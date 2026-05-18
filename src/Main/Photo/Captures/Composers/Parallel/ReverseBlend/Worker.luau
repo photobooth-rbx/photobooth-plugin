@@ -32,28 +32,28 @@ local function workerAction(
 
 	local onWhiteRetro = Image.fromBuffer(whiteRetroBuffer, size)
 	local onBlackRetro = Image.fromBuffer(blackRetroBuffer, size)
-	local onBlack = if blackBuffer then Image.fromBuffer(blackBuffer, size) else onBlackRetro:Clone()
+	local onBlack = if blackBuffer then Image.fromBuffer(blackBuffer, size) else onBlackRetro:clone()
 
 	for h = 1, onBlack.size.Y do
 		for w = 1, onBlack.size.X do
 			Timeout.tryYield()
 
-			local pixelIndex = onBlack:GetPixelIndex(w, h)
+			local pixelIndex = onBlack:getPixelIndex(w, h)
 
-			local Wo = { onWhiteRetro:GetRGBA255(pixelIndex) }
-			local Bo = { onBlackRetro:GetRGBA255(pixelIndex) }
+			local Wo = { onWhiteRetro:getRGBA255(pixelIndex) }
+			local Bo = { onBlackRetro:getRGBA255(pixelIndex) }
 
 			if compareByMargin(Wo, Wb, 0) and compareByMargin(Bo, Bb, 0) then
 				-- in both samples the pixels match their backgrounds perfectly
 				-- this means that this pixel is guaranteed to be a background pixel
-				onBlack:SetRGBA255(pixelIndex, 0, 0, 0, 0)
+				onBlack:setRGBA255(pixelIndex, 0, 0, 0, 0)
 				continue
 			end
 
 			if not compareByMargin(Wo, Bo, COMPARE_MARGIN) then
 				-- the pixels differ between the two versions of the image
 				-- this means their must be some alpha we have to calculate
-				local uBo = { onBlack:GetRGBA255(pixelIndex) }
+				local uBo = { onBlack:getRGBA255(pixelIndex) }
 
 				local maxAlpha = 0
 				for i = 1, 3 do
@@ -66,11 +66,11 @@ local function workerAction(
 					rgb[i] = math.clamp(Bb[i] + (uBo[i] - Bb[i]) / maxAlpha, 0, 255)
 				end
 
-				onBlack:SetRGBA255(pixelIndex, rgb[1], rgb[2], rgb[3], maxAlpha * 255)
+				onBlack:setRGBA255(pixelIndex, rgb[1], rgb[2], rgb[3], maxAlpha * 255)
 			end
 
 			-- apply color correction
-			local rgba = { onBlack:GetRGBA(pixelIndex) }
+			local rgba = { onBlack:getRGBA(pixelIndex) }
 			local gray = 0.345 * rgba[1] + 0.553 * rgba[2] + 0.114 * rgba[3]
 
 			for i = 1, 3 do
@@ -82,7 +82,7 @@ local function workerAction(
 				rgba[i] = math.clamp(component, 0, 1)
 			end
 
-			onBlack:SetRGBA(pixelIndex, rgba[1], rgba[2], rgba[3], rgba[4])
+			onBlack:setRGBA(pixelIndex, rgba[1], rgba[2], rgba[3], rgba[4])
 		end
 	end
 

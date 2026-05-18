@@ -13,7 +13,7 @@ local scheduler = Parallel.new(32, {
 local function parallelize(img: Image.Image)
 	scheduler:waitForReady()
 
-	for _, chunk in img:Split(scheduler:getActorCount(), 1) do
+	for _, chunk in img:split(scheduler:getActorCount(), 1) do
 		scheduler:schedule(chunk.buffer, chunk.size, chunk.crop, chunk.minIndex)
 		Timeout.tryYield()
 	end
@@ -23,7 +23,7 @@ local function parallelize(img: Image.Image)
 
 	local pending = {}
 	local copyIndex = 0
-	local visited = buffer.create(img:GetNumberOfPixels())
+	local visited = buffer.create(img:getNumberOfPixels())
 	for _, unpackResult in packedResults do
 		local visitedChunk, pendingChunk = unpackResult()
 		buffer.copy(visited, copyIndex, visitedChunk)

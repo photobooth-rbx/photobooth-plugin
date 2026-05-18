@@ -93,8 +93,8 @@ function ImageStatic.fromRGBA255(r: number, g: number, b: number, a: number, siz
 	local img = ImageStatic.fromBuffer(buffer.create(size.X * size.Y * 4), size)
 	for x = 1, size.X do
 		for y = 1, size.Y do
-			local pixelIndex = img:GetPixelIndex(x, y)
-			img:SetRGBA255(pixelIndex, r, g, b, a)
+			local pixelIndex = img:getPixelIndex(x, y)
+			img:setRGBA255(pixelIndex, r, g, b, a)
 		end
 	end
 	return img
@@ -106,7 +106,7 @@ end
 
 -- Public Methods
 
-function ImageClass.Clone(self: Image)
+function ImageClass.clone(self: Image)
 	local copyBuffer = buffer.create(buffer.len(self.buffer))
 	buffer.copy(copyBuffer, 0, self.buffer, 0)
 	local copy = ImageStatic.fromBuffer(copyBuffer, self.size)
@@ -114,7 +114,7 @@ function ImageClass.Clone(self: Image)
 	return copy
 end
 
-function ImageClass.Crop(self: Image, rect: Rect)
+function ImageClass.crop(self: Image, rect: Rect)
 	local size = rect.Max - rect.Min
 
 	local clampedWidth = math.min(rect.Min.X + size.X, self.size.X) - rect.Min.X
@@ -130,36 +130,36 @@ function ImageClass.Crop(self: Image, rect: Rect)
 	return ImageStatic.fromBuffer(targetBuffer, Vector2.new(clampedWidth, clampedHeight))
 end
 
-function ImageClass.GetSize(self: Image)
+function ImageClass.getSize(self: Image)
 	return self.size
 end
 
-function ImageClass.GetWidth(self: Image)
+function ImageClass.getWidth(self: Image)
 	return self.size.X
 end
 
-function ImageClass.GetHeight(self: Image)
+function ImageClass.getHeight(self: Image)
 	return self.size.Y
 end
 
-function ImageClass.GetNumberOfPixels(self: Image)
+function ImageClass.getNumberOfPixels(self: Image)
 	return self.size.X * self.size.Y
 end
 
-function ImageClass.GetPixelIndex(self: Image, x: number, y: number)
+function ImageClass.getPixelIndex(self: Image, x: number, y: number)
 	return (y - 1) * self.size.X + x
 end
 
-function ImageClass.GetXYFromPixelIndex(self: Image, pixelIndex: number)
+function ImageClass.getXYFromPixelIndex(self: Image, pixelIndex: number)
 	local y = math.floor((pixelIndex - 1) / self.size.X) + 1
 	local x = pixelIndex - ((y - 1) * self.size.X)
 	return x, y
 end
 
-function ImageClass.IterateNeighbors(self: Image, pixelIndex: number)
+function ImageClass.iterateNeighbors(self: Image, pixelIndex: number)
 	local width = self.size.X
 	local height = self.size.Y
-	local x, y = self:GetXYFromPixelIndex(pixelIndex)
+	local x, y = self:getXYFromPixelIndex(pixelIndex)
 
 	local i = 0
 	return function()
@@ -172,7 +172,7 @@ function ImageClass.IterateNeighbors(self: Image, pixelIndex: number)
 				local yn = y + offset[2]
 
 				if not (xn < 1 or xn > width or yn < 1 or yn > height) then
-					return i, self:GetPixelIndex(xn, yn)
+					return i, self:getPixelIndex(xn, yn)
 				end
 			else
 				return table.unpack({} :: any)
@@ -181,7 +181,7 @@ function ImageClass.IterateNeighbors(self: Image, pixelIndex: number)
 	end
 end
 
-function ImageClass.GetRGBA255(self: Image, pixelIndex: number): (number, number, number, number)
+function ImageClass.getRGBA255(self: Image, pixelIndex: number): (number, number, number, number)
 	local i = ((pixelIndex - 1) * 4)
 	return buffer.readu8(self.buffer, i + 0),
 		buffer.readu8(self.buffer, i + 1),
@@ -189,7 +189,7 @@ function ImageClass.GetRGBA255(self: Image, pixelIndex: number): (number, number
 		buffer.readu8(self.buffer, i + 3)
 end
 
-function ImageClass.SetRGBA255(self: Image, pixelIndex: number, r: number, g: number, b: number, a: number)
+function ImageClass.setRGBA255(self: Image, pixelIndex: number, r: number, g: number, b: number, a: number)
 	local i = ((pixelIndex - 1) * 4)
 	buffer.writeu8(self.buffer, i + 0, r)
 	buffer.writeu8(self.buffer, i + 1, g)
@@ -197,16 +197,16 @@ function ImageClass.SetRGBA255(self: Image, pixelIndex: number, r: number, g: nu
 	buffer.writeu8(self.buffer, i + 3, a)
 end
 
-function ImageClass.GetRGBA(self: Image, pixelIndex: number)
-	local r, g, b, a = self:GetRGBA255(pixelIndex)
+function ImageClass.getRGBA(self: Image, pixelIndex: number)
+	local r, g, b, a = self:getRGBA255(pixelIndex)
 	return r / 255, g / 255, b / 255, a / 255
 end
 
-function ImageClass.SetRGBA(self: Image, pixelIndex: number, r: number, g: number, b: number, a: number)
-	self:SetRGBA255(pixelIndex, r * 255, g * 255, b * 255, a * 255)
+function ImageClass.setRGBA(self: Image, pixelIndex: number, r: number, g: number, b: number, a: number)
+	self:setRGBA255(pixelIndex, r * 255, g * 255, b * 255, a * 255)
 end
 
-function ImageClass.WriteToEditableImage(self: Image, editableImage: EditableImage, position: Vector2, size: Vector2)
+function ImageClass.writeToEditableImage(self: Image, editableImage: EditableImage, position: Vector2, size: Vector2)
 	size = (position + size):Max(editableImage.Size) - position
 
 	local dx = math.ceil(size.X / MAX_READ_WRITE_IMAGE_WIDTH)
@@ -219,13 +219,13 @@ function ImageClass.WriteToEditableImage(self: Image, editableImage: EditableIma
 				math.min(MAX_READ_WRITE_IMAGE_WIDTH, size.X - offset.X),
 				math.min(MAX_READ_WRITE_IMAGE_HEIGHT, size.Y - offset.Y)
 			)
-			local cropImage = self:Crop(Rect.new(offset, offset + cropSize))
+			local cropImage = self:crop(Rect.new(offset, offset + cropSize))
 			editableImage:WritePixelsBuffer(position + offset, cropSize, cropImage.buffer)
 		end
 	end
 end
 
-function ImageClass.Split(self: Image, n: number, yPadding: number?)
+function ImageClass.split(self: Image, n: number, yPadding: number?)
 	local width = self.size.X
 	local height = self.size.Y
 
@@ -241,8 +241,8 @@ function ImageClass.Split(self: Image, n: number, yPadding: number?)
 			local startPadded = math.max(1, start - yPad)
 			local finishPadded = math.min(height, finish + yPad)
 
-			local minIndex = self:GetPixelIndex(1, startPadded)
-			local maxIndex = self:GetPixelIndex(width, finishPadded)
+			local minIndex = self:getPixelIndex(1, startPadded)
+			local maxIndex = self:getPixelIndex(width, finishPadded)
 
 			local chunkLen = (maxIndex - minIndex + 1) * 4
 			local chunkBuffer = buffer.create(chunkLen)
@@ -267,14 +267,14 @@ function ImageClass.Split(self: Image, n: number, yPadding: number?)
 	return chunks
 end
 
-function ImageClass.SetTemplateUri(self: Image, uri: string)
+function ImageClass.setTemplateUri(self: Image, uri: string)
 	self.templateUri = uri
 end
 
-function ImageClass.Save(self: Image)
+function ImageClass.save(self: Image)
 	if self.templateUri then
 		local editImage = AssetService:CreateEditableImageAsync(Content.fromUri(self.templateUri)) :: EditableImage
-		self:WriteToEditableImage(editImage, Vector2.zero, self.size)
+		self:writeToEditableImage(editImage, Vector2.zero, self.size)
 		return editImage
 	end
 
@@ -282,7 +282,7 @@ function ImageClass.Save(self: Image)
 		Size = self.size,
 	}) :: EditableImage
 
-	self:WriteToEditableImage(editableImage, Vector2.zero, self.size)
+	self:writeToEditableImage(editableImage, Vector2.zero, self.size)
 
 	return editableImage
 end

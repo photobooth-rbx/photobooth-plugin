@@ -165,7 +165,7 @@ function Photo.export(imgs: { Image.Image }, parent: Instance?)
 		local name = `{DateTime.now():ToIsoDate()}_{i}`
 		local meshPart = Photo.getQuadMeshPart()
 		meshPart.Name = name
-		meshPart.TextureContent = Content.fromObject(img:Save())
+		meshPart.TextureContent = Content.fromObject(img:save())
 		meshPart.Parent = parent
 
 		table.insert(results, meshPart)

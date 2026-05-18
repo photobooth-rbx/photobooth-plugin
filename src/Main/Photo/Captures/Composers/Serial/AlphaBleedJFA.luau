@@ -93,7 +93,7 @@ local function alphaBleedJFASerial(img: Image.Image, nBleedPixels: number?)
 		seedRead, seedWrite = seedWrite, seedRead
 	end
 
-	local jfaImg = img:Clone()
+	local jfaImg = img:clone()
 	local jfaBuffer = jfaImg.buffer
 
 	for i = 1, nPixels do

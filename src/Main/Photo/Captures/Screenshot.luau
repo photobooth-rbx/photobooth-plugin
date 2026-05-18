@@ -41,7 +41,7 @@ local function screenshot(rect: Rect?)
 
 		result = Image.fromEditableImage(editImage, rect)
 		if not rect then
-			result:SetTemplateUri(contentUri)
+			result:setTemplateUri(contentUri)
 		end
 	end)
 

@@ -18,9 +18,9 @@ local function parallelize(
 	scheduler:waitForReady()
 
 	local actorCount = scheduler:getActorCount()
-	local splitOnWhiteRetro = onWhiteRetro:Split(actorCount)
-	local splitOnBlackRetro = onBlackRetro:Split(actorCount)
-	local splitOnBlack = if onBlack then onBlack:Split(actorCount) else {}
+	local splitOnWhiteRetro = onWhiteRetro:split(actorCount)
+	local splitOnBlackRetro = onBlackRetro:split(actorCount)
+	local splitOnBlack = if onBlack then onBlack:split(actorCount) else {}
 
 	for i = 1, #splitOnWhiteRetro do
 		local onWhiteRetroChunk = splitOnWhiteRetro[i]
@@ -39,7 +39,7 @@ local function parallelize(
 	local packedResults = scheduler:workAsync()
 
 	local copyIndex = 0
-	local resultBuffer = buffer.create(onWhiteRetro:GetNumberOfPixels() * 4)
+	local resultBuffer = buffer.create(onWhiteRetro:getNumberOfPixels() * 4)
 	for _, unpackResult in packedResults do
 		local commitBuffer = unpackResult()
 		buffer.copy(resultBuffer, copyIndex, commitBuffer)

@@ -24,9 +24,9 @@ local function workerAction(
 			local rgb = { 0, 0, 0 }
 			local contributing = 0
 
-			for _, neighborIndex in img:IterateNeighbors(index) do
+			for _, neighborIndex in img:iterateNeighbors(index) do
 				if bit32.band(buffer.readu8(visited, neighborIndex - 1), 0b10) > 0 then
-					local r, g, b = img:GetRGBA255(neighborIndex)
+					local r, g, b = img:getRGBA255(neighborIndex)
 
 					rgb[1] = rgb[1] + r
 					rgb[2] = rgb[2] + g
@@ -42,7 +42,7 @@ local function workerAction(
 			end
 
 			if contributing > 0 then
-				img:SetRGBA255(index, rgb[1] / contributing, rgb[2] / contributing, rgb[3] / contributing, 0)
+				img:setRGBA255(index, rgb[1] / contributing, rgb[2] / contributing, rgb[3] / contributing, 0)
 			end
 
 			Timeout.tryYield()

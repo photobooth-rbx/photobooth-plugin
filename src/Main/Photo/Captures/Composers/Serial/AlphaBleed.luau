@@ -8,7 +8,7 @@ local function alphaBleedSerial(img: Image.Image, nBleedPixels: number?)
 		return math.sign(bit32.extract(u32, 24, 8))
 	end)
 
-	local copy = img:Clone()
+	local copy = img:clone()
 	local width, height = copy.size.X, copy.size.Y
 
 	local pending = {}
@@ -18,8 +18,8 @@ local function alphaBleedSerial(img: Image.Image, nBleedPixels: number?)
 		for x = 1, width do
 			Timeout.tryYield()
 
-			local index = copy:GetPixelIndex(x, y)
-			local _, _, _, alpha = copy:GetRGBA255(index)
+			local index = copy:getPixelIndex(x, y)
+			local _, _, _, alpha = copy:getRGBA255(index)
 
 			if alpha ~= 0 then
 				buffer.writeu8(visited, index - 1, 0b11)
@@ -47,9 +47,9 @@ local function alphaBleedSerial(img: Image.Image, nBleedPixels: number?)
 			local rgb = { 0, 0, 0 }
 			local contributing = 0
 
-			for _, neighborIndex in copy:IterateNeighbors(index) do
+			for _, neighborIndex in copy:iterateNeighbors(index) do
 				if bit32.band(buffer.readu8(visited, neighborIndex - 1), 0b10) > 0 then
-					local r, g, b = copy:GetRGBA255(neighborIndex)
+					local r, g, b = copy:getRGBA255(neighborIndex)
 
 					rgb[1] = rgb[1] + r
 					rgb[2] = rgb[2] + g
@@ -65,7 +65,7 @@ local function alphaBleedSerial(img: Image.Image, nBleedPixels: number?)
 			end
 
 			if contributing > 0 then
-				copy:SetRGBA255(index, rgb[1] / contributing, rgb[2] / contributing, rgb[3] / contributing, 0)
+				copy:setRGBA255(index, rgb[1] / contributing, rgb[2] / contributing, rgb[3] / contributing, 0)
 			end
 
 			Timeout.tryYield()
