@@ -96,8 +96,8 @@ end
 function UserInterface.mountCaptureViewport(plugin: Plugin, toolbar: PluginToolbar)
 	-- stylua: ignore
 	local openButton = toolbar:CreateButton(
-		"egomoose_photobooth_viewport_button", 
-		"Capture viewport images", 
+		"egomoose_photobooth_viewport_button",
+		"Capture viewport images",
 		"", "Viewport"
 	)
 
@@ -183,6 +183,7 @@ function UserInterface.mountCaptureViewport(plugin: Plugin, toolbar: PluginToolb
 		-- stylua: ignore
 		return isEnabled and React.createElement("ScreenGui", {
 			Name = "ViewportApp",
+			DisplayOrder = math.huge, -- this is so enabled ScreenGuis in say StarterGui don't stop Photobooth from receiving input
 			Archivable = false,
 			IgnoreGuiInset = true,
 			ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
