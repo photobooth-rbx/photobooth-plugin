@@ -17,6 +17,7 @@ Notably, it features the ability to remove skyboxes/backgrounds from images and 
 Results are output as editable images stored as a mesh part's texture.
 
 [![](docs/assets/readme/badges/roblox-marketplace-badge.svg)](https://create.roblox.com/store/asset/82716202460157) [![](docs/assets/readme/badges/itch-badge.svg)](https://egomoose.itch.io/rbx-photobooth-plugin)
+[![](docs/assets/readme/badges/discord-badge.svg)](https://discord.gg/VgxVYZHV3N)
 
 [Devforum post](https://devforum.roblox.com/t/3401720)
 
