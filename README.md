@@ -41,6 +41,7 @@ General:
 - Using the emulator + photobooth only works correctly when on "actual resolution"
 - The viewport must be visible when capturing. You cannot tab out of studio or switch to the script editor while a capture is in progress.
 - `Studio Settings > Rendering > Graphics Mode = OpenGL` is unsupported (this is a Roblox bug).
+- `Studio Settings > Rendering > Graphics Mode = Vulkan` is supported, but some users experience a bug where emulators that match their display resolution force them into fullscreen and won’t allow them to take captures.
 
 Skybox removal:
 - No atmosphere / fog support.
