@@ -144,7 +144,7 @@ If you want to export many images at the same time. First group all the mesh par
 
 Alternatively, you can also export your photobooth selection in the [glTF format](https://devforum.roblox.com/t/gltf-export-beta-available-now/3905928). This may be preferable as many users have reported that sometimes exporting as an obj can crash studio.
 
-In order to extract the pngs from the glTF file you'll need an additional tool. For convenience I've created a website found [here](https://egomoose.github.io/photobooth-plugin-site/) where you can drag and drop the export and get the resulting pngs.
+In order to extract the pngs from the glTF file you'll need an additional tool. For convenience I've created a website found [here](https://photobooth-rbx.github.io/photobooth-plugin-site/) where you can drag and drop the export and get the resulting pngs.
 
 ## Uploading
 
