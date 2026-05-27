@@ -5,19 +5,18 @@ on:
   push:
     tags: ["v*"]
 
+permissions:
+  contents: write
+
 jobs:
-  update:
-    name: Update Version
+  release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout repository
         uses: actions/checkout@v6
 
-      - name: "Setup rokit"
+      - name: 🔧 Install Rokit
         uses: CompeyDev/setup-rokit@v0.1.2
 
-      - name: "Run lune update script"
-        run: |
-          lune run update-place-version ${{ secrets.PHOTOBOOTH_PLACE_UPDATE_API_KEY }}
+      - name: 🏠 Update place version
+        run: lune run update-place-version ${{ secrets.PHOTOBOOTH_PLACE_UPDATE_API_KEY }}

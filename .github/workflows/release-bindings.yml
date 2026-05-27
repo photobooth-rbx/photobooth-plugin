@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  NAME: photobooth-bindings
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v6
+
+      - name: 🔧 Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: 📦 Install packages
+        run: lune run wally-install
+
+      - name: 🚧 Create ${{ env.NAME }} project folder
+        run: lune run create-bindings-package
+      
+      - name: 🏗️ Build ${{ env.NAME }}-${{ github.ref_name }}.rbxm
+        run: rojo build bindings-package/default.project.json --output bindings-package/${{ env.NAME }}-${{ github.ref_name }}.rbxm
+
+      - name: 🚀 Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} --draft --verify-tag --title ${{ github.ref_name }}
+
+      - name: 📤 Upload to Release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref_name }} bindings-package/${{ env.NAME }}-${{ github.ref_name }}.rbxm
