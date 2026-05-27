@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  PLUGIN_NAME: photobooth
+  BINDINGS_NAME: photobooth-bindings
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v6
+      
+      - name: 🚀 Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} --draft --verify-tag --title ${{ github.ref_name }}
+
+  release-plugin:
+    if: false
+    needs: ["create-release"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v6
+
+      - name: 🔧 Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: 📦 Install packages
+        run: lune run wally-install
+
+      - name: 🏗️ Build ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.rbxm
+        run: rojo build plugin.project.json --output ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.rbxm
+
+      - name: 📤 Upload to Release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref_name }} ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.rbxm
+
+  release-bindings:
+    needs: ["create-release"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v6
+
+      - name: 🔧 Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: 📦 Install packages
+        run: lune run wally-install
+
+      - name: 🚧 Create ${{ env.BINDINGS_NAME }} project folder
+        run: lune run create-bindings-package
+      
+      - name: 🏗️ Build ${{ env.BINDINGS_NAME }}-${{ github.ref_name }}.rbxm
+        run: rojo build bindings-package/default.project.json --output bindings-package/${{ env.BINDINGS_NAME }}-${{ github.ref_name }}.rbxm
+
+      - name: 📤 Upload to Release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref_name }} bindings-package/${{ env.BINDINGS_NAME }}-${{ github.ref_name }}.rbxm
