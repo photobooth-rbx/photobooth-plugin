@@ -1,4 +1,4 @@
-name: Release
+name: Release Plugin
 
 on:
   push:
