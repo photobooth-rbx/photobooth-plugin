@@ -1,6 +1,16 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.1.1] - 2026/05/21
+- Crop viewport app now has highest possible display order which means it renders on top of any gui in your starter gui (thanks to @\galmeowing)
+- Fixed an issue with binding compatibility checks returning false
+
+### [2.1.0] - 2026/05/16
+- Add image viewer controls in the gallery
+- Add min unbounded capture sizes when typing into the crop mode action bar
+- Color correction fixes to have saturation better match Roblox
+- Add a `getMeshPart` function to bindings
+
 ### [2.0.1] - 2026/04/24
 - Fix wally bindings package
 
