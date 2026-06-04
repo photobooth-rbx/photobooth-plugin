@@ -353,10 +353,10 @@ function UserInterface.mountGallery(plugin: Plugin, toolbar: PluginToolbar)
 end
 
 function UserInterface.mountBlackout(plugin: Plugin)
-	Blackout.setDisabled("default", not State.read().temporary.isBlackout)
+	Blackout.setDisabled("default", not State.read().temporary.isBlackoutMode)
 	local disconnect = State.onChanged(function(path)
-		if path[1] == "temporary" and path[2] == "isBlackout" then
-			Blackout.setDisabled("default", not State.read().temporary.isBlackout)
+		if path[1] == "temporary" and path[2] == "isBlackoutMode" then
+			Blackout.setDisabled("default", not State.read().temporary.isBlackoutMode)
 		end
 	end)
 

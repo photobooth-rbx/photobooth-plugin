@@ -181,7 +181,27 @@ local function ViewportGroup(props: GroupsProps)
 		HorizontalSplit = HORIZONTAL_SPLIT,
 		Title = "Viewport",
 		List = {
-
+			{
+				Name = "Blackout Mode",
+				Node = React.createElement(React.Fragment, {}, {
+					Padding = React.createElement("UIPadding", {
+						PaddingLeft = UDim.new(0, 5),
+						PaddingRight = UDim.new(0, 5),
+						PaddingTop = UDim.new(0, 4),
+						PaddingBottom = UDim.new(0, 4),
+					}),
+					Checkbox = React.createElement(StudioComponents.Checkbox, {
+						Disabled = props.RootProps.Disabled,
+						Size = UDim2.fromScale(1, 1),
+						Value = props.State.temporary.isBlackoutMode,
+						OnChanged = function()
+							props.MutateState(function(state)
+								state.temporary.isBlackoutMode = not state.temporary.isBlackoutMode
+							end)
+						end,
+					}),
+				}),
+			},
 			{
 				Name = "Fullscreen",
 				Node = React.createElement(React.Fragment, {}, {
@@ -198,27 +218,6 @@ local function ViewportGroup(props: GroupsProps)
 						OnChanged = function()
 							props.MutateState(function(state)
 								state.temporary.isFullscreen = not state.temporary.isFullscreen
-							end)
-						end,
-					}),
-				}),
-			},
-			{
-				Name = "Blackout",
-				Node = React.createElement(React.Fragment, {}, {
-					Padding = React.createElement("UIPadding", {
-						PaddingLeft = UDim.new(0, 5),
-						PaddingRight = UDim.new(0, 5),
-						PaddingTop = UDim.new(0, 4),
-						PaddingBottom = UDim.new(0, 4),
-					}),
-					Checkbox = React.createElement(StudioComponents.Checkbox, {
-						Disabled = props.RootProps.Disabled,
-						Size = UDim2.fromScale(1, 1),
-						Value = props.State.temporary.isBlackout,
-						OnChanged = function()
-							props.MutateState(function(state)
-								state.temporary.isBlackout = not state.temporary.isBlackout
 							end)
 						end,
 					}),
