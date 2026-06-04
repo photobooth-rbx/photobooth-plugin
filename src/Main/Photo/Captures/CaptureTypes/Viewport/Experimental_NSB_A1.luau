@@ -57,8 +57,8 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	trove:Add(SceneControl.applyRetroLighting())
 
 	local fogBackground = Background.new(workspace)
-	fogBackground:SetColor(Color3.new(0, 0, 0))
-	fogBackground:SetEnabled(true)
+	fogBackground:setColor(Color3.new(0, 0, 0))
+	fogBackground:setEnabled(true)
 
 	trove:Add(SceneControl.once(function()
 		fogBackground:Destroy()
@@ -71,7 +71,7 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	local onBlackRetro = Screenshot.rect(options.rect)
 
 	-- capture on retro white
-	fogBackground:SetColor(Color3.new(1, 1, 1))
+	fogBackground:setColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
 	local onWhiteRetro = Screenshot.rect(options.rect)
 

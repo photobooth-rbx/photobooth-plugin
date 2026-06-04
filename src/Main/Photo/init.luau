@@ -13,6 +13,7 @@ local Types = require(pluginRoot.Main.Bindings.Interface.Types)
 local State = require(pluginRoot.Main.State)
 
 local SceneControl = require(script.SceneControl)
+local Blackout = require(script.Tools.Blackout)
 local Captures = require(script.Captures)
 
 local Photo = {}
@@ -129,6 +130,8 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 		task.wait(options.delay)
 	end
 
+	Blackout.setDisabled("capturing", true)
+
 	local results: { Image.Image }
 	local trove = createIsCapturingTrove()
 	local success, err = SceneControl.freeze(true, function()
@@ -136,6 +139,7 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 	end)
 
 	trove:Destroy()
+	Blackout.setDisabled("capturing", false)
 
 	if not success then
 		if err then

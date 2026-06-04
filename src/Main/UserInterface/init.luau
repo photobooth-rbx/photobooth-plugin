@@ -19,8 +19,9 @@ local State = require(pluginRoot.Main.State)
 local Photo = require(pluginRoot.Main.Photo)
 
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
-local Captures = require(pluginRoot.Main.Photo.Captures)
+local Blackout = require(pluginRoot.Main.Photo.Tools.Blackout)
 local UIHider = require(pluginRoot.Main.Photo.Tools.UIHider)
+local Captures = require(pluginRoot.Main.Photo.Captures)
 
 local Hooks = require(script.Hooks)
 local Icons = require(script.Icons)
@@ -348,6 +349,19 @@ function UserInterface.mountGallery(plugin: Plugin, toolbar: PluginToolbar)
 
 	plugin.Unloading:Connect(function()
 		dockRoot:unmount()
+	end)
+end
+
+function UserInterface.mountBlackout(plugin: Plugin)
+	Blackout.setDisabled("default", not State.read().temporary.isBlackoutMode)
+	local disconnect = State.onChanged(function(path)
+		if path[1] == "temporary" and path[2] == "isBlackoutMode" then
+			Blackout.setDisabled("default", not State.read().temporary.isBlackoutMode)
+		end
+	end)
+
+	plugin.Unloading:Connect(function()
+		disconnect()
 	end)
 end
 
