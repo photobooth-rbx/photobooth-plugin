@@ -19,8 +19,8 @@ function BillboardBackgroundClass.new(parent: Instance): BillboardBackground
 	self.part, self.billboard, self.frame = self:_createInstances()
 	self.part.Parent = parent
 
-	self:SetEnabled(false)
-	self:Update()
+	self:setEnabled(false)
+	self:render()
 
 	return self
 end
@@ -78,7 +78,7 @@ local function getBoundsIntersection(cameraCF: CFrame)
 	return cameraCF.Position + lookVector * math.max(0, t + 1)
 end
 
-function BillboardBackgroundClass._createInstances(self: BillboardBackground)
+function BillboardBackgroundClass._createInstances(_self: BillboardBackground)
 	local part = Instance.new("Part")
 	part.CFrame = CFrame.identity
 	part.Size = Vector3.new(1, 1, 1)
@@ -105,15 +105,15 @@ end
 
 -- Public
 
-function BillboardBackgroundClass.Update(self: BillboardBackground)
+function BillboardBackgroundClass.render(self: BillboardBackground)
 	self.part.CFrame = CFrame.new(getBoundsIntersection(workspace.CurrentCamera.CFrame))
 end
 
-function BillboardBackgroundClass.SetEnabled(self: BillboardBackground, enabled: boolean)
+function BillboardBackgroundClass.setEnabled(self: BillboardBackground, enabled: boolean)
 	self.billboard.Enabled = enabled
 end
 
-function BillboardBackgroundClass.SetColor(self: BillboardBackground, color: Color3)
+function BillboardBackgroundClass.setColor(self: BillboardBackground, color: Color3)
 	self.frame.BackgroundColor3 = color
 end
 

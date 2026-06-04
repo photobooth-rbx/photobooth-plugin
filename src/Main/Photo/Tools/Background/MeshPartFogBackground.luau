@@ -30,8 +30,8 @@ function MeshPartFogBackgroundClass.new(parent: Instance): MeshPartFogBackground
 	self.fogDistance = -1
 	self.fogTrove = Trove.new()
 
-	self:SetEnabled(false)
-	self:Render()
+	self:setEnabled(false)
+	self:render()
 
 	return self
 end
@@ -79,14 +79,14 @@ end
 
 -- Public
 
-function MeshPartFogBackgroundClass.Render(self: MeshPartFogBackground)
+function MeshPartFogBackgroundClass.render(self: MeshPartFogBackground)
 	local cameraCF = workspace.CurrentCamera.CFrame
 	local intersection = getBoundsIntersection(cameraCF)
 	self.part.CFrame = CFrame.new(intersection) * cameraCF.Rotation
 	self.fogDistance = -cameraCF:PointToObjectSpace(intersection).Z - MARGIN_OF_ERROR_DISTANCE
 end
 
-function MeshPartFogBackgroundClass.SetEnabled(self: MeshPartFogBackground, enabled: boolean)
+function MeshPartFogBackgroundClass.setEnabled(self: MeshPartFogBackground, enabled: boolean)
 	self.part.Transparency = if enabled then 0 else 1
 	if enabled and self.fogDistance > 0 then
 		local color = Lighting.FogColor
@@ -106,7 +106,7 @@ function MeshPartFogBackgroundClass.SetEnabled(self: MeshPartFogBackground, enab
 	end
 end
 
-function MeshPartFogBackgroundClass.SetColor(self: MeshPartFogBackground, color: Color3)
+function MeshPartFogBackgroundClass.setColor(self: MeshPartFogBackground, color: Color3)
 	self.part.Color = color
 	if self.part.Transparency == 0 then
 		Lighting.FogColor = color
@@ -114,7 +114,7 @@ function MeshPartFogBackgroundClass.SetColor(self: MeshPartFogBackground, color:
 end
 
 function MeshPartFogBackgroundClass.Destroy(self: MeshPartFogBackground)
-	self:SetEnabled(false)
+	self:setEnabled(false)
 	self.fogTrove:Destroy()
 	self.part:Destroy()
 end

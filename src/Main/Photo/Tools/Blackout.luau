@@ -22,15 +22,15 @@ local function refresh()
 
 		if not isDisabled then
 			local background = MeshPartFogBackground.new(workspace.CurrentCamera)
-			background:SetColor(Color3.new(0, 0, 0))
-			background:SetEnabled(true)
+			background:setColor(Color3.new(0, 0, 0))
+			background:setEnabled(true)
 
 			blackoutTrove:Add(function()
 				background:Destroy()
 			end)
 
 			blackoutTrove:Add(RunService.RenderStepped:Connect(function()
-				background:Render()
+				background:render()
 			end))
 		end
 	end
