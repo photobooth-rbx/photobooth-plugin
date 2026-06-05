@@ -31,7 +31,6 @@ function MeshPartFogBackgroundClass.new(parent: Instance): MeshPartFogBackground
 	self.fogTrove = Trove.new()
 
 	self:setEnabled(false)
-	self:render()
 
 	return self
 end
@@ -98,6 +97,7 @@ function MeshPartFogBackgroundClass.setEnabled(self: MeshPartFogBackground, enab
 			Lighting.FogEnd = fogEnd
 		end)
 
+		self:render()
 		Lighting.FogColor = self.part.Color
 		Lighting.FogStart = self.fogDistance
 		Lighting.FogEnd = self.fogDistance
