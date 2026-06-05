@@ -95,6 +95,7 @@ local function HighResImageSplit(props: Props)
 
 		labels[`ImageSplit{i}`] = React.createElement("ImageLabel", {
 			ImageContent = Content.fromObject(splitEntry.EditableImage),
+			ResampleMode = Enum.ResamplerMode.Pixelated,
 			Position = UDim2.fromScale(uvPosition.X, uvPosition.Y),
 			Size = UDim2.fromScale(uvSize.X, uvSize.Y),
 			BackgroundTransparency = 1,
