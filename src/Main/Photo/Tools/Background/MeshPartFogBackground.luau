@@ -86,6 +86,8 @@ function MeshPartFogBackgroundClass.render(self: MeshPartFogBackground)
 end
 
 function MeshPartFogBackgroundClass.setEnabled(self: MeshPartFogBackground, enabled: boolean)
+	self:render()
+
 	self.part.Transparency = if enabled then 0 else 1
 	if enabled and self.fogDistance > 0 then
 		local color = Lighting.FogColor
@@ -97,7 +99,6 @@ function MeshPartFogBackgroundClass.setEnabled(self: MeshPartFogBackground, enab
 			Lighting.FogEnd = fogEnd
 		end)
 
-		self:render()
 		Lighting.FogColor = self.part.Color
 		Lighting.FogStart = self.fogDistance
 		Lighting.FogEnd = self.fogDistance
