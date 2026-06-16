@@ -47,6 +47,12 @@ function Blackout.setDisabled(key: string, disabled: boolean)
 	refresh()
 end
 
+function Blackout.reset()
+	table.clear(disabledByKey)
+	Blackout.setDisabled("default", true)
+	refresh()
+end
+
 --
 
 Blackout.setDisabled("default", true)

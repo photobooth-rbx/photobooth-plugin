@@ -362,6 +362,7 @@ function UserInterface.mountBlackout(plugin: Plugin)
 
 	plugin.Unloading:Connect(function()
 		disconnect()
+		Blackout.reset()
 	end)
 end
 
