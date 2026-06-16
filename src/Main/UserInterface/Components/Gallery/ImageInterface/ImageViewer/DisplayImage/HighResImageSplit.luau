@@ -11,6 +11,7 @@ export type Props = {
 	AnchorPoint: Vector2,
 
 	EditableImage: EditableImage,
+	ResampleMode: Enum.ResamplerMode,
 }
 
 local function useHighResSplit(sourceEditableImage: EditableImage)
@@ -95,6 +96,7 @@ local function HighResImageSplit(props: Props)
 
 		labels[`ImageSplit{i}`] = React.createElement("ImageLabel", {
 			ImageContent = Content.fromObject(splitEntry.EditableImage),
+			ResampleMode = props.ResampleMode,
 			Position = UDim2.fromScale(uvPosition.X, uvPosition.Y),
 			Size = UDim2.fromScale(uvSize.X, uvSize.Y),
 			BackgroundTransparency = 1,

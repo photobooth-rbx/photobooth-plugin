@@ -81,6 +81,12 @@ local function DisplayImage(props: Props)
 	local imageLayerSize = UDim2.fromScale(zoom * fitScale.X, zoom * fitScale.Y)
 	local imageLayerPosition = UDim2.fromScale(imageCenter.X, imageCenter.Y)
 
+	-- Only show exact pixels (Pixelated) once the image is displayed at or above its native
+	-- resolution, i.e. the user is zooming in. Below 100% the image is being downscaled to fit the
+	-- window, where Default resampling looks better.
+	--local resampleMode = if controls.trueScale >= 1 then Enum.ResamplerMode.Pixelated else Enum.ResamplerMode.Default
+	local resampleMode = Enum.ResamplerMode.Default
+
 	return React.createElement("Frame", {
 		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(1, 1),
@@ -150,6 +156,7 @@ local function DisplayImage(props: Props)
 					AnchorPoint = Vector2.new(0, 0),
 
 					EditableImage = props.EditableImage,
+					ResampleMode = resampleMode,
 				}),
 
 				AttachedDimensions = React.createElement("TextLabel", {

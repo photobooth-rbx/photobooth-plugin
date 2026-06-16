@@ -13,6 +13,7 @@ export type ImageControls = {
 	zoom: number,
 	imageCenter: Vector2,
 	fitScale: Vector2,
+	trueScale: number,
 	maxZoom: number,
 	hasImage: boolean,
 	reset: () -> (),
@@ -79,6 +80,10 @@ local function useImageControls(editableImage: EditableImage?, viewportRef: { cu
 	local centerRef = React.useRef(imageCenter)
 	local viewportSizeRef = React.useRef(viewportSize)
 	local fitScaleRef = React.useRef(fitScale)
+
+	local trueScale = if imageSize.X > 0 and viewportSize.X > 0
+		then zoom * fitScale.X * viewportSize.X / imageSize.X
+		else zoom
 
 	zoomRef.current = zoom
 	centerRef.current = imageCenter
@@ -181,6 +186,7 @@ local function useImageControls(editableImage: EditableImage?, viewportRef: { cu
 		zoom = zoom,
 		imageCenter = imageCenter,
 		fitScale = fitScale,
+		trueScale = trueScale,
 		maxZoom = maxZoom,
 		hasImage = editableImage ~= nil,
 		reset = reset,
