@@ -5,9 +5,11 @@ local Trove = require(pluginRoot.Packages.Trove)
 
 local RENDER_DISTANCE = 90_000
 local MARGIN_OF_ERROR_DISTANCE = 1000
-
 local PLANE_SCALE = 1_000_000_000
-local AXIS_ALIGN_NUDGE = CFrame.Angles(0.01, 0.01, 0)
+
+-- when yaw axis is world-aligned there's a bug that kills render distance
+-- slightly nudging the part fixes this issue
+local AXIS_ALIGN_NUDGE = CFrame.Angles(math.rad(0.01), math.rad(0.01), 0)
 
 local MeshPartFogBackgroundClass = {}
 MeshPartFogBackgroundClass.__index = MeshPartFogBackgroundClass
@@ -54,7 +56,7 @@ function MeshPartFogBackgroundClass._createInstances(_self: MeshPartFogBackgroun
 	local part = Instance.new("Part")
 	part.Material = Enum.Material.SmoothPlastic
 	part.CFrame = CFrame.identity
-	part.Size = Vector3.new(2048, 2048, 2048)
+	part.Size = Vector3.new(1, 1, 1)
 	part.Color = Color3.new(1, 1, 1)
 	part.Transparency = 0
 	part.CastShadow = false
