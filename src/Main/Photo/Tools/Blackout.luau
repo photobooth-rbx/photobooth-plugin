@@ -50,7 +50,6 @@ end
 function Blackout.reset()
 	table.clear(disabledByKey)
 	Blackout.setDisabled("default", true)
-	refresh()
 end
 
 --
