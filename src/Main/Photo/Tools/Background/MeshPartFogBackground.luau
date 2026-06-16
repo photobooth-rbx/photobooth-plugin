@@ -3,7 +3,13 @@ local Lighting = game:GetService("Lighting") :: Lighting
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Trove = require(pluginRoot.Packages.Trove)
 
+local RENDER_DISTANCE = 90_000
 local MARGIN_OF_ERROR_DISTANCE = 1000
+local PLANE_SCALE = 1_000_000_000
+
+-- when yaw axis is world-aligned there's a bug that kills render distance
+-- slightly nudging the part fixes this issue
+local AXIS_ALIGN_NUDGE = CFrame.Angles(math.rad(0.01), math.rad(0.01), 0)
 
 local MeshPartFogBackgroundClass = {}
 MeshPartFogBackgroundClass.__index = MeshPartFogBackgroundClass
@@ -46,14 +52,6 @@ end
 
 -- Private
 
-local function getBoundsIntersection(cameraCF: CFrame)
-	-- the logic here used to be much more complex
-	-- originally, we'd try and calculate this based on the existing geometry relative to the camera
-	-- however, it's much more consistent to pick a fixed distance that renders on all quality levels
-	-- technically this means you can't capture things more than 90k studs away, but is that really an issue?
-	return cameraCF * Vector3.new(0, 0, -90_000)
-end
-
 function MeshPartFogBackgroundClass._createInstances(_self: MeshPartFogBackground)
 	local part = Instance.new("Part")
 	part.Material = Enum.Material.SmoothPlastic
@@ -69,7 +67,7 @@ function MeshPartFogBackgroundClass._createInstances(_self: MeshPartFogBackgroun
 	part.Locked = true
 
 	local mesh = Instance.new("SpecialMesh")
-	mesh.Scale = Vector3.new(1_000_000_000, 1_000_000_000) -- we could calc, but why bother
+	mesh.Scale = Vector3.new(PLANE_SCALE, PLANE_SCALE, 0)
 	mesh.MeshType = Enum.MeshType.Brick
 	mesh.Parent = part
 
@@ -80,9 +78,9 @@ end
 
 function MeshPartFogBackgroundClass.render(self: MeshPartFogBackground)
 	local cameraCF = workspace.CurrentCamera.CFrame
-	local intersection = getBoundsIntersection(cameraCF)
-	self.part.CFrame = CFrame.new(intersection) * cameraCF.Rotation
-	self.fogDistance = -cameraCF:PointToObjectSpace(intersection).Z - MARGIN_OF_ERROR_DISTANCE
+	local intersection = cameraCF * Vector3.new(0, 0, -RENDER_DISTANCE)
+	self.part.CFrame = CFrame.new(intersection) * cameraCF.Rotation * AXIS_ALIGN_NUDGE
+	self.fogDistance = RENDER_DISTANCE - MARGIN_OF_ERROR_DISTANCE
 end
 
 function MeshPartFogBackgroundClass.setEnabled(self: MeshPartFogBackground, enabled: boolean)
