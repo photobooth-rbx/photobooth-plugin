@@ -1,6 +1,10 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.2.0] - 2026/06/17
+- Add blackout mode to settings which allows the rendering of a black background without influencing the skybox
+- Fixed a render distance bug that occurred when the camera's yaw was axis-aligned and studio quality levels were not set to max
+
 ### [2.1.1] - 2026/05/21
 - Crop viewport app now has highest possible display order which means it renders on top of any gui in your starter gui (thanks to @\galmeowing)
 - Fixed an issue with binding compatibility checks returning false
