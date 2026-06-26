@@ -1,22 +1,23 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Parallel = require(pluginRoot.Packages.Parallel)
 
-local Constants = require(pluginRoot.Constants)
+local ACTOR_COUNT = assert(script.Parent:GetAttribute("ActorCount") :: number?)
+local PLUS_ONE = assert(script.Parent:GetAttribute("JFAPlusOne") :: boolean?)
 
 type WorkerAction = typeof(require(script.Worker))
 
-local function firstPassJFA(
+local scheduler = Parallel.new(ACTOR_COUNT, {
+	script = script.Worker,
+	typecast = (nil :: any) :: WorkerAction,
+})
+
+local function jfaPasses(
 	img: EditableImage,
 	voronoi: EditableImage,
 	regions: { Rect },
 	workingBbox: Rect,
 	nBleedPixels: number?
 )
-	local scheduler = Parallel.new(Constants.JFAActorCount, {
-		script = script.Worker,
-		typecast = (nil :: any) :: WorkerAction,
-	})
-
 	scheduler:waitForReady()
 
 	local bboxSize = workingBbox.Max - workingBbox.Min
@@ -34,7 +35,7 @@ local function firstPassJFA(
 		nextStep = math.floor(nextStep / 2)
 	end
 
-	if #passSteps > 0 and Constants.JFAPlusOne then
+	if #passSteps > 0 and PLUS_ONE then
 		table.insert(passSteps, 1)
 	end
 
@@ -47,7 +48,7 @@ local function firstPassJFA(
 
 		local offset = 0
 		local results = scheduler:workAsync()
-		for i, getCropBuffer in results do
+		for _i, getCropBuffer in results do
 			local cropBuffer = getCropBuffer()
 			buffer.copy(stitched, offset, cropBuffer)
 			offset = offset + buffer.len(cropBuffer)
@@ -56,9 +57,7 @@ local function firstPassJFA(
 		voronoi:WritePixelsBuffer(workingBbox.Min, bboxSize, stitched)
 	end
 
-	scheduler:Destroy()
-
 	return #passSteps
 end
 
-return firstPassJFA
+return jfaPasses

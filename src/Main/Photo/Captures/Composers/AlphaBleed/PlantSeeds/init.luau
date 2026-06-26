@@ -1,22 +1,23 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Parallel = require(pluginRoot.Packages.Parallel)
-local Constants = require(pluginRoot.Constants)
+
+local ACTOR_COUNT = assert(script.Parent:GetAttribute("ActorCount") :: number?)
 
 type WorkerAction = typeof(require(script.Worker))
 
-local function plantSeeds(img: EditableImage, voronoi: EditableImage, regions: { Rect }): Rect?
-	local scheduler = Parallel.new(Constants.JFAActorCount, {
-		script = script.Worker,
-		typecast = (nil :: any) :: WorkerAction,
-	})
+local scheduler = Parallel.new(ACTOR_COUNT, {
+	script = script.Worker,
+	typecast = (nil :: any) :: WorkerAction,
+})
 
+local function plantSeeds(img: EditableImage, voronoi: EditableImage, regions: { Rect }): Rect?
 	scheduler:waitForReady()
 
 	local imgSize = img.Size
 	local imgWidth, imgHeight = imgSize.X, imgSize.Y
 
 	for _, crop in regions do
-		scheduler:schedule(img, voronoi, crop)
+		scheduler:schedule(img, crop)
 	end
 
 	local offset = 0
@@ -27,9 +28,7 @@ local function plantSeeds(img: EditableImage, voronoi: EditableImage, regions: {
 	local tXMax, tYMax = -math.huge, -math.huge
 
 	local results = scheduler:workAsync()
-	scheduler:Destroy()
-
-	for i, getCropBuffer in results do
+	for _i, getCropBuffer in results do
 		local cropBuffer, chunkHasOpaque, cXMin, cYMin, cXMax, cYMax = getCropBuffer()
 		buffer.copy(stitched, offset, cropBuffer)
 		offset = offset + buffer.len(cropBuffer)

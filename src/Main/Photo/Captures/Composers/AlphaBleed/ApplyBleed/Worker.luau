@@ -1,6 +1,6 @@
---!native
 --!optimize 2
 
+@native
 local function worker(img: EditableImage, voronoi: EditableImage, crop: Rect)
 	local imgSize = img.Size
 	local imgWidth = imgSize.X

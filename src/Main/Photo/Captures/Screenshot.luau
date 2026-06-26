@@ -3,7 +3,6 @@ local CaptureService = game:GetService("CaptureService") :: CaptureService
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Future = require(pluginRoot.Packages.Future)
-local Image = require(pluginRoot.Utilities.Image)
 local Constants = require(pluginRoot.Constants)
 local State = require(pluginRoot.Main.State)
 
@@ -24,11 +23,11 @@ local function captureEditableImage()
 	local contentUri = contentUriFuture:expect()
 	local editImage = AssetService:CreateEditableImageAsync(Content.fromUri(contentUri)) :: EditableImage
 
-	return editImage, contentUri
+	return editImage
 end
 
 local function screenshot(rect: Rect?)
-	local editImage, contentUri = captureEditableImage()
+	local editImage = captureEditableImage()
 
 	local result
 	local success, err: string? = pcall(function()
@@ -39,15 +38,20 @@ local function screenshot(rect: Rect?)
 			error("WARN: " .. OS_MISMATCH, 0)
 		end
 
-		result = Image.fromEditableImage(editImage, rect)
-		if not rect then
-			result:setTemplateUri(contentUri)
+		if rect then
+			local rectSize = rect.Max - rect.Min
+			local croppedBuffer = editImage:ReadPixelsBuffer(rect.Min, rectSize)
+			local cropped = AssetService:CreateEditableImage({ Size = rectSize })
+			cropped:WritePixelsBuffer(Vector2.zero, rectSize, croppedBuffer)
+			editImage:Destroy()
+			result = cropped
+		else
+			result = editImage
 		end
 	end)
 
-	editImage:Destroy()
-
 	if not success and err then
+		editImage:Destroy()
 		error(err, 0)
 	end
 

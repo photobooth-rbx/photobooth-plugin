@@ -1,3 +1,5 @@
+--!optimize 2
+
 local COMPARE_MARGIN = 0
 
 local WHITE = { 255, 255, 255, 255 }

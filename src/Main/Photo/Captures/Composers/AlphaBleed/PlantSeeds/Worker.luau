@@ -1,7 +1,7 @@
---!native
 --!optimize 2
 
-local function worker(img: EditableImage, voronoi: EditableImage, crop: Rect)
+@native
+local function worker(img: EditableImage, crop: Rect)
 	local imgSize = img.Size
 	local imgWidth, _imgHeight = imgSize.X, imgSize.Y
 	local imgBuffer = img:ReadPixelsBuffer(Vector2.zero, imgSize)
