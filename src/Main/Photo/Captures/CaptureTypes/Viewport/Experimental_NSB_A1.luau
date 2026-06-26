@@ -1,7 +1,6 @@
 local Lighting = game:GetService("Lighting") :: Lighting
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local Image = require(pluginRoot.Utilities.Image)
 local Trove = require(pluginRoot.Packages.Trove)
 
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
@@ -25,13 +24,13 @@ local function getAppliedAtmosphere(): Atmosphere?
 	return nil
 end
 
-local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove): ...Image.Image
+local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove)
 	trove:Add(SceneControl.hideScreenUI())
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())
 
 	-- capture on graded black
+	local gradedOnBlack
 	local preRetroYieldCount = 1
-	local gradedOnBlack: Image.Image?
 	if SceneControl.isGradedLightingRequired() or Lighting.ExposureCompensation ~= 0 then
 		local undoGradedLighting = trove:Add(SceneControl.applyGradedLighting())
 
@@ -49,6 +48,9 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 
 		-- SceneControl.yieldUntilNextFrame()
 		gradedOnBlack = Screenshot.rect(options.rect)
+		trove:Add(function()
+			gradedOnBlack:Destroy()
+		end)
 
 		undoGradedLighting()
 	end
@@ -69,11 +71,17 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 		SceneControl.yieldUntilNextFrame()
 	end
 	local onBlackRetro = Screenshot.rect(options.rect)
+	trove:Add(function()
+		onBlackRetro:Destroy()
+	end)
 
 	-- capture on retro white
 	fogBackground:setColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
 	local onWhiteRetro = Screenshot.rect(options.rect)
+	trove:Add(function()
+		onWhiteRetro:Destroy()
+	end)
 
 	-- remove background & alpha bleed
 	local capture = Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, colorCorrection)

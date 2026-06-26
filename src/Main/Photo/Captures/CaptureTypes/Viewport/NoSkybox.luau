@@ -1,7 +1,6 @@
 local Lighting = game:GetService("Lighting") :: Lighting
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local Image = require(pluginRoot.Utilities.Image)
 local Trove = require(pluginRoot.Packages.Trove)
 
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
@@ -14,7 +13,7 @@ local SceneControl = require(photoRoot.SceneControl)
 local capturesRoot = script:FindFirstAncestor("Captures")
 local Composers = require(capturesRoot.Composers)
 
-local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove): ...Image.Image
+local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove)
 	if Lighting:FindFirstChildWhichIsA("Atmosphere") then
 		error("WARN: Skybox cannot be removed when Atmosphere is present.", 0)
 	end
@@ -30,12 +29,15 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 		fogBackground:Destroy()
 	end))
 
-	local gradedOnBlack: Image.Image?
+	local gradedOnBlack
 	if SceneControl.isGradedLightingRequired() or Lighting.ExposureCompensation ~= 0 then
 		local undoGradedLighting = trove:Add(SceneControl.applyGradedLighting())
 
 		SceneControl.yieldUntilNextFrame()
 		gradedOnBlack = Screenshot.rect(options.rect)
+		trove:Add(function()
+			gradedOnBlack:Destroy()
+		end)
 
 		undoGradedLighting()
 	end
@@ -46,11 +48,17 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	-- capture on retro black
 	SceneControl.yieldUntilNextFrame()
 	local onBlackRetro = Screenshot.rect(options.rect)
+	trove:Add(function()
+		onBlackRetro:Destroy()
+	end)
 
 	-- capture on retro white
 	fogBackground:setColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
 	local onWhiteRetro = Screenshot.rect(options.rect)
+	trove:Add(function()
+		onWhiteRetro:Destroy()
+	end)
 
 	local capture = Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, colorCorrection)
 	if options.alphaBleed then

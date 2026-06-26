@@ -1,5 +1,4 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local Image = require(pluginRoot.Utilities.Image)
 local Sift = require(pluginRoot.Packages.Sift)
 
 local State = require(pluginRoot.Main.State)
@@ -10,7 +9,7 @@ local Types = require(pluginRoot.Main.Bindings.Interface.Types)
 local ticket = 0
 local ticketLookup = {}
 
-local function wrap<T...>(callback: (T...) -> ...Image.Image)
+local function wrap<T...>(callback: (T...) -> ...EditableImage)
 	ticket = ticket + 1
 	local myTicket = ticket
 
@@ -22,7 +21,7 @@ local function wrap<T...>(callback: (T...) -> ...Image.Image)
 	return wrapped
 end
 
-local function getOrder<T...>(exported: { [string]: (T...) -> { Image.Image } })
+local function getOrder<T...>(exported: { [string]: (T...) -> { EditableImage } })
 	local order = Sift.Dictionary.keys(exported)
 	table.sort(order, function(a, b)
 		return ticketLookup[exported[a]] < ticketLookup[exported[b]]
