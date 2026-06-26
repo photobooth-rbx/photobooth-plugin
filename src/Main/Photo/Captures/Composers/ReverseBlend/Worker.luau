@@ -1,19 +1,8 @@
 --!optimize 2
 
 local COMPARE_MARGIN = 0
-
-local WHITE = { 255, 255, 255, 255 }
-local BLACK = { 0, 0, 0, 255 }
-
-@native
-local function compareByMargin(a: { number }, b: { number }, margin: number): boolean
-	-- stylua: ignore
-	return (
-			math.abs(a[1] - b[1]) <= margin 
-		and math.abs(a[2] - b[2]) <= margin
-		and math.abs(a[3] - b[3]) <= margin
-	)
-end
+local WHITE = 0xFFFFFFFF
+local BLACK = 0x000000FF
 
 @native
 local function worker(
@@ -40,6 +29,13 @@ local function worker(
 	for i = 1, width * height do
 		local j = (i - 1) * 4
 
+		if buffer.readu32(whiteRetroBuffer, j + 0) == WHITE and buffer.readu32(blackRetroBuffer, j + 0) == BLACK then
+			-- in both samples the pixels match their backgrounds perfectly
+			-- this means that this pixel is guaranteed to be a background pixel
+			buffer.writeu32(blackBuffer, j + 0, 0)
+			continue
+		end
+
 		local white = {
 			buffer.readu8(whiteRetroBuffer, j + 0),
 			buffer.readu8(whiteRetroBuffer, j + 1),
@@ -54,13 +50,6 @@ local function worker(
 			buffer.readu8(blackRetroBuffer, j + 3),
 		}
 
-		if compareByMargin(white, WHITE, 0) and compareByMargin(black, BLACK, 0) then
-			-- in both samples the pixels match their backgrounds perfectly
-			-- this means that this pixel is guaranteed to be a background pixel
-			buffer.writeu32(blackBuffer, j + 0, 0)
-			continue
-		end
-
 		local rgba = {
 			buffer.readu8(blackBuffer, j + 0),
 			buffer.readu8(blackBuffer, j + 1),
@@ -68,7 +57,13 @@ local function worker(
 			buffer.readu8(blackBuffer, j + 3),
 		}
 
-		if not compareByMargin(white, black, COMPARE_MARGIN) then
+		local isNearMargin = (
+			math.abs(white[1] - black[1]) <= COMPARE_MARGIN
+			and math.abs(white[2] - black[2]) <= COMPARE_MARGIN
+			and math.abs(white[3] - black[3]) <= COMPARE_MARGIN
+		)
+
+		if not isNearMargin then
 			-- the pixels differ between the two versions of the image
 			-- this means their must be some alpha we have to calculate
 			local maxAlpha = 0
