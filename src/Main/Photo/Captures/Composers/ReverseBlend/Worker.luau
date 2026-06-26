@@ -82,6 +82,12 @@ local function worker(
 			end
 
 			rgba[4] = maxAlpha
+		else
+			-- the pixel is identical on both backgrounds, its color is simply the
+			-- observed value, just normalized to [0, 1]
+			for k = 1, 4 do
+				rgba[k] = rgba[k] / 255
+			end
 		end
 
 		-- color correction
