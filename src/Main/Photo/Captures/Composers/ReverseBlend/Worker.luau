@@ -37,7 +37,7 @@ local function worker(
 	local blackRetroBuffer = onBlackRetro:ReadPixelsBuffer(rect.Min, rectSize)
 	local blackBuffer = if onBlack then onBlack:ReadPixelsBuffer(rect.Min, rectSize) else blackRetroBuffer
 
-	for i = 1, width * height * 4 do
+	for i = 1, width * height do
 		local j = (i - 1) * 4
 
 		local white = {
@@ -57,7 +57,7 @@ local function worker(
 		if compareByMargin(white, WHITE, 0) and compareByMargin(black, BLACK, 0) then
 			-- in both samples the pixels match their backgrounds perfectly
 			-- this means that this pixel is guaranteed to be a background pixel
-			buffer.writeu8(blackBuffer, j + 3, 0)
+			buffer.writeu32(blackBuffer, j + 0, 0)
 			continue
 		end
 
@@ -78,7 +78,7 @@ local function worker(
 			end
 
 			for k = 1, 3 do
-				rgba[k] = math.clamp((rgba[k] / maxAlpha) / 255, 0, 1)
+				rgba[k] = math.clamp(rgba[k] / (maxAlpha * 255), 0, 1)
 			end
 
 			rgba[4] = maxAlpha
@@ -101,7 +101,7 @@ local function worker(
 		buffer.writeu8(blackBuffer, j + 3, rgba[4] * 255)
 	end
 
-	return buffer.create(0)
+	return blackBuffer
 end
 
 return worker
