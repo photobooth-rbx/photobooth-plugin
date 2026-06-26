@@ -5,7 +5,7 @@ local RectSlicer = require(pluginRoot.Utilities.RectSlicer)
 local ACTOR_COUNT = 32
 
 script:SetAttribute("ActorCount", ACTOR_COUNT)
-script:SetAttribute("JFAPlusOne", false)
+script:SetAttribute("JFAPlusOne", true)
 
 local PlantSeeds = require(script.PlantSeeds)
 local JFAPasses = require(script.JFAPasses)
