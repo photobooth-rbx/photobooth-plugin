@@ -3,7 +3,8 @@ local RunService = game:GetService("RunService") :: RunService
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioMode = require(pluginRoot.Utilities.StudioMode)
 local Constants = require(pluginRoot.Constants)
-local State = require(pluginRoot.Main.State)
+
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local Plugin = {}
 
@@ -29,8 +30,9 @@ local function updateScaleOS()
 	local Screenshot = require(pluginRoot.Main.Photo.Captures.Screenshot)
 	local scale = Screenshot.calculateScaleOS()
 
-	State.mutate(function(state)
-		state.temporary.scaleOS = scale
+	StateManager.temporary:update()(function(state)
+		state.scaleOS = scale
+		return state
 	end)
 
 	if DISPLAY_SCALE_WARNING and not (scale.X == 1 and scale.Y == 1) then
@@ -43,6 +45,33 @@ local function updateScaleOS()
 	end
 end
 
+local function updateExperimentalMode()
+	local experimentalModeEnabled = StateManager.saved:get().experimentalModeEnabled
+	if not Constants.AllowExperimentalMode then
+		experimentalModeEnabled = false
+	end
+
+	StateManager.saved:update()(function(state)
+		state.experimentalModeEnabled = experimentalModeEnabled
+		return state
+	end)
+
+	StateManager.temporary:update()(function(state)
+		if Constants.AllowExperimentalMode then
+			-- we set this one time at session start so that it remains constant for the entire session
+			-- you can toggle this value in the settings, but then need to restart photobooth for changes to occur
+			if StudioMode.isTeamCreate() then
+				state.isExperimentalMode = false
+			else
+				state.isExperimentalMode = experimentalModeEnabled
+			end
+		else
+			state.isExperimentalMode = false
+		end
+		return state
+	end)
+end
+
 -- Public
 
 function Plugin.build(plugin: Plugin)
@@ -50,21 +79,8 @@ function Plugin.build(plugin: Plugin)
 		return
 	end
 
-	State.setup(plugin)
-	State.mutate(function(state)
-		if Constants.AllowExperimentalMode then
-			-- we set this one time at session start so that it remains constant for the entire session
-			-- you can toggle this value in the settings, but then need to restart photobooth for changes to occur
-			if StudioMode.isTeamCreate() then
-				state.temporary.isExperimentalMode = false
-			else
-				state.temporary.isExperimentalMode = state.saved.experimentalModeEnabled
-			end
-		else
-			state.temporary.isExperimentalMode = false
-			state.saved.experimentalModeEnabled = false
-		end
-	end)
+	StateManager.initPluginSaving(plugin)
+	updateExperimentalMode()
 
 	-- load the modules after the state has been setup
 	local UserInterface = require(pluginRoot.Main.UserInterface)
