@@ -15,7 +15,7 @@ local Trove = require(pluginRoot.Packages.Trove)
 local Constants = require(pluginRoot.Constants)
 local Wally = require(pluginRoot.Wally)
 
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 local Photo = require(pluginRoot.Main.Photo)
 
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
@@ -74,8 +74,8 @@ function UserInterface.mountCaptureUI(plugin: Plugin, toolbar: PluginToolbar)
 	end)
 
 	local clickConnection = captureButton.Click:Connect(function()
-		if selection and not State.read().temporary.isCapturing then
-			local captureTypeIndex = State.read().temporary.uiCaptureTypeIndex
+		if selection and not StateManager.temporary:get().isCapturing then
+			local captureTypeIndex = StateManager.temporary:get().uiCaptureTypeIndex
 			local captureType = assert(Captures.UserInterface.Order[captureTypeIndex], "No capture type found")
 
 			local captures = Photo.captureUI({
@@ -132,7 +132,7 @@ function UserInterface.mountCaptureViewport(plugin: Plugin, toolbar: PluginToolb
 
 		local updatePrevCaptureRectRef = React.useCallback(function()
 			local captureRect = captureRectRef.current
-			if not State.read().temporary.isFullscreen and captureRect then
+			if not StateManager.temporary:get().isFullscreen and captureRect then
 				prevCaptureRectRef.current = captureRect
 			end
 		end, {})
@@ -150,7 +150,7 @@ function UserInterface.mountCaptureViewport(plugin: Plugin, toolbar: PluginToolb
 		end, { isEnabled })
 
 		local onCapture = React.useCallback(function(rect: Rect)
-			local captureTypeIndex = State.read().temporary.viewportCaptureTypeIndex
+			local captureTypeIndex = StateManager.temporary:get().viewportCaptureTypeIndex
 			local captureType = assert(Captures.Viewport.Order[captureTypeIndex], "No capture type found")
 
 			local trove = Trove.new()
@@ -174,8 +174,9 @@ function UserInterface.mountCaptureViewport(plugin: Plugin, toolbar: PluginToolb
 			local prevRect = prevCaptureRectRef.current
 			updatePrevCaptureRectRef()
 			captureRectRef.current = prevRect
-			State.mutate(function(state)
-				state.temporary.isFullscreen = not state.temporary.isFullscreen
+			StateManager.temporary:update()(function(state)
+				state.isFullscreen = not state.isFullscreen
+				return state
 			end)
 		end, {})
 
@@ -284,8 +285,9 @@ function UserInterface.mountGallery(plugin: Plugin, toolbar: PluginToolbar)
 			and React.createElement(Gallery, {
 				IsExpanded = galleryListExpanded,
 				SetIsExpanded = function()
-					State.mutate(function(state)
-						state.saved.galleryListExpanded = not state.saved.galleryListExpanded
+					StateManager.saved:update()(function(state)
+						state.galleryListExpanded = not state.galleryListExpanded
+						return state
 					end)
 				end,
 
@@ -353,15 +355,15 @@ function UserInterface.mountGallery(plugin: Plugin, toolbar: PluginToolbar)
 end
 
 function UserInterface.mountBlackout(plugin: Plugin)
-	Blackout.setDisabled("default", not State.read().temporary.isBlackoutMode)
-	local disconnect = State.onChanged(function(path)
-		if path[1] == "temporary" and path[2] == "isBlackoutMode" then
-			Blackout.setDisabled("default", not State.read().temporary.isBlackoutMode)
-		end
-	end)
+	local function refreshBlackout()
+		Blackout.setDisabled("default", not StateManager.temporary:get().isBlackoutMode)
+	end
+
+	refreshBlackout()
+	local connection = StateManager.temporary:onChanged(refreshBlackout)
 
 	plugin.Unloading:Connect(function()
-		disconnect()
+		connection:Disconnect()
 		Blackout.reset()
 	end)
 end

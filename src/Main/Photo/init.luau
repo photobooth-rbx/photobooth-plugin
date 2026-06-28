@@ -10,7 +10,7 @@ local Timeout = require(pluginRoot.Utilities.Timeout)
 local Image = require(pluginRoot.Utilities.Image)
 
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local SceneControl = require(script.SceneControl)
 local Blackout = require(script.Tools.Blackout)
@@ -21,16 +21,18 @@ local Photo = {}
 -- Private
 
 local function createIsCapturingTrove()
-	assert(not State.read().temporary.isCapturing, "A capture is already in progress.")
+	assert(not StateManager.temporary:get().isCapturing, "A capture is already in progress.")
 
-	State.mutate(function(state)
-		state.temporary.isCapturing = true
+	StateManager.temporary:update()(function(state)
+		state.isCapturing = true
+		return state
 	end)
 
 	local trove = Trove.new()
 	trove:Add(function()
-		State.mutate(function(state)
-			state.temporary.isCapturing = false
+		StateManager.temporary:update()(function(state)
+			state.isCapturing = false
+			return state
 		end)
 	end)
 
@@ -87,7 +89,7 @@ end
 function Photo.captureUI(options: Types.CaptureUIOptions)
 	options = Sift.Dictionary.merge({
 		delay = 0,
-		alphaBleed = State.read().saved.alphaBleedingEnabled,
+		alphaBleed = StateManager.saved:get().alphaBleedingEnabled,
 	}, options)
 
 	local processor = Captures.UserInterface.Processors[options.type]
@@ -121,7 +123,7 @@ end
 function Photo.captureViewport(options: Types.CaptureViewportOptions)
 	options = Sift.Dictionary.merge({
 		delay = 0,
-		alphaBleed = State.read().saved.alphaBleedingEnabled,
+		alphaBleed = StateManager.saved:get().alphaBleedingEnabled,
 	}, options)
 
 	local processor = Captures.Viewport.Processors[options.type]

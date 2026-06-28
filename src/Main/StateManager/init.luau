@@ -14,6 +14,11 @@ local DEFAULT_TEMPORARY = {
 	viewportCaptureTypeIndex = 1,
 }
 
+export type State = {
+	saved: SaveVersions.Deserialized,
+	temporary: typeof(DEFAULT_TEMPORARY),
+}
+
 local State = {}
 
 State.saved = ObservableValue.new(SaveVersions.default())

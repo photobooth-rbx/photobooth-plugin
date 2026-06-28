@@ -12,7 +12,7 @@ local Constants = require(pluginRoot.Constants)
 
 local Screenshot = require(pluginRoot.Main.Photo.Captures.Screenshot)
 local Captures = require(pluginRoot.Main.Photo.Captures)
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local VerticalScroll = require(uiRoot.Components.Shared.VerticalScroll)
@@ -34,8 +34,8 @@ export type Props = {
 
 type GroupsProps = {
 	RootProps: Props,
-	State: State.State,
-	MutateState: ((State.State) -> ()) -> (),
+	State: StateManager.State,
+	MutateState: ((StateManager.State) -> ()) -> (),
 	LayoutOrder: number,
 }
 
@@ -338,7 +338,15 @@ local function ConfigurationWindow(props: Props)
 	local isLocalPlugin = Hooks.useIsLocalPlugin()
 
 	local state = Hooks.useState()
-	local mutateState = React.useCallback(State.mutate, {})
+	local mutateState = React.useCallback(function(callback: (StateManager.State) -> ())
+		local snapshot: StateManager.State = {
+			saved = table.clone(StateManager.saved:get()),
+			temporary = table.clone(StateManager.temporary:get()),
+		}
+		callback(snapshot)
+		StateManager.saved:set(snapshot.saved)
+		StateManager.temporary:set(snapshot.temporary)
+	end, {})
 
 	local scrollTransparency, setScrollTransparency = useScrollTransparency()
 

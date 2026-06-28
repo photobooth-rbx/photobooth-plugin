@@ -4,7 +4,7 @@ local React = require(pluginRoot.Packages.React)
 
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
 local Constants = require(pluginRoot.Constants)
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
@@ -438,7 +438,7 @@ return function(props: Props)
 	React.useEffect(function()
 		local viewportFrame = viewportRef.current
 		if viewportFrame then
-			local scaleOS = State.read().temporary.scaleOS
+			local scaleOS = StateManager.temporary:get().scaleOS
 			local absSize = viewportFrame.AbsoluteSize
 			local absPosition = viewportFrame.AbsolutePosition
 

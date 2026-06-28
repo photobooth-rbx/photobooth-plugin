@@ -1,7 +1,7 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Signal = require(pluginRoot.Packages.Signal)
 local Trove = require(pluginRoot.Packages.Trove)
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local photoRoot = script:FindFirstAncestor("Photo")
 local Screenshot = require(photoRoot.Captures.Screenshot)
@@ -75,7 +75,7 @@ end
 -- Static
 
 function UIHiderStatic.isViewportAppExcluded(rect: Rect)
-	local scaleOS = State.read().temporary.scaleOS
+	local scaleOS = StateManager.temporary:get().scaleOS
 	return not Screenshot.isFullscreenRect(rect) and Screenshot.isUnitScaleOS(scaleOS)
 end
 

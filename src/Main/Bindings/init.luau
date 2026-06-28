@@ -4,7 +4,7 @@ local ServerStorage = game:GetService("ServerStorage") :: ServerStorage
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Trove = require(pluginRoot.Packages.Trove)
 
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local Bindings = {}
 local trove = Trove.new()
@@ -92,9 +92,9 @@ end
 -- Public
 
 function Bindings.setup(plugin: Plugin)
-	setEnabled(plugin, State.read().saved.bindingsEnabled)
-	local disconnect = State.onChanged(function()
-		setEnabled(plugin, State.read().saved.bindingsEnabled)
+	setEnabled(plugin, StateManager.saved:get().bindingsEnabled)
+	local connection = StateManager.saved:onChanged(function()
+		setEnabled(plugin, StateManager.saved:get().bindingsEnabled)
 	end)
 
 	local camera = Instance.new("Camera")
@@ -115,7 +115,7 @@ function Bindings.setup(plugin: Plugin)
 	plugin.Unloading:Connect(function()
 		connectBinding:Destroy()
 		camera:Destroy()
-		disconnect()
+		connection:Disconnect()
 		setEnabled(plugin, false)
 	end)
 end

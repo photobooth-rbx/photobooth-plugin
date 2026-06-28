@@ -2,7 +2,7 @@ local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Image = require(pluginRoot.Utilities.Image)
 local Sift = require(pluginRoot.Packages.Sift)
 
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
 
 -- Private
@@ -46,7 +46,7 @@ local captureTypes = {
 	},
 }
 
-if State.read().temporary.isExperimentalMode then
+if StateManager.temporary:get().isExperimentalMode then
 	captureTypes.Viewport.Experimental_NSB_A1 = wrap(require(script.CaptureTypes.Viewport.Experimental_NSB_A1))
 end
 
