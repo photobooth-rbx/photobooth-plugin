@@ -23,7 +23,6 @@ local Blackout = require(pluginRoot.Main.Photo.Tools.Blackout)
 local UIHider = require(pluginRoot.Main.Photo.Tools.UIHider)
 local Captures = require(pluginRoot.Main.Photo.Captures)
 
-local Hooks = require(script.Hooks)
 local Icons = require(script.Icons)
 
 local Gallery = require(script.Components.Gallery)
