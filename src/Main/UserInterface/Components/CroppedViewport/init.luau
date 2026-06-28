@@ -213,8 +213,8 @@ export type Props = {
 
 local function CroppedViewport(props: Props & { ViewportRect: Rect, CaptureRectRef: { current: Rect } })
 	local theme = StudioComponents.useTheme()
-	local scaleOS = Hooks.useStatePath(function(state)
-		return state.temporary.scaleOS
+	local scaleOS = StateManager.temporary:useSpecific()(function(state)
+		return state.scaleOS
 	end)
 
 	local isCropMode, setIsCropMode = React.useState(false)

@@ -34,8 +34,6 @@ export type Props = {
 
 type GroupsProps = {
 	RootProps: Props,
-	State: StateManager.State,
-	MutateState: ((StateManager.State) -> ()) -> (),
 	LayoutOrder: number,
 }
 
@@ -46,6 +44,9 @@ type DropdownItemDetail = {
 
 local function GeneralGroup(props: GroupsProps)
 	local theme = StudioComponents.useTheme()
+
+	local savedState = StateManager.saved:use()
+	local temporaryState = StateManager.temporary:use()
 
 	local isRefreshing, setIsRefreshing = React.useState(false)
 	local refreshHovered, setRefreshHovered = React.useState(false)
@@ -77,8 +78,9 @@ local function GeneralGroup(props: GroupsProps)
 					[React.Event.Activated] = function()
 						if not isRefreshing then
 							setIsRefreshing(true)
-							props.MutateState(function(state)
-								state.temporary.scaleOS = Screenshot.calculateScaleOS()
+							StateManager.temporary:update()(function(state)
+								state.scaleOS = Screenshot.calculateScaleOS()
+								return state
 							end)
 							setIsRefreshing(false)
 						end
@@ -95,9 +97,7 @@ local function GeneralGroup(props: GroupsProps)
 						Disabled = true,
 						Size = UDim2.fromScale(1, 1),
 						TextXAlignment = Enum.TextXAlignment.Left,
-						Text = if isRefreshing
-							then "..."
-							else `{props.State.temporary.scaleOS.X}, {props.State.temporary.scaleOS.Y}`,
+						Text = if isRefreshing then "..." else `{temporaryState.scaleOS.X}, {temporaryState.scaleOS.Y}`,
 					}),
 					Refresh = React.createElement("ImageLabel", {
 						AnchorPoint = Vector2.new(1, 0.5),
@@ -128,10 +128,11 @@ local function GeneralGroup(props: GroupsProps)
 					Checkbox = React.createElement(StudioComponents.Checkbox, {
 						Disabled = props.RootProps.Disabled,
 						Size = UDim2.fromScale(1, 1),
-						Value = props.State.saved.alphaBleedingEnabled,
+						Value = savedState.alphaBleedingEnabled,
 						OnChanged = function()
-							props.MutateState(function(state)
-								state.saved.alphaBleedingEnabled = not state.saved.alphaBleedingEnabled
+							StateManager.saved:update()(function(state)
+								state.alphaBleedingEnabled = not state.alphaBleedingEnabled
+								return state
 							end)
 						end,
 					}),
@@ -149,10 +150,11 @@ local function GeneralGroup(props: GroupsProps)
 					Checkbox = React.createElement(StudioComponents.Checkbox, {
 						Disabled = props.RootProps.Disabled,
 						Size = UDim2.fromScale(1, 1),
-						Value = props.State.saved.bindingsEnabled,
+						Value = savedState.bindingsEnabled,
 						OnChanged = function()
-							props.MutateState(function(state)
-								state.saved.bindingsEnabled = not state.saved.bindingsEnabled
+							StateManager.saved:update()(function(state)
+								state.bindingsEnabled = not state.bindingsEnabled
+								return state
 							end)
 						end,
 					}),
@@ -163,7 +165,8 @@ local function GeneralGroup(props: GroupsProps)
 end
 
 local function ViewportGroup(props: GroupsProps)
-	local captureTypeIndex = props.State.temporary.viewportCaptureTypeIndex
+	local temporaryState = StateManager.temporary:use()
+
 	local dropdownItems = React.useMemo(function()
 		local items: { DropdownItemDetail } = {}
 		for i, captureType in Captures.Viewport.Order do
@@ -193,10 +196,11 @@ local function ViewportGroup(props: GroupsProps)
 					Checkbox = React.createElement(StudioComponents.Checkbox, {
 						Disabled = props.RootProps.Disabled,
 						Size = UDim2.fromScale(1, 1),
-						Value = props.State.temporary.isBlackoutMode,
+						Value = temporaryState.isBlackoutMode,
 						OnChanged = function()
-							props.MutateState(function(state)
-								state.temporary.isBlackoutMode = not state.temporary.isBlackoutMode
+							StateManager.temporary:update()(function(state)
+								state.isBlackoutMode = not state.isBlackoutMode
+								return state
 							end)
 						end,
 					}),
@@ -214,10 +218,11 @@ local function ViewportGroup(props: GroupsProps)
 					Checkbox = React.createElement(StudioComponents.Checkbox, {
 						Disabled = props.RootProps.Disabled,
 						Size = UDim2.fromScale(1, 1),
-						Value = props.State.temporary.isFullscreen,
+						Value = temporaryState.isFullscreen,
 						OnChanged = function()
-							props.MutateState(function(state)
-								state.temporary.isFullscreen = not state.temporary.isFullscreen
+							StateManager.temporary:update()(function(state)
+								state.isFullscreen = not state.isFullscreen
+								return state
 							end)
 						end,
 					}),
@@ -231,12 +236,13 @@ local function ViewportGroup(props: GroupsProps)
 						Size = UDim2.new(1, -1, 1, 0),
 						Position = UDim2.fromOffset(1, 0),
 						Items = dropdownItems :: { any },
-						SelectedItem = tostring(captureTypeIndex),
+						SelectedItem = tostring(temporaryState.viewportCaptureTypeIndex),
 						OnItemSelected = function(id: string?)
 							local index = tonumber(id)
 							if index then
-								props.MutateState(function(state)
-									state.temporary.viewportCaptureTypeIndex = index
+								StateManager.temporary:update()(function(state)
+									state.viewportCaptureTypeIndex = index
+									return state
 								end)
 							end
 						end,
@@ -248,7 +254,8 @@ local function ViewportGroup(props: GroupsProps)
 end
 
 local function UserInterfaceGroup(props: GroupsProps)
-	local captureTypeIndex = props.State.temporary.uiCaptureTypeIndex
+	local temporaryState = StateManager.temporary:use()
+
 	local dropdownItems = React.useMemo(function()
 		local items: { DropdownItemDetail } = {}
 		for i, captureType in Captures.UserInterface.Order do
@@ -274,12 +281,13 @@ local function UserInterfaceGroup(props: GroupsProps)
 						Size = UDim2.new(1, -1, 1, 0),
 						Position = UDim2.fromOffset(1, 0),
 						Items = dropdownItems :: { any },
-						SelectedItem = tostring(captureTypeIndex),
+						SelectedItem = tostring(temporaryState.uiCaptureTypeIndex),
 						OnItemSelected = function(id: string?)
 							local index = tonumber(id)
 							if index then
-								props.MutateState(function(state)
-									state.temporary.uiCaptureTypeIndex = index
+								StateManager.temporary:update()(function(state)
+									state.uiCaptureTypeIndex = index
+									return state
 								end)
 							end
 						end,
@@ -291,6 +299,9 @@ local function UserInterfaceGroup(props: GroupsProps)
 end
 
 local function DevGroup(props: GroupsProps)
+	local savedState = StateManager.saved:use()
+	local temporaryState = StateManager.temporary:use()
+
 	return React.createElement(SettingsGroup, {
 		Disabled = props.RootProps.Disabled,
 		LayoutOrder = props.LayoutOrder,
@@ -298,7 +309,7 @@ local function DevGroup(props: GroupsProps)
 		Title = "Developer",
 		List = {
 			{
-				Name = if props.State.temporary.isExperimentalMode == props.State.saved.experimentalModeEnabled
+				Name = if temporaryState.isExperimentalMode == savedState.experimentalModeEnabled
 					then "Experimental"
 					else "Experimental*",
 				Node = React.createElement(React.Fragment, {}, {
@@ -311,10 +322,11 @@ local function DevGroup(props: GroupsProps)
 					Checkbox = React.createElement(StudioComponents.Checkbox, {
 						Disabled = props.RootProps.Disabled,
 						Size = UDim2.fromScale(1, 1),
-						Value = props.State.saved.experimentalModeEnabled,
+						Value = savedState.experimentalModeEnabled,
 						OnChanged = function()
-							props.MutateState(function(state)
-								state.saved.experimentalModeEnabled = not state.saved.experimentalModeEnabled
+							StateManager.saved:update()(function(state)
+								state.experimentalModeEnabled = not state.experimentalModeEnabled
+								return state
 							end)
 						end,
 					}),
@@ -337,21 +349,18 @@ local function ConfigurationWindow(props: Props)
 	local latestVersion = Hooks.useLatestVersion()
 	local isLocalPlugin = Hooks.useIsLocalPlugin()
 
-	local state = Hooks.useState()
-	local mutateState = React.useCallback(function(callback: (StateManager.State) -> ())
-		local snapshot: StateManager.State = {
-			saved = table.clone(StateManager.saved:get()),
-			temporary = table.clone(StateManager.temporary:get()),
-		}
-		callback(snapshot)
-		StateManager.saved:set(snapshot.saved)
-		StateManager.temporary:set(snapshot.temporary)
-	end, {})
+	local isExperimentalMode = StateManager.temporary:useSpecific()(function(state)
+		return state.isExperimentalMode
+	end)
+
+	local experimentalModeEnabled = StateManager.saved:useSpecific()(function(state)
+		return state.experimentalModeEnabled
+	end)
 
 	local scrollTransparency, setScrollTransparency = useScrollTransparency()
 
 	local versionText = `v{Wally.package.version}-{if isLocalPlugin then "local" else "cloud"}`
-	local needsRestart = state.temporary.isExperimentalMode ~= state.saved.experimentalModeEnabled
+	local needsRestart = isExperimentalMode ~= experimentalModeEnabled
 	if needsRestart and Constants.AllowExperimentalMode and not IS_TEAM_CREATE then
 		versionText = "requires restart*\n" .. versionText
 	elseif Semver.validateVersion(Wally.package.version) and Semver.cmp(latestVersion, ">", Wally.package.version) then
@@ -433,26 +442,18 @@ local function ConfigurationWindow(props: Props)
 
 				General = React.createElement(GeneralGroup, {
 					RootProps = props,
-					State = state,
-					MutateState = mutateState,
 					LayoutOrder = 1,
 				}),
 				Viewport = React.createElement(ViewportGroup, {
 					RootProps = props,
-					State = state,
-					MutateState = mutateState,
 					LayoutOrder = 2,
 				}),
 				UserInterface = React.createElement(UserInterfaceGroup, {
 					RootProps = props,
-					State = state,
-					MutateState = mutateState,
 					LayoutOrder = 3,
 				}),
 				Dev = Constants.AllowExperimentalMode and not IS_TEAM_CREATE and React.createElement(DevGroup, {
 					RootProps = props,
-					State = state,
-					MutateState = mutateState,
 					LayoutOrder = 4,
 				}),
 			}),

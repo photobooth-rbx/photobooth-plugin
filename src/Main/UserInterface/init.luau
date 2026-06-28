@@ -117,12 +117,12 @@ function UserInterface.mountCaptureViewport(plugin: Plugin, toolbar: PluginToolb
 	local function ViewportApp(): React.ReactNode?
 		local isEnabled, setIsEnabled = React.useState(false)
 
-		local isCapturing = Hooks.useStatePath(function(state)
-			return state.temporary.isCapturing
+		local isCapturing = StateManager.temporary:useSpecific()(function(state)
+			return state.isCapturing
 		end)
 
-		local isFullscreen = Hooks.useStatePath(function(state)
-			return state.temporary.isFullscreen
+		local isFullscreen = StateManager.temporary:useSpecific()(function(state)
+			return state.isFullscreen
 		end)
 
 		local captureRectRef = React.useRef(RenderRect.fromViewportCenter(workspace.CurrentCamera.ViewportSize / 2))
@@ -253,12 +253,12 @@ function UserInterface.mountGallery(plugin: Plugin, toolbar: PluginToolbar)
 	local function GalleryApp(): React.ReactNode
 		local isEnabled, setIsEnabled = React.useState(dock.Enabled)
 
-		local isCapturing = Hooks.useStatePath(function(state)
-			return state.temporary.isCapturing
+		local isCapturing = StateManager.temporary:useSpecific()(function(state)
+			return state.isCapturing
 		end)
 
-		local galleryListExpanded = Hooks.useStatePath(function(state)
-			return state.saved.galleryListExpanded
+		local galleryListExpanded = StateManager.saved:useSpecific()(function(state)
+			return state.galleryListExpanded
 		end)
 
 		local backgroundType, setBackgroundType = React.useState("Checkerboard")
