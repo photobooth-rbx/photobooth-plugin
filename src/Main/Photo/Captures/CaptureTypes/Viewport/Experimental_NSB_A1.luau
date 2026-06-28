@@ -84,11 +84,13 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	end)
 
 	-- remove background & alpha bleed
-	local capture = Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, colorCorrection)
+	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
+	local capture = errorWatch(Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, colorCorrection))
 	if options.alphaBleed then
-		capture = Composers.alphaBleed(capture)
+		capture = errorWatch(Composers.alphaBleed(capture))
 	end
 
+	markComplete()
 	return capture
 end
 

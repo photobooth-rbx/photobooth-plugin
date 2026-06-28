@@ -44,11 +44,13 @@ local function operation(options: Types.CaptureUIOptions, trove: Trove.Trove)
 	colorCorrection.Brightness = 1
 	trove:Add(colorCorrection)
 
-	local capture = Composers.reverseBlend(onWhite, onBlack, nil, colorCorrection)
+	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
+	local capture = errorWatch(Composers.reverseBlend(onWhite, onBlack, nil, colorCorrection))
 	if options.alphaBleed then
-		capture = Composers.alphaBleed(capture)
+		capture = errorWatch(Composers.alphaBleed(capture))
 	end
 
+	markComplete()
 	return capture
 end
 
