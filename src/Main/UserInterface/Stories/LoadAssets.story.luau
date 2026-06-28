@@ -5,9 +5,6 @@ local StudioComponents = require(pluginRoot.Packages.StudioComponents)
 local ReactRoblox = require(pluginRoot.Packages.ReactRoblox)
 local React = require(pluginRoot.Packages.React)
 
-local State = require(pluginRoot.Main.State)
-State.storybook()
-
 local Photo = require(pluginRoot.Main.Photo)
 
 local LOADED_TAG = "PhotoboothStoryImage"

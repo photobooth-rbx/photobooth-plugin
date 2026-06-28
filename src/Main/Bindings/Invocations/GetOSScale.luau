@@ -1,7 +1,7 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local gt = require(pluginRoot.Packages.GreenTea)
 
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 -- stylua: ignore
 local typechecker = gt.fn(
@@ -10,7 +10,7 @@ local typechecker = gt.fn(
 )
 
 local function callback()
-	return State.read().temporary.scaleOS
+	return StateManager.temporary:get().scaleOS
 end
 
 return {

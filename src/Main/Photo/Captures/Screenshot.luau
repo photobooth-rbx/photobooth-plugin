@@ -4,7 +4,7 @@ local CaptureService = game:GetService("CaptureService") :: CaptureService
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Future = require(pluginRoot.Packages.Future)
 local Constants = require(pluginRoot.Constants)
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local OS_MISMATCH = "OS Scale mismatch. You may need to go into photobooth settings and refresh the OS scale value."
 
@@ -34,7 +34,7 @@ local function screenshot(rect: Rect?)
 		local viewportSize = workspace.CurrentCamera.ViewportSize :: Vector2
 		local scale = editImage.Size / viewportSize
 
-		if scale ~= State.read().temporary.scaleOS then
+		if scale ~= StateManager.temporary:get().scaleOS then
 			error("WARN: " .. OS_MISMATCH, 0)
 		end
 
@@ -73,7 +73,7 @@ function Screenshot.isUnitScaleOS(scaleOS: Vector2)
 end
 
 function Screenshot.isFullscreenRect(rect: Rect)
-	local scaleOS = State.read().temporary.scaleOS
+	local scaleOS = StateManager.temporary:get().scaleOS
 	local viewportSize = workspace.CurrentCamera.ViewportSize :: Vector2
 
 	-- stylua: ignore

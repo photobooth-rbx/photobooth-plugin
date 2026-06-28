@@ -3,6 +3,8 @@ local StudioComponents = require(pluginRoot.Packages.StudioComponents)
 local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
+local StateManager = require(pluginRoot.Main.StateManager)
+
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local BaseButton = require(uiRoot.Components.Shared.BaseButton)
 local Hooks = require(uiRoot.Hooks)
@@ -20,8 +22,8 @@ local function ActionBar(props: Props)
 	local minimizeIcon = assert(Lucide.GetAsset("minimize", 16))
 
 	local theme = StudioComponents.useTheme()
-	local scaleOS = Hooks.useStatePath(function(state)
-		return state.temporary.scaleOS
+	local scaleOS = StateManager.temporary:useSpecific()(function(state)
+		return state.scaleOS
 	end)
 
 	local underFrameRef = React.useRef(nil)

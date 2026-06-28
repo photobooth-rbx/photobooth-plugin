@@ -9,7 +9,7 @@ local Sift = require(pluginRoot.Packages.Sift)
 local Timeout = require(pluginRoot.Utilities.Timeout)
 
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local SceneControl = require(script.SceneControl)
 local Blackout = require(script.Tools.Blackout)
@@ -20,16 +20,18 @@ local Photo = {}
 -- Private
 
 local function createIsCapturingTrove()
-	assert(not State.read().temporary.isCapturing, "A capture is already in progress.")
+	assert(not StateManager.temporary:get().isCapturing, "A capture is already in progress.")
 
-	State.mutate(function(state)
-		state.temporary.isCapturing = true
+	StateManager.temporary:update()(function(state)
+		state.isCapturing = true
+		return state
 	end)
 
 	local trove = Trove.new()
 	trove:Add(function()
-		State.mutate(function(state)
-			state.temporary.isCapturing = false
+		StateManager.temporary:update()(function(state)
+			state.isCapturing = false
+			return state
 		end)
 	end)
 
@@ -52,10 +54,10 @@ local function getQuadMeshPartTemplate()
 		local n2 = editMesh:AddNormal(Vector3.new(0, 0, -1))
 		local n3 = editMesh:AddNormal(Vector3.new(0, 0, -1))
 
-		local uv0 = editMesh:AddUV(Vector2.new(0, 0))
-		local uv1 = editMesh:AddUV(Vector2.new(1, 0))
-		local uv2 = editMesh:AddUV(Vector2.new(1, 1))
-		local uv3 = editMesh:AddUV(Vector2.new(0, 1))
+		local uv0 = editMesh:AddUV(Vector2.new(1, 0))
+		local uv1 = editMesh:AddUV(Vector2.new(0, 0))
+		local uv2 = editMesh:AddUV(Vector2.new(0, 1))
+		local uv3 = editMesh:AddUV(Vector2.new(1, 1))
 
 		local f0 = editMesh:AddTriangle(v0, v1, v2)
 		local f1 = editMesh:AddTriangle(v0, v2, v3)
@@ -86,7 +88,7 @@ end
 function Photo.captureUI(options: Types.CaptureUIOptions)
 	options = Sift.Dictionary.merge({
 		delay = 0,
-		alphaBleed = State.read().saved.alphaBleedingEnabled,
+		alphaBleed = StateManager.saved:get().alphaBleedingEnabled,
 	}, options)
 
 	local processor = Captures.UserInterface.Processors[options.type]
@@ -120,7 +122,7 @@ end
 function Photo.captureViewport(options: Types.CaptureViewportOptions)
 	options = Sift.Dictionary.merge({
 		delay = 0,
-		alphaBleed = State.read().saved.alphaBleedingEnabled,
+		alphaBleed = StateManager.saved:get().alphaBleedingEnabled,
 	}, options)
 
 	local processor = Captures.Viewport.Processors[options.type]

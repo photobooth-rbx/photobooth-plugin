@@ -66,6 +66,13 @@ function SaveVersions.load(saved: Saved): Deserialized
 	return SaveVersions.latest.deserialize(serialized)
 end
 
+function SaveVersions.default()
+	return SaveVersions.load({
+		version = SaveVersions.latest.version,
+		serialized = {},
+	})
+end
+
 --
 
 init()

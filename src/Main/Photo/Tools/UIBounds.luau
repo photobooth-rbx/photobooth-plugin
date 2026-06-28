@@ -1,6 +1,6 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local ALWAYS_CLIPPED = true
 local ALWAYS_CLIP_TEXT = true
@@ -71,7 +71,7 @@ function UIBoundsClass._createSurface(self: UIBounds, parent: Instance)
 	local layerCollector = self.subject:FindFirstAncestorWhichIsA("LayerCollector")
 	local zIndexBehavior = if layerCollector then layerCollector.ZIndexBehavior else Enum.ZIndexBehavior.Sibling
 
-	local canvasScale = State.read().temporary.scaleOS / self.scale
+	local canvasScale = StateManager.temporary:get().scaleOS / self.scale
 	local canvasSize = viewportSize * canvasScale
 
 	local surfaceGui = Instance.new("SurfaceGui")

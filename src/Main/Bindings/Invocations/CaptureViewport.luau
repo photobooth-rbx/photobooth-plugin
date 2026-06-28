@@ -5,7 +5,7 @@ local Sift = require(pluginRoot.Packages.Sift)
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
 local Captures = require(pluginRoot.Main.Photo.Captures)
 local Camera = require(pluginRoot.Utilities.Camera)
-local State = require(pluginRoot.Main.State)
+local StateManager = require(pluginRoot.Main.StateManager)
 local Photo = require(pluginRoot.Main.Photo)
 
 local captureTypeLiterals = Sift.Array.map(Captures.Viewport.Order, function(value)
@@ -27,7 +27,7 @@ local typechecker = gt.fn(
 )
 
 local function callback(options: typeof(gtOptions))
-	local scaleOS = State.read().temporary.scaleOS
+	local scaleOS = StateManager.temporary:get().scaleOS
 	local captureScale = options.scale or Vector2.new(1, 1)
 
 	local camera = workspace.CurrentCamera
