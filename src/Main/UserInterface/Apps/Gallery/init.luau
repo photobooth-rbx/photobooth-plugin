@@ -107,11 +107,14 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 				BackgroundType = backgroundType,
 				SetBackgroundType = setBackgroundType,
 
-				TryUpload = function(_i, name, editImage)
+				TryUpload = function(_i, name, editImage, creator)
 					local result: Enum.CreateAssetResult
 					local value: number | string
 
 					result, value = AssetService:CreateAssetAsync(editImage, Enum.AssetType.Image, {
+						CreatorId = creator.Id,
+						CreatorType = creator.Type,
+
 						Name = name,
 						Description = table.concat({
 							"Uploaded with the Photobooth plugin.",
@@ -130,6 +133,9 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 					warn(value :: string)
 					return nil
 				end,
+				TestCreator = function(creator)
+					return creator.Id > 0
+				end,
 				OnUploadComplete = function(completed)
 					local module = Instance.new("ModuleScript")
 					module.Name = `{DateTime.now():ToIsoDate()} - Photobooth Upload`
@@ -145,11 +151,6 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 
 					ScriptEditorService:OpenScriptDocumentAsync(module)
 					SelectionService:Set({ module })
-				end,
-
-				OnImport = function()
-					local result = Photo.importFiles(StarterGui)
-					SelectionService:Set(result :: { any })
 				end,
 
 				Disabled = isCapturing,
