@@ -7,7 +7,9 @@ local uiRoot = script:FindFirstAncestor("UserInterface")
 return {
 	name = "Photobooth",
 	storyRoots = {
-		uiRoot.Apps,
+		uiRoot.Apps.Gallery.Components.Gallery,
+		uiRoot.Apps.Viewport.Components.CroppedViewport,
+		uiRoot.Apps.Viewport.Components.FullViewport,
 		uiRoot.Stories.Debug,
 	},
 	packages = {
