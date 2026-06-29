@@ -5,7 +5,7 @@ local React = require(pluginRoot.Packages.React)
 local Constants = require(pluginRoot.Constants)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local LucideButton = require(uiRoot.Components.Shared.LucideButton)
+local LucideButton = require(uiRoot.Components.LucideButton)
 
 local useImageControls = require(script.Parent.ImageInterface.useImageControls)
 

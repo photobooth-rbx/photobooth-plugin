@@ -5,7 +5,7 @@ local Trove = require(pluginRoot.Packages.Trove)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local VerticalScroll = require(uiRoot.Components.Shared.VerticalScroll)
+local VerticalScroll = require(uiRoot.Components.VerticalScroll)
 local Hooks = require(uiRoot.Hooks)
 
 local UploadLineItem = require(script.UploadLineItem)

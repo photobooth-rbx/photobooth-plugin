@@ -5,7 +5,7 @@ local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local LucideButton = require(uiRoot.Components.Shared.LucideButton)
+local LucideButton = require(uiRoot.Components.LucideButton)
 local Hooks = require(uiRoot.Hooks)
 
 local OUTLINE_THICKNESS = 1

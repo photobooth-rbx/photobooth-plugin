@@ -4,7 +4,7 @@ local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local VerticalScroll = require(uiRoot.Components.Shared.VerticalScroll)
+local VerticalScroll = require(uiRoot.Components.VerticalScroll)
 local Hooks = require(uiRoot.Hooks)
 
 local UPLOAD_ICON = assert(Lucide.GetAsset("upload", 16))

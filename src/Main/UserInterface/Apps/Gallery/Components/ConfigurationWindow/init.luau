@@ -15,7 +15,7 @@ local Captures = require(pluginRoot.Main.Photo.Captures)
 local StateManager = require(pluginRoot.Main.StateManager)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local VerticalScroll = require(uiRoot.Components.Shared.VerticalScroll)
+local VerticalScroll = require(uiRoot.Components.VerticalScroll)
 local Hooks = require(uiRoot.Hooks)
 
 local SettingsGroup = require(script.SettingsGroup)

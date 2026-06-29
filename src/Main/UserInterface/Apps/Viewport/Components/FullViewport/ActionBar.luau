@@ -6,7 +6,7 @@ local React = require(pluginRoot.Packages.React)
 local StateManager = require(pluginRoot.Main.StateManager)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local BaseButton = require(uiRoot.Components.Shared.BaseButton)
+local BaseButton = require(uiRoot.Components.BaseButton)
 local Hooks = require(uiRoot.Hooks)
 
 export type Props = {

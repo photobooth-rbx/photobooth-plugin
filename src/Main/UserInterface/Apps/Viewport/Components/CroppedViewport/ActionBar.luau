@@ -4,7 +4,7 @@ local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local BaseButton = require(uiRoot.Components.Shared.BaseButton)
+local BaseButton = require(uiRoot.Components.BaseButton)
 local Hooks = require(uiRoot.Hooks)
 
 type Props = {
