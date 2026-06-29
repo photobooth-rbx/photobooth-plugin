@@ -6,7 +6,8 @@ local React = require(pluginRoot.Packages.React)
 local Studio = settings().Studio
 local themes = Studio:GetAvailableThemes()
 
-local UILabs = require(pluginRoot.DevPackages.UILabs)
+local UILabs = require(game.ReplicatedStorage.DevPackages.UILabs)
+
 local IsStoryContext = require(script.IsStoryContext)
 local useStoryPlugin = require(script.useStoryPlugin)
 

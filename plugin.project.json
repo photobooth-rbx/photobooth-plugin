@@ -12,9 +12,6 @@
 		"Packages": {
 			"$path": "Packages"
 		},
-		"DevPackages": {
-			"$path": { "optional": "DevPackages" }
-		},
 		"Wally": {
 			"$path": "wally.toml"
 		},
