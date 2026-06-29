@@ -1,3 +1,5 @@
+local StudioService = game:GetService("StudioService")
+
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioComponents = require(pluginRoot.Packages.StudioComponents)
 local StudioProperties = require(pluginRoot.Packages.StudioProperties)
@@ -16,6 +18,13 @@ local SEQUENTIAL_UPLOAD = true
 type Output = { { Name: string, AssetId: number } }
 type UploadStatus = "Waiting" | "Queued" | "InProgress" | "Complete" | "Fail" | "Cancel"
 
+export type Creator = {
+	Id: number,
+	Type: Enum.CreatorType,
+}
+
+export type TryUpload = (number, string, EditableImage, Creator) -> number?
+
 export type Props = {
 	AnchorPoint: Vector2,
 	Position: UDim2,
@@ -24,7 +33,7 @@ export type Props = {
 	UploadInfos: { Hooks.EditableImageInfo },
 	SetUploadInfos: ({ Hooks.EditableImageInfo }?) -> (),
 
-	TryUpload: (number, string, EditableImage) -> number?,
+	TryUpload: TryUpload,
 	OnUploadComplete: (Output) -> (),
 
 	OnCancel: () -> (),
@@ -33,7 +42,7 @@ export type Props = {
 }
 
 local function useCreatorTargets()
-	return { "Me" }
+	return { "Me", "Group" }
 end
 
 local function UploadWindow(props: Props)
@@ -41,6 +50,7 @@ local function UploadWindow(props: Props)
 
 	local creatorTargets = useCreatorTargets()
 	local creator, setCreator = React.useState(creatorTargets[1])
+	local groupId, setGroupId = React.useState(0)
 
 	local cancelSignal = Hooks.useConstant(function()
 		return Signal.new() :: Signal.Signal<number>
@@ -191,6 +201,12 @@ local function UploadWindow(props: Props)
 							if uploadState == "Complete" then
 								props.OnUploadComplete(outputRef.current)
 							else
+								local isGroup = creator == "Group"
+								local creatorInfo = {
+									Id = if isGroup then groupId else StudioService:GetUserId(),
+									Type = if isGroup then Enum.CreatorType.Group else Enum.CreatorType.User,
+								}
+
 								local cleanupTrove = Trove.new()
 								closeTrove:Add(cleanupTrove)
 								closeTrove:Add(task.spawn(function()
@@ -231,7 +247,8 @@ local function UploadWindow(props: Props)
 										uploadThreads[i] = cleanupTrove:Add(task.spawn(function()
 											for _ = 1, MAX_RETRIES do
 												local success, err = pcall(function()
-													assetId = props.TryUpload(i, info.Name, info.EditableImage)
+													assetId =
+														props.TryUpload(i, info.Name, info.EditableImage, creatorInfo)
 												end)
 
 												if not success and err then
@@ -349,16 +366,39 @@ local function UploadWindow(props: Props)
 						Size = UDim2.new(1, -48, 0, StudioComponents.Constants.DefaultDropdownHeight),
 						LayoutOrder = 2,
 					}, {
-						UISizeConstraint = React.createElement("UISizeConstraint", {
-							MaxSize = Vector2.new(70, math.huge),
+						Layout = React.createElement("UIListLayout", {
+							SortOrder = Enum.SortOrder.LayoutOrder,
+							FillDirection = Enum.FillDirection.Horizontal,
+							VerticalAlignment = Enum.VerticalAlignment.Center,
+							HorizontalAlignment = Enum.HorizontalAlignment.Left,
+							Padding = UDim.new(0, 4),
 						}),
+
 						Dropdown = React.createElement(StudioComponents.Dropdown, {
+							LayoutOrder = 1,
 							Disabled = props.Disabled or uploadState == "Uploading",
-							Size = UDim2.fromScale(1, 1),
+							Size = UDim2.fromScale(0.4, 1),
 							Items = creatorTargets,
 							SelectedItem = creator,
 							OnItemSelected = function(item)
 								setCreator(item :: string)
+							end,
+						}),
+
+						Input = creator == "Group" and React.createElement(StudioProperties.NumberBox, {
+							LayoutOrder = 2,
+							Disabled = props.Disabled or uploadState == "Uploading",
+							Size = UDim2.new(0.5, -4, 1, 0),
+							HighlightOnFocus = true,
+							HighlightMode = "TextboxFocused",
+
+							Min = 0,
+							Step = 1,
+							StepButtonsDisabled = true,
+
+							Value = groupId,
+							OnValueSubmitted = function(groupId)
+								setGroupId(groupId)
 							end,
 						}),
 					}),

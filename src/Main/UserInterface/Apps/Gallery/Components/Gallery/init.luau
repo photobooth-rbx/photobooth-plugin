@@ -19,7 +19,7 @@ export type Props = {
 	BackgroundType: string,
 	SetBackgroundType: (string) -> (),
 
-	TryUpload: (number, string, EditableImage) -> number?,
+	TryUpload: UploadWindow.TryUpload,
 	OnUploadComplete: ({ { Name: string, AssetId: number } }) -> (),
 
 	OnImport: () -> (),

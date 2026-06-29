@@ -107,11 +107,14 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 				BackgroundType = backgroundType,
 				SetBackgroundType = setBackgroundType,
 
-				TryUpload = function(_i, name, editImage)
+				TryUpload = function(_i, name, editImage, creator)
 					local result: Enum.CreateAssetResult
 					local value: number | string
 
 					result, value = AssetService:CreateAssetAsync(editImage, Enum.AssetType.Image, {
+						CreatorId = creator.Id,
+						CreatorType = creator.Type,
+
 						Name = name,
 						Description = table.concat({
 							"Uploaded with the Photobooth plugin.",

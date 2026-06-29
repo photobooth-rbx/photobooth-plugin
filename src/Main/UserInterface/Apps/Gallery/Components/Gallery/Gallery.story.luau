@@ -26,7 +26,8 @@ return CreateStory.theme(function(props)
 			BackgroundType = backgroundType,
 			SetBackgroundType = setBackgroundType,
 
-			TryUpload = function(i)
+			TryUpload = function(i, _, _, creator)
+				print(creator)
 				task.wait(1)
 				return i
 			end,
