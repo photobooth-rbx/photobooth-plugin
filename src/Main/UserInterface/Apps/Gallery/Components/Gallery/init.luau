@@ -20,9 +20,13 @@ export type Props = {
 	SetBackgroundType: (string) -> (),
 
 	TryUpload: UploadWindow.TryUpload,
-	OnUploadComplete: ({ { Name: string, AssetId: number } }) -> (),
-
-	OnImport: () -> (),
+	TestCreator: UploadWindow.TestCreator,
+	OnUploadComplete: ({
+		{
+			Name: string,
+			AssetId: number,
+		}
+	}) -> (),
 
 	Disabled: boolean,
 }
@@ -94,6 +98,7 @@ local function Gallery(props: Props)
 				SetUploadInfos = setUploadInfos,
 
 				TryUpload = props.TryUpload,
+				TestCreator = props.TestCreator,
 				OnUploadComplete = props.OnUploadComplete,
 
 				OnCancel = function()
@@ -162,8 +167,6 @@ local function Gallery(props: Props)
 			SelectedCount = #editImageInfos,
 
 			ImageControls = imageControls,
-
-			OnImport = props.OnImport,
 
 			Disabled = props.Disabled or selectedTab == "Settings",
 		}),

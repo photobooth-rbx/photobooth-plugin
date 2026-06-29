@@ -30,8 +30,6 @@ export type Props = {
 
 	ImageControls: useImageControls.ImageControls,
 
-	OnImport: () -> (),
-
 	Disabled: boolean,
 }
 
@@ -212,25 +210,6 @@ local function ActionBar(props: Props)
 						controls.reset()
 					end,
 				}),
-			}),
-
-			Import = false and React.createElement(StudioComponents.MainButton, {
-				LayoutOrder = -1,
-				Size = UDim2.new(0, 70, 1, 0),
-				TextXAlignment = Enum.TextXAlignment.Center,
-				Text = "Import",
-				Disabled = props.Disabled,
-				OnActivated = function()
-					props.OnImport()
-				end,
-
-				Icon = {
-					Image = IMPORT_ICON.Url,
-					RectSize = IMPORT_ICON.ImageRectSize,
-					RectOffset = IMPORT_ICON.ImageRectOffset,
-					Size = Vector2.new(IMPORT_ICON.ImageRectSize.X, IMPORT_ICON.ImageRectSize.Y),
-					UseThemeColor = true,
-				},
 			}),
 		}),
 	})

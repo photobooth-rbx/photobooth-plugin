@@ -3,27 +3,19 @@ local StudioService = game:GetService("StudioService")
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioComponents = require(pluginRoot.Packages.StudioComponents)
 local StudioProperties = require(pluginRoot.Packages.StudioProperties)
-local Signal = require(pluginRoot.Packages.Signal)
-local Trove = require(pluginRoot.Packages.Trove)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
 
 local UploadLineItem = require(script.UploadLineItem)
+local CreatorSelect = require(script.CreatorSelect)
+local useUpload = require(script.useUpload)
 
-local MAX_RETRIES = 1
-local SEQUENTIAL_UPLOAD = true
-
-type Output = { { Name: string, AssetId: number } }
-type UploadStatus = "Waiting" | "Queued" | "InProgress" | "Complete" | "Fail" | "Cancel"
-
-export type Creator = {
-	Id: number,
-	Type: Enum.CreatorType,
-}
-
-export type TryUpload = (number, string, EditableImage, Creator) -> number?
+export type Creator = useUpload.Creator
+export type Output = useUpload.Output
+export type TryUpload = useUpload.TryUpload
+export type TestCreator = useUpload.TestCreator
 
 export type Props = {
 	AnchorPoint: Vector2,
@@ -34,6 +26,7 @@ export type Props = {
 	SetUploadInfos: ({ Hooks.EditableImageInfo }?) -> (),
 
 	TryUpload: TryUpload,
+	TestCreator: TestCreator,
 	OnUploadComplete: (Output) -> (),
 
 	OnCancel: () -> (),
@@ -41,40 +34,24 @@ export type Props = {
 	Disabled: boolean,
 }
 
-local function useCreatorTargets()
-	return { "Me", "Group" }
-end
-
 local function UploadWindow(props: Props)
 	local theme = StudioComponents.useTheme()
 
-	local creatorTargets = useCreatorTargets()
-	local creator, setCreator = React.useState(creatorTargets[1])
+	local creator, setCreator = React.useState("Me")
 	local groupId, setGroupId = React.useState(0)
 
-	local cancelSignal = Hooks.useConstant(function()
-		return Signal.new() :: Signal.Signal<number>
-	end)
+	local upload = useUpload({
+		UploadInfos = props.UploadInfos,
+		TryUpload = props.TryUpload,
+		TestCreator = props.TestCreator,
+	})
 
-	local closeTrove = Hooks.useConstant(function()
-		return Trove.new()
-	end)
-
-	React.useEffect(function()
-		return closeTrove:WrapClean()
-	end, {})
-
-	local assetIdRef = React.useRef({})
-	local outputRef = React.useRef({})
-
-	local uploadState, setIsUploadState = React.useState("NotStarted")
-	local uploadStatusesBinding, setUploadStatuses =
-		React.useBinding(table.create(#props.UploadInfos, "Waiting" :: UploadStatus))
-	local uploadStatuses = Hooks.useBindingState(uploadStatusesBinding) :: { UploadStatus }
+	local isComplete = upload.phase == "Complete"
+	local isBusy = upload.phase == "Validating" or upload.phase == "Uploading"
 
 	local lines: { [string]: React.Node } = {}
 	for i, info in props.UploadInfos do
-		local status = uploadStatuses[i]
+		local status = upload.statuses[i]
 
 		lines[`Line{i}`] = React.createElement(UploadLineItem, {
 			AnchorPoint = Vector2.zero,
@@ -84,7 +61,7 @@ local function UploadWindow(props: Props)
 			Name = info.Name,
 			EditableImage = info.EditableImage,
 
-			AssetId = assetIdRef.current[i],
+			AssetId = upload.assetIds[i],
 			Progress = if status == "Complete" then 1 elseif status == "InProgress" then 0.05 else 0,
 			StatusText = if status == "Waiting"
 				then "Waiting"
@@ -93,7 +70,7 @@ local function UploadWindow(props: Props)
 				else nil,
 
 			OnCancel = function()
-				cancelSignal:Fire(i)
+				upload.cancel(i)
 			end,
 
 			LayoutOrder = i,
@@ -195,134 +172,17 @@ local function UploadWindow(props: Props)
 						LayoutOrder = -1,
 						Size = UDim2.new(0, 70, 1, 0),
 						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = if uploadState == "Complete" then "Open" else "Upload",
-						Disabled = props.Disabled or uploadState == "Uploading",
+						Text = if isComplete then "Open" else "Upload",
+						Disabled = props.Disabled or isBusy,
 						OnActivated = function()
-							if uploadState == "Complete" then
-								props.OnUploadComplete(outputRef.current)
+							if isComplete then
+								props.OnUploadComplete(upload.output)
 							else
 								local isGroup = creator == "Group"
-								local creatorInfo = {
+								upload.start({
 									Id = if isGroup then groupId else StudioService:GetUserId(),
 									Type = if isGroup then Enum.CreatorType.Group else Enum.CreatorType.User,
-								}
-
-								local cleanupTrove = Trove.new()
-								closeTrove:Add(cleanupTrove)
-								closeTrove:Add(task.spawn(function()
-									setIsUploadState("Uploading")
-
-									outputRef.current = {}
-
-									local uploadThreads = {}
-									local uploadCompleteSignal = Signal.new()
-
-									cleanupTrove:Add(cancelSignal:Connect(function(i)
-										local statuses = uploadStatusesBinding:getValue()
-										if statuses[i] == "InProgress" or statuses[i] == "Queued" then
-											statuses[i] = "Cancel"
-											setUploadStatuses(table.clone(statuses))
-
-											local uploadThread = uploadThreads[i]
-											if uploadThread and coroutine.status(uploadThread) == "suspended" then
-												task.cancel(uploadThread)
-											end
-
-											uploadCompleteSignal:Fire(i, true)
-										end
-									end))
-
-									local statuses = uploadStatusesBinding:getValue()
-									for i, _info in props.UploadInfos do
-										statuses[i] = "Queued"
-									end
-									setUploadStatuses(table.clone(statuses))
-
-									local function uploadYielding(i: number, info: Hooks.EditableImageInfo)
-										statuses = uploadStatusesBinding:getValue()
-										statuses[i] = "InProgress"
-										setUploadStatuses(table.clone(statuses))
-
-										local assetId: number?
-										uploadThreads[i] = cleanupTrove:Add(task.spawn(function()
-											for _ = 1, MAX_RETRIES do
-												local success, err = pcall(function()
-													assetId =
-														props.TryUpload(i, info.Name, info.EditableImage, creatorInfo)
-												end)
-
-												if not success and err then
-													warn(err)
-												end
-
-												if assetId then
-													break
-												end
-											end
-											uploadCompleteSignal:Fire(i, false)
-										end))
-
-										-- signal library has an annoying warn on cleanup so can't use signal:Wait()
-										local isCancelled = false
-										local myThread = coroutine.running()
-										local connection =
-											cleanupTrove:Add(uploadCompleteSignal:Connect(function(j, canceled)
-												if i == j then
-													isCancelled = canceled
-													task.spawn(myThread)
-												end
-											end))
-
-										coroutine.yield()
-										connection:Disconnect()
-
-										if not isCancelled then
-											statuses = uploadStatusesBinding:getValue()
-
-											if assetId then
-												assetIdRef.current[i] = assetId
-												statuses[i] = "Complete"
-												table.insert(outputRef.current, {
-													Name = info.Name,
-													AssetId = assetId,
-												})
-											else
-												statuses[i] = "Fail"
-											end
-
-											setUploadStatuses(table.clone(statuses))
-										end
-									end
-
-									local count = 0
-									local thread = coroutine.running()
-									for i, info in props.UploadInfos do
-										local status = uploadStatusesBinding:getValue()[i]
-										if status == "Queued" then
-											if SEQUENTIAL_UPLOAD then
-												uploadYielding(i, info)
-												count = count + 1
-											else
-												cleanupTrove:Add(task.spawn(function()
-													uploadYielding(i, info)
-													count = count + 1
-													if count == #props.UploadInfos then
-														task.spawn(thread)
-													end
-												end))
-											end
-										elseif status == "Cancel" then
-											count = count + 1
-										end
-									end
-
-									if count < #props.UploadInfos then
-										coroutine.yield()
-									end
-									cleanupTrove:Destroy()
-
-									setIsUploadState("Complete")
-								end))
+								})
 							end
 						end,
 					}),
@@ -330,78 +190,25 @@ local function UploadWindow(props: Props)
 						LayoutOrder = -2,
 						Size = UDim2.new(0, 70, 1, 0),
 						TextXAlignment = Enum.TextXAlignment.Center,
-						Text = if uploadState == "Complete" then "Close" else "Cancel",
+						Text = if isComplete then "Close" else "Cancel",
 						Disabled = props.Disabled,
 						OnActivated = function()
-							closeTrove:Clean()
+							upload.reset()
 							props.OnCancel()
 						end,
 					}),
 				}),
 
-				Creator = React.createElement("Frame", {
-					BackgroundTransparency = 1,
-					Size = UDim2.new(1, -152, 1, 0),
-					Position = UDim2.fromOffset(4, 0),
-				}, {
-					Layout = React.createElement("UIListLayout", {
-						SortOrder = Enum.SortOrder.LayoutOrder,
-						FillDirection = Enum.FillDirection.Horizontal,
-						VerticalAlignment = Enum.VerticalAlignment.Center,
-						HorizontalAlignment = Enum.HorizontalAlignment.Left,
-						Padding = UDim.new(0, 4),
-					}),
+				Creator = React.createElement(CreatorSelect, {
+					Creator = creator,
+					SetCreator = setCreator,
 
-					Label = React.createElement(StudioComponents.Label, {
-						BackgroundTransparency = 1,
-						Size = UDim2.new(0, 44, 1, 0),
-						Text = "Creator:",
-						TextXAlignment = Enum.TextXAlignment.Left,
-						TextYAlignment = Enum.TextYAlignment.Center,
-						LayoutOrder = 1,
-					}),
+					GroupId = groupId,
+					SetGroupId = setGroupId,
 
-					Container = React.createElement("Frame", {
-						BackgroundTransparency = 1,
-						Size = UDim2.new(1, -48, 0, StudioComponents.Constants.DefaultDropdownHeight),
-						LayoutOrder = 2,
-					}, {
-						Layout = React.createElement("UIListLayout", {
-							SortOrder = Enum.SortOrder.LayoutOrder,
-							FillDirection = Enum.FillDirection.Horizontal,
-							VerticalAlignment = Enum.VerticalAlignment.Center,
-							HorizontalAlignment = Enum.HorizontalAlignment.Left,
-							Padding = UDim.new(0, 4),
-						}),
+					GroupError = upload.groupError,
 
-						Dropdown = React.createElement(StudioComponents.Dropdown, {
-							LayoutOrder = 1,
-							Disabled = props.Disabled or uploadState == "Uploading",
-							Size = UDim2.fromScale(0.4, 1),
-							Items = creatorTargets,
-							SelectedItem = creator,
-							OnItemSelected = function(item)
-								setCreator(item :: string)
-							end,
-						}),
-
-						Input = creator == "Group" and React.createElement(StudioProperties.NumberBox, {
-							LayoutOrder = 2,
-							Disabled = props.Disabled or uploadState == "Uploading",
-							Size = UDim2.new(0.5, -4, 1, 0),
-							HighlightOnFocus = true,
-							HighlightMode = "TextboxFocused",
-
-							Min = 0,
-							Step = 1,
-							StepButtonsDisabled = true,
-
-							Value = groupId,
-							OnValueSubmitted = function(groupId)
-								setGroupId(groupId)
-							end,
-						}),
-					}),
+					Disabled = props.Disabled or isBusy,
 				}),
 			}),
 		}),

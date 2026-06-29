@@ -27,16 +27,16 @@ return CreateStory.theme(function(props)
 			SetBackgroundType = setBackgroundType,
 
 			TryUpload = function(i, _, _, creator)
-				print(creator)
 				task.wait(1)
 				return i
 			end,
+			TestCreator = function(creator)
+				print("testing creator", creator)
+				task.wait(0.5)
+				return creator.Id > 0
+			end,
 			OnUploadComplete = function(completed)
 				print(completed)
-			end,
-
-			OnImport = function()
-				print("Import!")
 			end,
 
 			Disabled = not not props.Disabled,
