@@ -1,14 +1,12 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local ReactRoblox = require(pluginRoot.Packages.ReactRoblox)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local CroppedViewport = require(uiRoot.Components.CroppedViewport)
+local CreateStory = require(uiRoot.Stories.CreateStory)
 
-local stories = script:FindFirstAncestor("Stories")
-local CreateStory = require(stories.Helpers.CreateStory)
+local CroppedViewport = require(script.Parent)
 
-local function story()
+CreateStory.theme(function(props)
 	local isDisabled, setIsDisabled = React.useState(false)
 
 	return React.createElement(CroppedViewport, {
@@ -30,12 +28,6 @@ local function story()
 		end,
 
 		Visible = true,
-		Disabled = isDisabled,
+		Disabled = isDisabled or not not props.Disabled,
 	})
-end
-
-return {
-	react = React,
-	reactRoblox = ReactRoblox,
-	story = CreateStory.theme(story),
-}
+end)

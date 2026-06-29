@@ -5,12 +5,12 @@ local React = require(pluginRoot.Packages.React)
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
 
-local useImageControls = require(script.Parent.ImageInterface.useImageControls)
+local useImageControls = require(script.ImageInterface.useImageControls)
 
-local ConfigurationWindow = require(script.Parent.ConfigurationWindow)
-local ImageInterface = require(script.Parent.ImageInterface)
-local UploadWindow = require(script.Parent.UploadWindow)
-local ActionBar = require(script.Parent.ActionBar)
+local ConfigurationWindow = require(script.ConfigurationWindow)
+local ImageInterface = require(script.ImageInterface)
+local UploadWindow = require(script.UploadWindow)
+local ActionBar = require(script.ActionBar)
 
 export type Props = {
 	IsExpanded: boolean,
