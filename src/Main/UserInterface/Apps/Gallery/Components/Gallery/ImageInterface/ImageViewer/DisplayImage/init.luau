@@ -4,8 +4,8 @@ local React = require(pluginRoot.Packages.React)
 local Constants = require(pluginRoot.Constants)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
+local Asphalt = require(uiRoot.Asphalt)
 local Hooks = require(uiRoot.Hooks)
-local Icons = require(uiRoot.Icons)
 
 local useImageControls = require(script.Parent.Parent.useImageControls)
 local HighResImageSplit = require(script.HighResImageSplit)
@@ -39,7 +39,7 @@ local function makeBackgroundTypeAction(text: string, backgroundType: string, se
 
 	return {
 		Text = renderText,
-		Icon = Icons.menu[text:lower()],
+		Icon = Asphalt.menu[text:lower()],
 		OnTriggered = function()
 			setBackgroundType(text)
 		end,
@@ -127,7 +127,7 @@ local function DisplayImage(props: Props)
 				}, {
 					Checkerboard = props.BackgroundType == "Checkerboard" and React.createElement("ImageLabel", {
 						BackgroundTransparency = 1,
-						Image = Icons.misc.checkerboard,
+						Image = Asphalt.misc.checkerboard,
 						ScaleType = Enum.ScaleType.Tile,
 						TileSize = UDim2.fromOffset(50, 50),
 						Size = UDim2.new(1, 100, 1, 100),

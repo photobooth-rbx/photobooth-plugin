@@ -7,7 +7,7 @@ typescript = false
 style = "nested"
 strip_extensions = true
 
-[inputs.assets]
+[inputs.Asphalt]
 path = "assets/icons/asphalt/**/*"
-output_path = "src/Main/UserInterface/Icons"
+output_path = "src/Main/UserInterface"
 bleed = true

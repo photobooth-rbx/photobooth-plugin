@@ -1,11 +1,11 @@
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local Icons = require(uiRoot.Icons)
+local Asphalt = require(uiRoot.Asphalt)
 
 local ToolbarIcon = {}
 
 local function getIcon(iconName: string)
 	local theme = settings().Studio.Theme
-	return assert(Icons.processed[theme.Name:lower()][iconName] :: string?)
+	return assert(Asphalt.processed[theme.Name:lower()][iconName] :: string?)
 end
 
 function ToolbarIcon.listen(button: PluginToolbarButton, iconName: string)

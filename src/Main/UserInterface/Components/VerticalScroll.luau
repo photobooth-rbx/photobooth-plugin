@@ -3,7 +3,7 @@ local StudioComponents = require(pluginRoot.Packages.StudioComponents)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local Icons = require(uiRoot.Icons)
+local Asphalt = require(uiRoot.Asphalt)
 local Hooks = require(uiRoot.Hooks)
 
 export type Props = {
@@ -81,9 +81,9 @@ local function VerticalScroll(props: Props)
 			ScrollBarImageColor3 = theme:GetColor(Enum.StudioStyleGuideColor.DimmedText),
 			ScrollBarImageTransparency = props.ScrollBarTransparency or 0,
 
-			TopImage = Icons.scroll["scroll-top"],
-			MidImage = Icons.scroll["scroll-middle"],
-			BottomImage = Icons.scroll["scroll-bottom"],
+			TopImage = Asphalt.scroll["scroll-top"],
+			MidImage = Asphalt.scroll["scroll-middle"],
+			BottomImage = Asphalt.scroll["scroll-bottom"],
 
 			ref = scrollRef,
 		}),
