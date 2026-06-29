@@ -93,12 +93,7 @@ function Plugin.build(plugin: Plugin)
 	end)
 
 	local toolbar = plugin:CreateToolbar("Photobooth")
-
-	UserInterface.mountCaptureViewport(plugin, toolbar)
-	UserInterface.mountCaptureUI(plugin, toolbar)
-	UserInterface.mountGallery(plugin, toolbar)
-	UserInterface.mountBlackout(plugin)
-
+	UserInterface.mountApps(plugin, toolbar)
 	Bindings.setup(plugin)
 end
 
