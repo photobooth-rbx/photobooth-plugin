@@ -6,7 +6,7 @@ local CreateStory = require(uiRoot.Stories.CreateStory)
 
 local CroppedViewport = require(script.Parent)
 
-CreateStory.theme(function(props)
+return CreateStory.theme(function(props)
 	local isDisabled, setIsDisabled = React.useState(false)
 
 	return React.createElement(CroppedViewport, {

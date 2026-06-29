@@ -6,7 +6,7 @@ local CreateStory = require(uiRoot.Stories.CreateStory)
 
 local FullViewport = require(script.Parent)
 
-CreateStory.theme(function(props)
+return CreateStory.theme(function(props)
 	local isDisabled, setIsDisabled = React.useState(false)
 	local focusLenseSizeRef = React.useRef(Rect.new(0, 0, 0, 0))
 
