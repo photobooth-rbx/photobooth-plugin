@@ -1,11 +1,11 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioComponents = require(pluginRoot.Packages.StudioComponents)
+local StudioProperties = require(pluginRoot.Packages.StudioProperties)
 local Signal = require(pluginRoot.Packages.Signal)
 local Trove = require(pluginRoot.Packages.Trove)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local VerticalScroll = require(uiRoot.Components.VerticalScroll)
 local Hooks = require(uiRoot.Hooks)
 
 local UploadLineItem = require(script.UploadLineItem)
@@ -146,7 +146,7 @@ local function UploadWindow(props: Props)
 				BorderColor3 = theme:GetColor(Enum.StudioStyleGuideColor.Border),
 				LayoutOrder = 2,
 			}, {
-				Scroll = React.createElement(VerticalScroll, {
+				Scroll = React.createElement(StudioProperties.VerticalScroll, {
 					AnchorPoint = Vector2.zero,
 					Position = UDim2.fromScale(0, 0),
 					Size = UDim2.fromScale(1, 1),

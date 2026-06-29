@@ -1,5 +1,6 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioComponents = require(pluginRoot.Packages.StudioComponents)
+local StudioProperties = require(pluginRoot.Packages.StudioProperties)
 local ReactRipple = require(pluginRoot.Packages.ReactRipple)
 local Semver = require(pluginRoot.Packages.Semver)
 local Lucide = require(pluginRoot.Packages.Lucide)
@@ -15,7 +16,6 @@ local Captures = require(pluginRoot.Main.Photo.Captures)
 local StateManager = require(pluginRoot.Main.StateManager)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local VerticalScroll = require(uiRoot.Components.VerticalScroll)
 local Hooks = require(uiRoot.Hooks)
 
 local SettingsGroup = require(script.SettingsGroup)
@@ -415,7 +415,7 @@ local function ConfigurationWindow(props: Props)
 				setScrollTransparency(1)
 			end,
 		}, {
-			Scroll = React.createElement(VerticalScroll, {
+			Scroll = React.createElement(StudioProperties.VerticalScroll, {
 				AnchorPoint = Vector2.zero,
 				Position = UDim2.fromScale(0, 0),
 				Size = UDim2.fromScale(1, 1),

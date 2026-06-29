@@ -1,10 +1,10 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioComponents = require(pluginRoot.Packages.StudioComponents)
+local StudioProperties = require(pluginRoot.Packages.StudioProperties)
 local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local VerticalScroll = require(uiRoot.Components.VerticalScroll)
 local Hooks = require(uiRoot.Hooks)
 
 local UPLOAD_ICON = assert(Lucide.GetAsset("upload", 16))
@@ -170,7 +170,7 @@ local function ToggleScrollList(props: Props)
 			}),
 		}),
 
-		Scroll = React.createElement(VerticalScroll, {
+		Scroll = React.createElement(StudioProperties.VerticalScroll, {
 			AnchorPoint = Vector2.zero,
 			Position = UDim2.fromOffset(0, props.TitleHeight),
 			Size = UDim2.new(1, 0, 1, -props.TitleHeight - uploadHeight),
