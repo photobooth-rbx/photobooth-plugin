@@ -21,16 +21,16 @@ function CreateStory.theme(component: React.FC<Props>)
 		react = React,
 		reactRoblox = ReactRoblox,
 		controls = {
-			disabled = false,
-			theme = UILabs.Choose({ "Default", "Dark", "Light" }),
+			Disabled = false,
+			Theme = UILabs.Choose({ "Default", "Dark", "Light" }),
 		},
 		story = function(props)
 			local storyPlugin = useStoryPlugin()
 
 			local rootTheme = nil
-			if props.controls.theme == "Dark" then
+			if props.controls.Theme == "Dark" then
 				rootTheme = themes[2]
-			elseif props.controls.theme == "Light" then
+			elseif props.controls.Theme == "Light" then
 				rootTheme = themes[1]
 			end
 
@@ -44,7 +44,7 @@ function CreateStory.theme(component: React.FC<Props>)
 						value = rootTheme,
 					}, {
 						Component = React.createElement(component, {
-							Disabled = props.controls.disabled,
+							Disabled = props.controls.Disabled,
 						}),
 					}),
 				}),

@@ -7,7 +7,7 @@ local CreateStory = require(uiRoot.Stories.CreateStory)
 
 local Gallery = require(script.Parent)
 
-local function Widget(props: { Size: UDim2, Disabled: boolean? })
+return CreateStory.theme(function(props)
 	local theme = StudioComponents.useTheme()
 	local backgroundType, setBackgroundType = React.useState("Checkerboard")
 	local isExpanded, setIsExpanded = React.useState(true)
@@ -15,7 +15,7 @@ local function Widget(props: { Size: UDim2, Disabled: boolean? })
 	return React.createElement("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
-		Size = props.Size,
+		Size = UDim2.fromOffset(900, 600),
 		BackgroundColor3 = theme:GetColor(Enum.StudioStyleGuideColor.MainBackground),
 		BorderColor3 = theme:GetColor(Enum.StudioStyleGuideColor.Border),
 	}, {
@@ -40,36 +40,5 @@ local function Widget(props: { Size: UDim2, Disabled: boolean? })
 
 			Disabled = not not props.Disabled,
 		}),
-	})
-end
-
-return CreateStory.theme(function(props)
-	local selectedTab, setSelectedTab = React.useState("Small")
-
-	return React.createElement(StudioComponents.TabContainer, {
-		SelectedTab = selectedTab,
-		OnTabSelected = setSelectedTab,
-	}, {
-		["Small"] = {
-			LayoutOrder = 1,
-			Content = React.createElement(Widget, {
-				Size = UDim2.fromOffset(500, 350),
-				Disabled = props.Disabled,
-			}),
-		},
-		["Medium"] = {
-			LayoutOrder = 2,
-			Content = React.createElement(Widget, {
-				Size = UDim2.fromScale(0.5, 0.5),
-				Disabled = props.Disabled,
-			}),
-		},
-		["Large"] = {
-			LayoutOrder = 3,
-			Content = React.createElement(Widget, {
-				Size = UDim2.new(1, -30, 1, -30),
-				Disabled = props.Disabled,
-			}),
-		},
 	})
 end)
