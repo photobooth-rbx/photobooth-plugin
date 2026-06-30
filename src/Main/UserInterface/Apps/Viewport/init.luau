@@ -59,8 +59,9 @@ local function useRectRequest()
 end
 
 local function createCenterRect(scale: Vector2)
+	local scaleOS = StateManager.temporary:get().scaleOS
 	local currentCamera = workspace.CurrentCamera :: Camera
-	return RenderRect.fromViewportCenter(currentCamera.ViewportSize * scale)
+	return RenderRect.fromViewportCenter((currentCamera.ViewportSize * scale) / scaleOS)
 end
 
 local function useCaptureRect()
@@ -185,7 +186,10 @@ local function appComponent(props: { Button: PluginToolbarButton })
 
 			Cropped = React.createElement(CroppedViewport, {
 				IsRectRequest = not not rectRequest,
-				ScaleOS = rectRequest and rectRequest.scaleOS or scaleOS,
+				ScaleOS = if rectRequest and rectRequest.scaleOS
+					then scaleOS / rectRequest.scaleOS
+					elseif rectRequest then Vector2.one
+					else scaleOS,
 				CaptureRectRef = captureRectRef,
 				UpdateCaptureRectRef = updateCaptureRectRef,
 				OnMaximize = onMinMax,
@@ -246,7 +250,7 @@ function ViewportApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 		local rect = RenderRect.fromViewportCenter(Vector2.new(512, 512))
 		-- local result1 = ViewportApp.requestRect(rect, Vector2.new(1.5, 1.5))
 		-- local result2 = ViewportApp.requestRect(rect, Vector2.new(1, 1))
-		local result3 = ViewportApp.requestRect(rect, Vector2.new(0.5, 0.5))
+		local result3 = ViewportApp.requestRect(rect, Vector2.new(1.25, 1.25))
 		print(result3)
 	end)
 end
