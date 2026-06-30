@@ -248,18 +248,6 @@ function ViewportApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 		coreGuiRoot:unmount()
 		folder:Destroy()
 	end)
-
-	task.delay(5, function()
-		local scaleOS = Vector2.new(1, 1)
-		local size = Vector2.new(512, 512)
-
-		local viewportSize = (workspace.CurrentCamera :: Camera).ViewportSize * scaleOS
-		local absPosition = (viewportSize - size) / 2
-		local rect = RenderRect.fromAbs(absPosition, size)
-
-		local result = ViewportApp.requestRect(rect, scaleOS)
-		print(result)
-	end)
 end
 
 return ViewportApp
