@@ -56,12 +56,6 @@ local MIN_CAPTURE_WIDTH = math.max(MIN_CAPTURE_HEIGHT, ACTION_BAR.Width, ALIGN_B
 local MAX_CAPTURE_HEIGHT = Constants.MaxCaptureRectSize.Y
 local MAX_CAPTURE_WIDTH = Constants.MaxCaptureRectSize.X
 
-local function scaleRect(rect: Rect, anchorPoint: Vector2, scale: Vector2)
-	local size = Vector2.new(rect.Width, rect.Height)
-	local anchor = rect.Min + size * anchorPoint
-	return Rect.new(rect.Min + (anchor - rect.Min) * scale, rect.Max + (anchor - rect.Max) * scale)
-end
-
 local function positionRect(rect: Rect, anchorPoint: Vector2, position: Vector2)
 	local size = Vector2.new(rect.Width, rect.Height)
 	local anchor = rect.Min + size * anchorPoint
@@ -186,15 +180,10 @@ local function useCaptureRect(
 		{ scaledViewportRect, scaleOS } :: { any }
 	)
 
-	local captureRect, setCaptureRect = React.useState(
-		RenderRect.fromRect(getClampedCaptureRect(captureRef.current, Vector2.zero, Vector2.zero, true, true))
-	)
-
-	React.useEffect(function()
-		setCaptureRect(
-			RenderRect.fromRect(getClampedCaptureRect(captureRef.current, Vector2.zero, Vector2.zero, true, true))
-		)
-	end, { updateCaptureRef })
+	local captureRect, setCaptureRect = React.useState(function()
+		local clampedCaptureRect = getClampedCaptureRect(captureRef.current, Vector2.zero, Vector2.zero, true, true)
+		return RenderRect.fromRect(clampedCaptureRect)
+	end)
 
 	local setCaptureRectClamped = React.useCallback(
 		function(rect: Rect, direction: Vector2, delta: Vector2, mirror: boolean, clampMin: boolean)
@@ -206,11 +195,18 @@ local function useCaptureRect(
 		{ getClampedCaptureRect }
 	)
 
+	local updateCaptureRefRef = React.useRef((nil :: any) :: typeof(updateCaptureRef))
 	React.useEffect(function()
-		local newCenter = scaledViewportRect.Min + Vector2.new(scaledViewportRect.Width, scaledViewportRect.Height) / 2
-		local newCaptureRect = positionRect(captureRect, Vector2.new(0.5, 0.5), newCenter)
-		setCaptureRectClamped(newCaptureRect, Vector2.zero, Vector2.zero, true, true)
-	end, { setCaptureRectClamped })
+		if updateCaptureRefRef.current ~= updateCaptureRef then
+			updateCaptureRefRef.current = updateCaptureRef
+			setCaptureRectClamped(captureRef.current, Vector2.zero, Vector2.zero, true, true)
+		else
+			local newCenter = scaledViewportRect.Min
+				+ Vector2.new(scaledViewportRect.Width, scaledViewportRect.Height) / 2
+			local newCaptureRect = positionRect(captureRect, Vector2.new(0.5, 0.5), newCenter)
+			setCaptureRectClamped(newCaptureRect, Vector2.zero, Vector2.zero, true, true)
+		end
+	end, { setCaptureRectClamped, updateCaptureRef })
 
 	return captureRect, setCaptureRectClamped
 end

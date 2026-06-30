@@ -28,7 +28,7 @@ local FullViewport = require(script.Components.FullViewport)
 local ViewportApp = {}
 
 type RectRequest = {
-	scaleOS: Vector2?,
+	scaleOS: Vector2,
 	initialRect: Rect?,
 	resultFuture: Future.Future<Rect?>,
 }
@@ -186,10 +186,7 @@ local function appComponent(props: { Button: PluginToolbarButton })
 
 			Cropped = React.createElement(CroppedViewport, {
 				IsRectRequest = not not rectRequest,
-				ScaleOS = if rectRequest and rectRequest.scaleOS
-					then scaleOS / rectRequest.scaleOS
-					elseif rectRequest then Vector2.one
-					else scaleOS,
+				ScaleOS = if rectRequest then rectRequest.scaleOS else scaleOS,
 				CaptureRectRef = captureRectRef,
 				UpdateCaptureRectRef = updateCaptureRectRef,
 				OnMaximize = onMinMax,
@@ -204,7 +201,7 @@ function ViewportApp.requestRect(rect: Rect?, scaleOS: Vector2?)
 	local resultFuture = Future.new()
 	rectRequestQueue:update()(function(queue)
 		table.insert(queue, {
-			scaleOS = scaleOS,
+			scaleOS = scaleOS or Vector2.one,
 			initialRect = rect,
 			resultFuture = resultFuture,
 		})
@@ -246,12 +243,15 @@ function ViewportApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 	end)
 
 	task.delay(5, function()
-		print("Request")
-		local rect = RenderRect.fromViewportCenter(Vector2.new(512, 512))
-		-- local result1 = ViewportApp.requestRect(rect, Vector2.new(1.5, 1.5))
-		-- local result2 = ViewportApp.requestRect(rect, Vector2.new(1, 1))
-		local result3 = ViewportApp.requestRect(rect, Vector2.new(1.25, 1.25))
-		print(result3)
+		local scaleOS = Vector2.new(1, 1)
+		local size = Vector2.new(512, 512)
+
+		local viewportSize = (workspace.CurrentCamera :: Camera).ViewportSize * scaleOS
+		local absPosition = (viewportSize - size) / 2
+		local rect = RenderRect.fromAbs(absPosition, size)
+
+		local result = ViewportApp.requestRect(rect, scaleOS)
+		print(result)
 	end)
 end
 
