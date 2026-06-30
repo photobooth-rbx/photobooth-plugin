@@ -29,7 +29,7 @@ local ViewportApp = {}
 
 type RectRequest = {
 	scaleOS: Vector2,
-	initialRect: Rect?,
+	initialRect: Rect,
 	resultFuture: Future.Future<Rect?>,
 }
 
@@ -63,9 +63,9 @@ local function useRectRequest()
 	return rectRequest, remove
 end
 
-local function createCenterRect(scale: Vector2)
-	local scaleOS = StateManager.temporary:get().scaleOS
-	local viewportSize = (workspace.CurrentCamera :: Camera).ViewportSize * scaleOS
+local function createCenterRect(scale: Vector2, scaleOS: Vector2?)
+	local renderScaleOS = scaleOS or StateManager.temporary:get().scaleOS
+	local viewportSize = (workspace.CurrentCamera :: Camera).ViewportSize * renderScaleOS
 	local rectSize = viewportSize * scale
 	local absPosition = (viewportSize - rectSize) / 2
 	return RenderRect.fromAbs(absPosition, rectSize)
@@ -123,9 +123,7 @@ local function appComponent(props: { Button: PluginToolbarButton })
 
 	React.useEffect(function()
 		if rectRequest then
-			if rectRequest.initialRect then
-				updateCaptureRectRef(rectRequest.initialRect)
-			end
+			updateCaptureRectRef(rectRequest.initialRect)
 
 			StateManager.temporary:update()(function(state)
 				state.isFullscreen = false
@@ -206,10 +204,11 @@ end
 
 function ViewportApp.requestRect(rect: Rect?, scaleOS: Vector2?)
 	local resultFuture = Future.new()
+	local renderScaleOS = scaleOS or Vector2.one
 	rectRequestQueue:update()(function(queue)
 		table.insert(queue, {
-			scaleOS = scaleOS or Vector2.one,
-			initialRect = rect,
+			scaleOS = renderScaleOS,
+			initialRect = rect or createCenterRect(Vector2.new(0.5, 0.5), renderScaleOS),
 			resultFuture = resultFuture,
 		})
 		return queue
