@@ -10,4 +10,8 @@ function UserInterface.mountApps(plugin: Plugin, toolbar: PluginToolbar)
 	GalleryApp.mount(plugin, toolbar)
 end
 
+function UserInterface.rectRequest(rect: Rect?, scaleOS: Vector2?)
+	return ViewportApp.requestRect(rect, scaleOS)
+end
+
 return UserInterface

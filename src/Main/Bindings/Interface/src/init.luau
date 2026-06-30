@@ -14,6 +14,8 @@ export type ViewportCaptureTypes = Types.ViewportCaptureTypes
 export type CaptureViewportOptions = Types.CaptureViewportOptions
 export type CaptureUIOptions = Types.CaptureUIOptions
 
+export type RequestRectOptions = Types.RequestRectOptions
+
 -- Public
 
 Bindings.rect = RenderRect
@@ -50,6 +52,10 @@ end
 
 function Bindings.captureUI(options: CaptureUIOptions): MeshPart?
 	return Binding.invoke("captureUI", options)
+end
+
+function Bindings.requestRect(options: RequestRectOptions): Rect?
+	return Binding.invoke("requestRect", options)
 end
 
 function Bindings.isConnected(): boolean
