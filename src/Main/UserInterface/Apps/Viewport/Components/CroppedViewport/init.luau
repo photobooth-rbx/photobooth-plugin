@@ -173,7 +173,12 @@ local function useScaledViewportRect(viewportRect: Rect, scaleOS: Vector2)
 	return scaledViewportRect
 end
 
-local function useCaptureRect(captureRef: { current: Rect }, scaledViewportRect: Rect, scaleOS: Vector2)
+local function useCaptureRect(
+	captureRef: { current: Rect },
+	updateCaptureRef: (Rect) -> (),
+	scaledViewportRect: Rect,
+	scaleOS: Vector2
+)
 	local getClampedCaptureRect = React.useCallback(
 		function(rect: Rect, direction: Vector2, delta: Vector2, mirror: boolean, clampMin: boolean)
 			return clampRect(rect, scaledViewportRect, scaleOS, direction, delta * scaleOS, mirror, clampMin)
@@ -184,6 +189,12 @@ local function useCaptureRect(captureRef: { current: Rect }, scaledViewportRect:
 	local captureRect, setCaptureRect = React.useState(
 		RenderRect.fromRect(getClampedCaptureRect(captureRef.current, Vector2.zero, Vector2.zero, true, true))
 	)
+
+	React.useEffect(function()
+		setCaptureRect(
+			RenderRect.fromRect(getClampedCaptureRect(captureRef.current, Vector2.zero, Vector2.zero, true, true))
+		)
+	end, { updateCaptureRef })
 
 	local setCaptureRectClamped = React.useCallback(
 		function(rect: Rect, direction: Vector2, delta: Vector2, mirror: boolean, clampMin: boolean)
@@ -205,17 +216,19 @@ local function useCaptureRect(captureRef: { current: Rect }, scaledViewportRect:
 end
 
 export type Props = {
+	ScaleOS: Vector2,
+	IsRectRequest: boolean,
+	CaptureRectRef: { current: Rect },
+	UpdateCaptureRectRef: (Rect) -> (),
 	OnCapture: (Rect) -> (boolean, string?),
 	OnMaximize: () -> (),
+	OnReady: (GuiObject) -> ()?,
 	Visible: boolean,
 	Disabled: boolean?,
 }
 
-local function CroppedViewport(props: Props & { ViewportRect: Rect, CaptureRectRef: { current: Rect } })
+local function CroppedViewport(props: Props & { ViewportRect: Rect })
 	local theme = StudioComponents.useTheme()
-	local scaleOS = StateManager.temporary:useSpecific()(function(state)
-		return state.scaleOS
-	end)
 
 	local isCropMode, setIsCropMode = React.useState(false)
 	local isCropDragging, setIsCropDragging = React.useState(false)
@@ -226,15 +239,16 @@ local function CroppedViewport(props: Props & { ViewportRect: Rect, CaptureRectR
 	local dragPositionRef = React.useRef(Vector2.zero)
 	local dragRectRef = React.useRef(Rect.new(0, 0, 0, 0))
 
-	local scaledViewportRect = useScaledViewportRect(props.ViewportRect, scaleOS)
-	local captureRect, setCaptureRect = useCaptureRect(props.CaptureRectRef, scaledViewportRect, scaleOS)
+	local scaledViewportRect = useScaledViewportRect(props.ViewportRect, props.ScaleOS)
+	local captureRect, setCaptureRect =
+		useCaptureRect(props.CaptureRectRef, props.UpdateCaptureRectRef, scaledViewportRect, props.ScaleOS)
 
 	local renderedCaptureRect = RenderRect.fromRect(
 		Rect.new(
-			captureRect.Min.X / scaleOS.X,
-			captureRect.Min.Y / scaleOS.Y,
-			captureRect.Max.X / scaleOS.X,
-			captureRect.Max.Y / scaleOS.Y
+			captureRect.Min.X / props.ScaleOS.X,
+			captureRect.Min.Y / props.ScaleOS.Y,
+			captureRect.Max.X / props.ScaleOS.X,
+			captureRect.Max.Y / props.ScaleOS.Y
 		)
 	)
 
@@ -335,6 +349,7 @@ local function CroppedViewport(props: Props & { ViewportRect: Rect, CaptureRectR
 					setCaptureRect(rect, Vector2.zero, Vector2.zero, false, false)
 				end,
 
+				IsRectRequest = props.IsRectRequest,
 				OnMaximize = props.OnMaximize,
 				OnCapture = function()
 					return props.OnCapture(captureRect)
@@ -421,8 +436,6 @@ local function CroppedViewport(props: Props & { ViewportRect: Rect, CaptureRectR
 end
 
 return function(props: Props)
-	local captureRectRef = React.useRef(Rect.new(0, 0, 512, 512))
-
 	local viewportRef = React.useRef(nil :: GuiObject?)
 	local viewportAbsSize = Hooks.useRefProperty(viewportRef, "AbsoluteSize", Vector2.new(math.huge, math.huge))
 	local viewportAbsPosition = Hooks.useRefProperty(viewportRef, "AbsolutePosition", Vector2.zero)
@@ -436,20 +449,10 @@ return function(props: Props)
 
 	local isReady, setIsReady = React.useState(false)
 	React.useEffect(function()
-		local viewportFrame = viewportRef.current
-		if viewportFrame then
-			local scaleOS = StateManager.temporary:get().scaleOS
-			local absSize = viewportFrame.AbsoluteSize
-			local absPosition = viewportFrame.AbsolutePosition
-
-			local scaledViewportRect = RenderRect.fromAbs(absPosition * scaleOS, absSize * scaleOS)
-			local centerRect = scaleRect(scaledViewportRect, Vector2.new(0.5, 0.5), Vector2.new(0.5, 0.5))
-
-			-- we are setting the initial capture rect ref to be half the viewport from the center of the screen
-			captureRectRef.current = RenderRect.fromRect(centerRect)
-
-			setIsReady(true)
+		if props.OnReady and viewportRef.current then
+			props.OnReady(viewportRef.current)
 		end
+		setIsReady(true)
 	end, {})
 
 	return React.createElement("Frame", {
@@ -459,8 +462,11 @@ return function(props: Props)
 		ref = viewportRef,
 	}, {
 		Core = props.Visible and isReady and React.createElement(CroppedViewport, {
+			ScaleOS = props.ScaleOS,
+			IsRectRequest = props.IsRectRequest,
 			ViewportRect = viewportRect,
-			CaptureRectRef = captureRectRef,
+			CaptureRectRef = props.CaptureRectRef,
+			UpdateCaptureRectRef = props.UpdateCaptureRectRef,
 			OnMaximize = props.OnMaximize,
 			OnCapture = props.OnCapture,
 			Visible = props.Visible :: boolean,

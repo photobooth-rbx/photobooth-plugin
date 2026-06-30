@@ -12,6 +12,8 @@ local DRAGGER_SIZE = Vector2.new(148, 28)
 local DRAGGER_SIZE_2 = DRAGGER_SIZE * 2
 
 export type Props = {
+	ScaleOS: Vector2,
+	IsRectRequest: boolean,
 	OnCapture: (Rect) -> (boolean, string?),
 	OnMinimize: () -> (),
 	Visible: boolean,
@@ -72,6 +74,8 @@ local function FullViewport(props: Props & { ViewportRect: Rect })
 			Disabled = props.Disabled,
 		}, {
 			ActionBar = React.createElement(ActionBar, {
+				ScaleOS = props.ScaleOS,
+				IsRectRequest = props.IsRectRequest,
 				ViewportRect = props.ViewportRect,
 				OnMinimize = props.OnMinimize,
 				OnCapture = props.OnCapture,
@@ -94,6 +98,8 @@ return function(props: Props)
 		ref = viewportRef,
 	}, {
 		Core = props.Visible and React.createElement(FullViewport, {
+			ScaleOS = props.ScaleOS,
+			IsRectRequest = props.IsRectRequest,
 			ViewportRect = viewportRect,
 			OnCapture = props.OnCapture,
 			OnMinimize = props.OnMinimize,

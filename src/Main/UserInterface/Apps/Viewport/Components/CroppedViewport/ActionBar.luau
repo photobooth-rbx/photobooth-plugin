@@ -7,6 +7,10 @@ local uiRoot = script:FindFirstAncestor("UserInterface")
 local BaseButton = require(uiRoot.Components.BaseButton)
 local Hooks = require(uiRoot.Hooks)
 
+local CAMERA_ICON = assert(Lucide.GetAsset("camera", 16))
+local MAXIMIZE_ICON = assert(Lucide.GetAsset("maximize", 16))
+local CIRCLE_CHECK_ICON = assert(Lucide.GetAsset("circle-check", 16))
+
 type Props = {
 	AnchorPoint: Vector2,
 	Position: UDim2,
@@ -20,6 +24,7 @@ type Props = {
 	UseRectText: boolean,
 	OnRectInput: (Rect) -> (),
 
+	IsRectRequest: boolean,
 	OnMaximize: () -> (),
 	OnCapture: () -> (boolean, string?),
 
@@ -183,8 +188,7 @@ end
 
 local function ActionBar(props: Props)
 	local theme = StudioComponents.useTheme()
-	local cameraIcon = assert(Lucide.GetAsset("camera", 16))
-	local maximizeIcon = assert(Lucide.GetAsset("maximize", 16))
+	local captureIcon = if props.IsRectRequest then CIRCLE_CHECK_ICON else CAMERA_ICON
 
 	local underFrameRef = React.useRef(nil)
 	local underFrameAbsPosition = Hooks.useRefProperty(underFrameRef, "AbsolutePosition", Vector2.zero)
@@ -254,11 +258,11 @@ local function ActionBar(props: Props)
 					TextColorStyle = Enum.StudioStyleGuideColor.ButtonText,
 
 					Icon = {
-						Image = maximizeIcon.Url,
-						RectSize = maximizeIcon.ImageRectSize,
-						RectOffset = maximizeIcon.ImageRectOffset,
+						Image = MAXIMIZE_ICON.Url,
+						RectSize = MAXIMIZE_ICON.ImageRectSize,
+						RectOffset = MAXIMIZE_ICON.ImageRectOffset,
 
-						Size = maximizeIcon.ImageRectSize,
+						Size = MAXIMIZE_ICON.ImageRectSize,
 						Transparency = if props.Disabled then 0.7 else 0,
 						UseThemeColor = true,
 					},
@@ -273,11 +277,11 @@ local function ActionBar(props: Props)
 					Size = UDim2.new(0, 24, 1, 0),
 
 					Icon = {
-						Image = cameraIcon.Url,
-						RectSize = cameraIcon.ImageRectSize,
-						RectOffset = cameraIcon.ImageRectOffset,
+						Image = captureIcon.Url,
+						RectSize = captureIcon.ImageRectSize,
+						RectOffset = captureIcon.ImageRectOffset,
 
-						Size = cameraIcon.ImageRectSize,
+						Size = captureIcon.ImageRectSize,
 						Transparency = if props.Disabled then 0.7 else 0,
 						Color = Color3.new(1, 1, 1),
 					},
