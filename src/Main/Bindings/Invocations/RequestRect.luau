@@ -15,7 +15,8 @@ local typechecker = gt.fn(
 )
 
 local function callback(options: typeof(gtOptions))
-	return UserInterface.rectRequest(options.rect, options.scale)
+	local request = UserInterface.rectRequest(options.rect, options.scale)
+	return request.expect()
 end
 
 return {

@@ -41,14 +41,6 @@ local function safeComplete<T...>(f: Future.Future<T...>, ...: T...)
 	end
 end
 
-local function clearAllRectRequests()
-	local queue = rectRequestQueue:get()
-	rectRequestQueue:set({})
-	for _, rectRequest in pairs(queue) do
-		safeComplete(rectRequest.resultFuture, nil)
-	end
-end
-
 local function useRectRequest()
 	local rectQueue = rectRequestQueue:use()
 	local rectRequest = rectQueue[1]
@@ -111,7 +103,7 @@ local function appComponent(props: { Button: PluginToolbarButton })
 			if newIsEnabled then
 				updateCaptureRectRef(createCenterRect(Vector2.new(0.5, 0.5)))
 			else
-				clearAllRectRequests()
+				ViewportApp.clearAllRectRequests()
 			end
 			setIsEnabled(newIsEnabled)
 		end))
@@ -205,17 +197,47 @@ end
 function ViewportApp.requestRect(rect: Rect?, scaleOS: Vector2?)
 	local resultFuture = Future.new()
 	local renderScaleOS = scaleOS or Vector2.one
+
+	local entry = {
+		scaleOS = renderScaleOS,
+		initialRect = rect or createCenterRect(Vector2.new(0.5, 0.5), renderScaleOS),
+		resultFuture = resultFuture,
+	}
+
 	rectRequestQueue:update()(function(queue)
-		table.insert(queue, {
-			scaleOS = renderScaleOS,
-			initialRect = rect or createCenterRect(Vector2.new(0.5, 0.5), renderScaleOS),
-			resultFuture = resultFuture,
-		})
+		table.insert(queue, entry)
 		return queue
 	end)
 
-	local resultRect = resultFuture:expect()
-	return resultRect
+	local function expect()
+		return resultFuture:expect()
+	end
+
+	local function cancel()
+		if not resultFuture:isCompleted() then
+			rectRequestQueue:update()(function(queue)
+				local foundIndex = table.find(queue, entry)
+				if foundIndex then
+					table.remove(queue, foundIndex)
+				end
+				return queue
+			end)
+			resultFuture:complete(nil)
+		end
+	end
+
+	return {
+		expect = expect,
+		cancel = cancel,
+	}
+end
+
+function ViewportApp.clearAllRectRequests()
+	local queue = rectRequestQueue:get()
+	rectRequestQueue:set({})
+	for _, rectRequest in pairs(queue) do
+		safeComplete(rectRequest.resultFuture, nil)
+	end
 end
 
 function ViewportApp.mount(plugin: Plugin, toolbar: PluginToolbar)
@@ -243,7 +265,7 @@ function ViewportApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 	}))
 
 	plugin.Unloading:Connect(function()
-		clearAllRectRequests()
+		ViewportApp.clearAllRectRequests()
 		coreGuiRoot:unmount()
 		folder:Destroy()
 	end)
