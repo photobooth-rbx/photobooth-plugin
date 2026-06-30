@@ -35,13 +35,18 @@ type RectRequest = {
 
 local rectRequestQueue = ObservableValue.new({} :: { RectRequest })
 
+local function safeComplete<T...>(f: Future.Future<T...>, ...: T...)
+	if not f:isCompleted() then
+		f:complete(...)
+	end
+end
+
 local function clearAllRectRequests()
 	local queue = rectRequestQueue:get()
 	rectRequestQueue:set({})
 	for _, rectRequest in pairs(queue) do
-		rectRequest.resultFuture:complete(nil)
+		safeComplete(rectRequest.resultFuture, nil)
 	end
-	table.clear(queue)
 end
 
 local function useRectRequest()
@@ -60,8 +65,10 @@ end
 
 local function createCenterRect(scale: Vector2)
 	local scaleOS = StateManager.temporary:get().scaleOS
-	local currentCamera = workspace.CurrentCamera :: Camera
-	return RenderRect.fromViewportCenter((currentCamera.ViewportSize * scale) / scaleOS)
+	local viewportSize = (workspace.CurrentCamera :: Camera).ViewportSize * scaleOS
+	local rectSize = viewportSize * scale
+	local absPosition = (viewportSize - rectSize) / 2
+	return RenderRect.fromAbs(absPosition, rectSize)
 end
 
 local function useCaptureRect()
@@ -131,7 +138,7 @@ local function appComponent(props: { Button: PluginToolbarButton })
 
 	local onCapture = React.useCallback(function(rect: Rect)
 		if rectRequest then
-			rectRequest.resultFuture:complete(rect)
+			safeComplete(rectRequest.resultFuture, rect)
 			removeRectRequest()
 			setIsEnabled(false)
 			return true, "" :: string?
