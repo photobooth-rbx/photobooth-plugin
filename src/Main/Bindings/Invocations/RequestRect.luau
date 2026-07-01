@@ -35,7 +35,7 @@ local function callback(options: typeof(gtOptions))
 	if options.type == "request" then
 		local castedOptions = options :: typeof(requestOptions)
 		local guid = HttpService:GenerateGUID(false)
-		UserInterface.rectRequest(guid, castedOptions.rect, castedOptions.scale)
+		UserInterface.requestRect(guid, castedOptions.rect, castedOptions.scale)
 		return guid
 	end
 
