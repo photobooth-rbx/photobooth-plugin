@@ -54,10 +54,7 @@ local function useRectRequest()
 
 	local remove = React.useCallback(function()
 		rectRequestQueue:update()(function(queue)
-			local popped = table.remove(queue, 1)
-			if popped then
-				rectRequestControlByGuid[popped.guid] = nil
-			end
+			table.remove(queue, 1)
 			return queue
 		end)
 	end, { rectRequest })
@@ -232,7 +229,9 @@ function ViewportApp.requestRect(guid: string, rect: Rect?, scaleOS: Vector2?)
 	end)
 
 	local function expect()
-		return resultFuture:expect()
+		local result = resultFuture:expect()
+		rectRequestControlByGuid[entry.guid] = nil
+		return result
 	end
 
 	local function cancel()
