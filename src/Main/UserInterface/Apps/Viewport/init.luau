@@ -265,7 +265,6 @@ function ViewportApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 	}))
 
 	plugin.Unloading:Connect(function()
-		ViewportApp.clearAllRectRequests()
 		coreGuiRoot:unmount()
 		folder:Destroy()
 	end)
