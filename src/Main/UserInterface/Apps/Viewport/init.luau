@@ -28,12 +28,19 @@ local FullViewport = require(script.Components.FullViewport)
 local ViewportApp = {}
 
 type RectRequest = {
+	guid: string,
 	scaleOS: Vector2,
 	initialRect: Rect,
 	resultFuture: Future.Future<Rect?>,
 }
 
+type RectRequestControl = {
+	expect: () -> Rect?,
+	cancel: () -> (),
+}
+
 local rectRequestQueue = ObservableValue.new({} :: { RectRequest })
+local rectRequestControlByGuid: { [string]: RectRequestControl } = {}
 
 local function safeComplete<T...>(f: Future.Future<T...>, ...: T...)
 	if not f:isCompleted() then
@@ -47,7 +54,10 @@ local function useRectRequest()
 
 	local remove = React.useCallback(function()
 		rectRequestQueue:update()(function(queue)
-			table.remove(queue, 1)
+			local popped = table.remove(queue, 1)
+			if popped then
+				rectRequestControlByGuid[popped.guid] = nil
+			end
 			return queue
 		end)
 	end, { rectRequest })
@@ -114,6 +124,7 @@ local function appComponent(props: { Button: PluginToolbarButton })
 	end, { isEnabled })
 
 	React.useEffect(function()
+		local connection
 		if rectRequest then
 			updateCaptureRectRef(rectRequest.initialRect)
 
@@ -123,6 +134,17 @@ local function appComponent(props: { Button: PluginToolbarButton })
 			end)
 
 			setIsEnabled(true)
+			connection = rectRequestQueue:onChanged(function()
+				if #rectRequestQueue:get() == 0 then
+					setIsEnabled(false)
+				end
+			end)
+		end
+
+		return function()
+			if connection then
+				connection:Disconnect()
+			end
 		end
 	end, { rectRequest })
 
@@ -130,7 +152,6 @@ local function appComponent(props: { Button: PluginToolbarButton })
 		if rectRequest then
 			safeComplete(rectRequest.resultFuture, rect)
 			removeRectRequest()
-			setIsEnabled(false)
 			return true, "" :: string?
 		end
 
@@ -194,11 +215,12 @@ local function appComponent(props: { Button: PluginToolbarButton })
 		})
 end
 
-function ViewportApp.requestRect(rect: Rect?, scaleOS: Vector2?)
+function ViewportApp.requestRect(guid: string, rect: Rect?, scaleOS: Vector2?)
 	local resultFuture = Future.new()
 	local renderScaleOS = scaleOS or Vector2.one
 
 	local entry = {
+		guid = guid,
 		scaleOS = renderScaleOS,
 		initialRect = rect or createCenterRect(Vector2.new(0.5, 0.5), renderScaleOS),
 		resultFuture = resultFuture,
@@ -219,6 +241,7 @@ function ViewportApp.requestRect(rect: Rect?, scaleOS: Vector2?)
 				local foundIndex = table.find(queue, entry)
 				if foundIndex then
 					table.remove(queue, foundIndex)
+					rectRequestControlByGuid[entry.guid] = nil
 				end
 				return queue
 			end)
@@ -226,15 +249,24 @@ function ViewportApp.requestRect(rect: Rect?, scaleOS: Vector2?)
 		end
 	end
 
-	return {
+	local requestControl: RectRequestControl = {
 		expect = expect,
 		cancel = cancel,
 	}
+
+	rectRequestControlByGuid[entry.guid] = requestControl
+
+	return requestControl
+end
+
+function ViewportApp.getRectRequestByGuid(guid: string)
+	return rectRequestControlByGuid[guid] :: RectRequestControl?
 end
 
 function ViewportApp.clearAllRectRequests()
 	local queue = rectRequestQueue:get()
 	rectRequestQueue:set({})
+	table.clear(rectRequestControlByGuid)
 	for _, rectRequest in pairs(queue) do
 		safeComplete(rectRequest.resultFuture, nil)
 	end
