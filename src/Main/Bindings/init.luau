@@ -35,10 +35,10 @@ local function connectBindings(plugin: Plugin, interface: Instance)
 
 	if bindable then
 		bindable.OnInvoke = function(identifier: string, ...: any)
-			local resultFuture = Future.new() :: Future.Future<boolean, string?, { any }>
+			local resultFuture = Future.new() :: Future.Future<boolean, string?, boolean, { any }>
 			local connection = plugin.Unloading:Connect(function()
 				if not resultFuture:isCompleted() then
-					resultFuture:complete(false, "Plugin unloaded.", {})
+					resultFuture:complete(false, "Plugin unloaded.", true, {})
 				end
 			end)
 
@@ -52,13 +52,15 @@ local function connectBindings(plugin: Plugin, interface: Instance)
 				end)
 
 				if not resultFuture:isCompleted() then
-					resultFuture:complete(success, err, results)
+					resultFuture:complete(success, err, false, results)
 				end
 			end)
 
-			local success, err, results = resultFuture:expect()
-			task.cancel(thread)
+			local success, err, unloaded, results = resultFuture:expect()
 			connection:Disconnect()
+			if unloaded then
+				task.cancel(thread)
+			end
 
 			if success then
 				return true, table.unpack(results)
