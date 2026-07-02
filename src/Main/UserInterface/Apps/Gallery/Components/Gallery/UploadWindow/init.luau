@@ -181,7 +181,7 @@ local function UploadWindow(props: Props)
 								local isGroup = creator == "Group"
 								upload.start({
 									Id = if isGroup then groupId else StudioService:GetUserId(),
-									Type = if isGroup then Enum.CreatorType.Group else Enum.CreatorType.User,
+									Type = if isGroup then Enum.AssetCreatorType.Group else Enum.AssetCreatorType.User,
 								})
 							end
 						end,
