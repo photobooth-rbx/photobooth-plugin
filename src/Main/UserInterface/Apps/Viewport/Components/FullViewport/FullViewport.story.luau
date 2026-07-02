@@ -17,6 +17,9 @@ return CreateStory.theme(function(props)
 		BackgroundTransparency = 1,
 	}, {
 		FullViewport = React.createElement(FullViewport, {
+			ScaleOS = Vector2.new(1, 1),
+			IsRectRequest = false,
+
 			OnMinimize = function()
 				print("Minimize")
 			end,

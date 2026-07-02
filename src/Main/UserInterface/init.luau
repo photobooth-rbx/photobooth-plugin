@@ -10,4 +10,7 @@ function UserInterface.mountApps(plugin: Plugin, toolbar: PluginToolbar)
 	GalleryApp.mount(plugin, toolbar)
 end
 
+UserInterface.requestRect = ViewportApp.requestRect
+UserInterface.getRectRequestByGuid = ViewportApp.getRectRequestByGuid
+
 return UserInterface

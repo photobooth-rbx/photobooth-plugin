@@ -3,28 +3,27 @@ local StudioComponents = require(pluginRoot.Packages.StudioComponents)
 local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
-local StateManager = require(pluginRoot.Main.StateManager)
-
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local BaseButton = require(uiRoot.Components.BaseButton)
 local Hooks = require(uiRoot.Hooks)
 
+local MOVE_ICON = assert(Lucide.GetAsset("move", 16))
+local CAMERA_ICON = assert(Lucide.GetAsset("camera", 16))
+local MINIMIZE_ICON = assert(Lucide.GetAsset("minimize", 16))
+local CIRCLE_CHECK_ICON = assert(Lucide.GetAsset("circle-check", 16))
+
 export type Props = {
 	ViewportRect: Rect,
+	ScaleOS: Vector2,
+	IsRectRequest: boolean,
 	OnMinimize: () -> (),
 	OnCapture: (Rect) -> (boolean, string?),
 	Disabled: boolean?,
 }
 
 local function ActionBar(props: Props)
-	local moveIcon = assert(Lucide.GetAsset("move", 16))
-	local cameraIcon = assert(Lucide.GetAsset("camera", 16))
-	local minimizeIcon = assert(Lucide.GetAsset("minimize", 16))
-
 	local theme = StudioComponents.useTheme()
-	local scaleOS = StateManager.temporary:useSpecific()(function(state)
-		return state.scaleOS
-	end)
+	local captureIcon = if props.IsRectRequest then CIRCLE_CHECK_ICON else CAMERA_ICON
 
 	local underFrameRef = React.useRef(nil)
 	local underFrameAbsPosition = Hooks.useRefProperty(underFrameRef, "AbsolutePosition", Vector2.zero)
@@ -43,8 +42,8 @@ local function ActionBar(props: Props)
 
 	-- stylua: ignore
 	local displaySize = Vector2.new(
-		math.round(scaleOS.X * props.ViewportRect.Width),
-		math.round(scaleOS.Y * props.ViewportRect.Height)
+		math.round(props.ScaleOS.X * props.ViewportRect.Width),
+		math.round(props.ScaleOS.Y * props.ViewportRect.Height)
 	)
 
 	return React.createElement("Frame", {
@@ -83,11 +82,11 @@ local function ActionBar(props: Props)
 				}),
 
 				Icon = React.createElement("ImageLabel", {
-					Image = moveIcon.Url,
-					ImageRectSize = moveIcon.ImageRectSize,
-					ImageRectOffset = moveIcon.ImageRectOffset,
+					Image = MOVE_ICON.Url,
+					ImageRectSize = MOVE_ICON.ImageRectSize,
+					ImageRectOffset = MOVE_ICON.ImageRectOffset,
 
-					Size = UDim2.fromOffset(moveIcon.ImageRectSize.X, moveIcon.ImageRectSize.Y),
+					Size = UDim2.fromOffset(MOVE_ICON.ImageRectSize.X, MOVE_ICON.ImageRectSize.Y),
 					BackgroundTransparency = 1,
 					ImageColor3 = Color3.fromRGB(102, 102, 102),
 					LayoutOrder = 1,
@@ -127,11 +126,11 @@ local function ActionBar(props: Props)
 					TextColorStyle = Enum.StudioStyleGuideColor.ButtonText,
 
 					Icon = {
-						Image = minimizeIcon.Url,
-						RectSize = minimizeIcon.ImageRectSize,
-						RectOffset = minimizeIcon.ImageRectOffset,
+						Image = MINIMIZE_ICON.Url,
+						RectSize = MINIMIZE_ICON.ImageRectSize,
+						RectOffset = MINIMIZE_ICON.ImageRectOffset,
 
-						Size = minimizeIcon.ImageRectSize,
+						Size = MINIMIZE_ICON.ImageRectSize,
 						Transparency = if props.Disabled then 0.7 else 0,
 						UseThemeColor = true,
 					},
@@ -151,11 +150,11 @@ local function ActionBar(props: Props)
 					Size = UDim2.new(0, 24, 1, 0),
 
 					Icon = {
-						Image = cameraIcon.Url,
-						RectSize = cameraIcon.ImageRectSize,
-						RectOffset = cameraIcon.ImageRectOffset,
+						Image = captureIcon.Url,
+						RectSize = captureIcon.ImageRectSize,
+						RectOffset = captureIcon.ImageRectOffset,
 
-						Size = cameraIcon.ImageRectSize,
+						Size = captureIcon.ImageRectSize,
 						Transparency = if props.Disabled then 0.7 else 0,
 						Color = Color3.new(1, 1, 1),
 					},
