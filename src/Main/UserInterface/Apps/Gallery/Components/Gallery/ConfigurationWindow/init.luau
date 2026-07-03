@@ -3,351 +3,45 @@ local StudioComponents = require(pluginRoot.Packages.StudioComponents)
 local StudioProperties = require(pluginRoot.Packages.StudioProperties)
 local ReactRipple = require(pluginRoot.Packages.ReactRipple)
 local Semver = require(pluginRoot.Packages.Semver)
-local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
 local StudioMode = require(pluginRoot.Utilities.StudioMode)
+local Constants = require(pluginRoot.Constants)
 local Wally = require(pluginRoot.Wally)
 
-local Constants = require(pluginRoot.Constants)
-
-local Screenshot = require(pluginRoot.Main.Photo.Captures.Screenshot)
-local Captures = require(pluginRoot.Main.Photo.Captures)
 local StateManager = require(pluginRoot.Main.StateManager)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
 
-local SettingsGroup = require(script.SettingsGroup)
+local SettingsPanel = require(script.SettingsPanel)
 
-local HORIZONTAL_SPLIT = 0.5
 local IS_TEAM_CREATE = StudioMode.isTeamCreate()
 
-export type Props = {
-	AnchorPoint: Vector2,
-	Position: UDim2,
-	Size: UDim2,
-
-	OnConfirm: () -> (),
-	Disabled: boolean,
-}
-
-type GroupsProps = {
-	RootProps: Props,
-	LayoutOrder: number,
-}
-
-type DropdownItemDetail = {
-	Id: string,
-	Text: string,
-}
-
-local function GeneralGroup(props: GroupsProps)
-	local theme = StudioComponents.useTheme()
-
-	local savedState = StateManager.saved:use()
-	local temporaryState = StateManager.temporary:use()
-
-	local isRefreshing, setIsRefreshing = React.useState(false)
-	local refreshHovered, setRefreshHovered = React.useState(false)
-	local refreshIcon = assert(Lucide.GetAsset("refresh-cw", 16))
-
-	return React.createElement(SettingsGroup, {
-		Disabled = props.RootProps.Disabled,
-		LayoutOrder = props.LayoutOrder,
-		HorizontalSplit = HORIZONTAL_SPLIT,
-		Title = "General",
-		List = {
-			{
-				Name = "OS Scale",
-				Node = React.createElement("ImageButton", {
-					Size = UDim2.fromScale(1, 1),
-					BackgroundTransparency = 1,
-
-					[React.Event.InputBegan] = function(_, input)
-						if input.UserInputType == Enum.UserInputType.MouseMovement then
-							setRefreshHovered(true)
-						end
-					end,
-					[React.Event.InputEnded] = function(_, input)
-						if input.UserInputType == Enum.UserInputType.MouseMovement then
-							setRefreshHovered(false)
-						end
-					end,
-
-					[React.Event.Activated] = function()
-						if not isRefreshing then
-							setIsRefreshing(true)
-							StateManager.temporary:update()(function(state)
-								state.scaleOS = Screenshot.calculateScaleOS()
-								return state
-							end)
-							setIsRefreshing(false)
-						end
-					end,
-				}, {
-					Padding = React.createElement("UIPadding", {
-						PaddingLeft = UDim.new(0, 8),
-						PaddingRight = UDim.new(0, 8),
-						PaddingTop = UDim.new(0, 4),
-						PaddingBottom = UDim.new(0, 4),
-					}),
-
-					Label = React.createElement(StudioComponents.Label, {
-						Disabled = true,
-						Size = UDim2.fromScale(1, 1),
-						TextXAlignment = Enum.TextXAlignment.Left,
-						Text = if isRefreshing then "..." else `{temporaryState.scaleOS.X}, {temporaryState.scaleOS.Y}`,
-					}),
-					Refresh = React.createElement("ImageLabel", {
-						AnchorPoint = Vector2.new(1, 0.5),
-						Position = UDim2.new(1, 0, 0.5, 0),
-						Size = UDim2.fromOffset(refreshIcon.ImageRectSize.X, refreshIcon.ImageRectSize.Y),
-						BackgroundTransparency = 1,
-						ImageRectOffset = refreshIcon.ImageRectOffset,
-						ImageRectSize = refreshIcon.ImageRectSize,
-						Image = refreshIcon.Url,
-						ImageColor3 = theme:GetColor(
-							Enum.StudioStyleGuideColor.MainText,
-							if not refreshHovered
-								then Enum.StudioStyleGuideModifier.Disabled
-								else Enum.StudioStyleGuideModifier.Default
-						),
-					}),
-				}),
-			},
-			{
-				Name = "Alpha Bleed",
-				Node = React.createElement(React.Fragment, {}, {
-					Padding = React.createElement("UIPadding", {
-						PaddingLeft = UDim.new(0, 5),
-						PaddingRight = UDim.new(0, 5),
-						PaddingTop = UDim.new(0, 4),
-						PaddingBottom = UDim.new(0, 4),
-					}),
-					Checkbox = React.createElement(StudioComponents.Checkbox, {
-						Disabled = props.RootProps.Disabled,
-						Size = UDim2.fromScale(1, 1),
-						Value = savedState.alphaBleedingEnabled,
-						OnChanged = function()
-							StateManager.saved:update()(function(state)
-								state.alphaBleedingEnabled = not state.alphaBleedingEnabled
-								return state
-							end)
-						end,
-					}),
-				}),
-			},
-			{
-				Name = "Bindings",
-				Node = React.createElement(React.Fragment, {}, {
-					Padding = React.createElement("UIPadding", {
-						PaddingLeft = UDim.new(0, 5),
-						PaddingRight = UDim.new(0, 5),
-						PaddingTop = UDim.new(0, 4),
-						PaddingBottom = UDim.new(0, 4),
-					}),
-					Checkbox = React.createElement(StudioComponents.Checkbox, {
-						Disabled = props.RootProps.Disabled,
-						Size = UDim2.fromScale(1, 1),
-						Value = savedState.bindingsEnabled,
-						OnChanged = function()
-							StateManager.saved:update()(function(state)
-								state.bindingsEnabled = not state.bindingsEnabled
-								return state
-							end)
-						end,
-					}),
-				}),
-			},
-		},
-	})
-end
-
-local function ViewportGroup(props: GroupsProps)
-	local temporaryState = StateManager.temporary:use()
-
-	local dropdownItems = React.useMemo(function()
-		local items: { DropdownItemDetail } = {}
-		for i, captureType in Captures.Viewport.Order do
-			table.insert(items, {
-				Id = tostring(i),
-				Text = captureType,
-			})
-		end
-		return items
-	end, {})
-
-	return React.createElement(SettingsGroup, {
-		Disabled = props.RootProps.Disabled,
-		LayoutOrder = props.LayoutOrder,
-		HorizontalSplit = HORIZONTAL_SPLIT,
-		Title = "Viewport",
-		List = {
-			{
-				Name = "Blackout Mode",
-				Node = React.createElement(React.Fragment, {}, {
-					Padding = React.createElement("UIPadding", {
-						PaddingLeft = UDim.new(0, 5),
-						PaddingRight = UDim.new(0, 5),
-						PaddingTop = UDim.new(0, 4),
-						PaddingBottom = UDim.new(0, 4),
-					}),
-					Checkbox = React.createElement(StudioComponents.Checkbox, {
-						Disabled = props.RootProps.Disabled,
-						Size = UDim2.fromScale(1, 1),
-						Value = temporaryState.isBlackoutMode,
-						OnChanged = function()
-							StateManager.temporary:update()(function(state)
-								state.isBlackoutMode = not state.isBlackoutMode
-								return state
-							end)
-						end,
-					}),
-				}),
-			},
-			{
-				Name = "Fullscreen",
-				Node = React.createElement(React.Fragment, {}, {
-					Padding = React.createElement("UIPadding", {
-						PaddingLeft = UDim.new(0, 5),
-						PaddingRight = UDim.new(0, 5),
-						PaddingTop = UDim.new(0, 4),
-						PaddingBottom = UDim.new(0, 4),
-					}),
-					Checkbox = React.createElement(StudioComponents.Checkbox, {
-						Disabled = props.RootProps.Disabled,
-						Size = UDim2.fromScale(1, 1),
-						Value = temporaryState.isFullscreen,
-						OnChanged = function()
-							StateManager.temporary:update()(function(state)
-								state.isFullscreen = not state.isFullscreen
-								return state
-							end)
-						end,
-					}),
-				}),
-			},
-			{
-				Name = "Capture Type",
-				Node = React.createElement(React.Fragment, {}, {
-					Input = React.createElement(StudioComponents.Dropdown, {
-						Disabled = props.RootProps.Disabled,
-						Size = UDim2.new(1, -1, 1, 0),
-						Position = UDim2.fromOffset(1, 0),
-						Items = dropdownItems :: { any },
-						SelectedItem = tostring(temporaryState.viewportCaptureTypeIndex),
-						OnItemSelected = function(id: string?)
-							local index = tonumber(id)
-							if index then
-								StateManager.temporary:update()(function(state)
-									state.viewportCaptureTypeIndex = index
-									return state
-								end)
-							end
-						end,
-					}),
-				}),
-			},
-		},
-	})
-end
-
-local function UserInterfaceGroup(props: GroupsProps)
-	local temporaryState = StateManager.temporary:use()
-
-	local dropdownItems = React.useMemo(function()
-		local items: { DropdownItemDetail } = {}
-		for i, captureType in Captures.UserInterface.Order do
-			table.insert(items, {
-				Id = tostring(i),
-				Text = captureType,
-			})
-		end
-		return items
-	end, {})
-
-	return React.createElement(SettingsGroup, {
-		Disabled = props.RootProps.Disabled,
-		LayoutOrder = props.LayoutOrder,
-		HorizontalSplit = HORIZONTAL_SPLIT,
-		Title = "User Interface",
-		List = {
-			{
-				Name = "Capture Type",
-				Node = React.createElement(React.Fragment, {}, {
-					Input = React.createElement(StudioComponents.Dropdown, {
-						Disabled = props.RootProps.Disabled,
-						Size = UDim2.new(1, -1, 1, 0),
-						Position = UDim2.fromOffset(1, 0),
-						Items = dropdownItems :: { any },
-						SelectedItem = tostring(temporaryState.uiCaptureTypeIndex),
-						OnItemSelected = function(id: string?)
-							local index = tonumber(id)
-							if index then
-								StateManager.temporary:update()(function(state)
-									state.uiCaptureTypeIndex = index
-									return state
-								end)
-							end
-						end,
-					}),
-				}),
-			},
-		},
-	})
-end
-
-local function DevGroup(props: GroupsProps)
-	local savedState = StateManager.saved:use()
-	local temporaryState = StateManager.temporary:use()
-
-	return React.createElement(SettingsGroup, {
-		Disabled = props.RootProps.Disabled,
-		LayoutOrder = props.LayoutOrder,
-		HorizontalSplit = HORIZONTAL_SPLIT,
-		Title = "Developer",
-		List = {
-			{
-				Name = if temporaryState.isExperimentalMode == savedState.experimentalModeEnabled
-					then "Experimental"
-					else "Experimental*",
-				Node = React.createElement(React.Fragment, {}, {
-					Padding = React.createElement("UIPadding", {
-						PaddingLeft = UDim.new(0, 5),
-						PaddingRight = UDim.new(0, 5),
-						PaddingTop = UDim.new(0, 4),
-						PaddingBottom = UDim.new(0, 4),
-					}),
-					Checkbox = React.createElement(StudioComponents.Checkbox, {
-						Disabled = props.RootProps.Disabled,
-						Size = UDim2.fromScale(1, 1),
-						Value = savedState.experimentalModeEnabled,
-						OnChanged = function()
-							StateManager.saved:update()(function(state)
-								state.experimentalModeEnabled = not state.experimentalModeEnabled
-								return state
-							end)
-						end,
-					}),
-				}),
-			},
-		},
-	})
-end
-
-local function useScrollTransparency()
-	local transparencyBinding, control = ReactRipple.useSpring(1)
+local function useScrollTransparency(initial: number)
+	local transparencyBinding, control = ReactRipple.useSpring(initial)
 	local transparency = Hooks.useBindingState(transparencyBinding)
 	return transparency, React.useCallback(function(value: number)
 		control:setGoal(value)
 	end, {})
 end
 
+export type Props = {
+	AnchorPoint: Vector2?,
+	Position: UDim2?,
+	Size: UDim2?,
+
+	OnConfirm: () -> (),
+
+	Disabled: boolean?,
+}
+
 local function ConfigurationWindow(props: Props)
 	local theme = StudioComponents.useTheme()
 	local latestVersion = Hooks.useLatestVersion()
 	local isLocalPlugin = Hooks.useIsLocalPlugin()
+
+	local scrollTransparency, setScrollTransparency = useScrollTransparency(1)
 
 	local isExperimentalMode = StateManager.temporary:useSpecific()(function(state)
 		return state.isExperimentalMode
@@ -356,8 +50,6 @@ local function ConfigurationWindow(props: Props)
 	local experimentalModeEnabled = StateManager.saved:useSpecific()(function(state)
 		return state.experimentalModeEnabled
 	end)
-
-	local scrollTransparency, setScrollTransparency = useScrollTransparency()
 
 	local versionText = `v{Wally.package.version}-{if isLocalPlugin then "local" else "cloud"}`
 	local needsRestart = isExperimentalMode ~= experimentalModeEnabled
@@ -440,22 +132,7 @@ local function ConfigurationWindow(props: Props)
 					PaddingBottom = UDim.new(0, 4 + 8),
 				}),
 
-				General = React.createElement(GeneralGroup, {
-					RootProps = props,
-					LayoutOrder = 1,
-				}),
-				Viewport = React.createElement(ViewportGroup, {
-					RootProps = props,
-					LayoutOrder = 2,
-				}),
-				UserInterface = React.createElement(UserInterfaceGroup, {
-					RootProps = props,
-					LayoutOrder = 3,
-				}),
-				Dev = Constants.AllowExperimentalMode and not IS_TEAM_CREATE and React.createElement(DevGroup, {
-					RootProps = props,
-					LayoutOrder = 4,
-				}),
+				Panel = React.createElement(SettingsPanel, {}),
 			}),
 		}),
 		Version = React.createElement(StudioComponents.Label, {

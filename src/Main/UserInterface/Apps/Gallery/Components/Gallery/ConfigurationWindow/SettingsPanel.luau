@@ -14,6 +14,8 @@ local Hooks = require(uiRoot.Hooks)
 
 local FORCE_EXPANDED_GROUPS = true
 
+local REFRESH_ICON = assert(Lucide.GetAsset("refresh-cw", 16))
+
 local function useDropdown(arr: { string })
 	local dropdownItems = Hooks.useConstant(function()
 		local items = {}
@@ -30,7 +32,69 @@ local function useDropdown(arr: { string })
 end
 
 local function ScaleOSComponent(props: { Disabled: boolean?, LayoutOrder: number? })
-	return React.createElement(StudioProperties.InputBox, {
+	local theme = StudioComponents.useTheme()
+	local temporaryState, updateTemporaryState = StateManager.temporary:use()
+
+	local isRefreshing, setIsRefreshing = React.useState(false)
+	local refreshHovered, setRefreshHovered = React.useState(false)
+
+	return React.createElement(StudioProperties.PropertyLine, {
+		FieldName = "OS Scale",
+
+		Interface = React.createElement("ImageButton", {
+			Size = UDim2.fromScale(1, 1),
+			BackgroundTransparency = 1,
+
+			[React.Event.InputBegan] = function(_, input)
+				if input.UserInputType == Enum.UserInputType.MouseMovement then
+					setRefreshHovered(true)
+				end
+			end,
+			[React.Event.InputEnded] = function(_, input)
+				if input.UserInputType == Enum.UserInputType.MouseMovement then
+					setRefreshHovered(false)
+				end
+			end,
+
+			[React.Event.Activated] = function()
+				if not isRefreshing then
+					setIsRefreshing(true)
+					updateTemporaryState(function(state)
+						state.scaleOS = Screenshot.calculateScaleOS()
+						return state
+					end)
+					setIsRefreshing(false)
+				end
+			end,
+		}, {
+			Padding = React.createElement("UIPadding", {
+				PaddingLeft = UDim.new(0, 4),
+				PaddingRight = UDim.new(0, 4),
+			}),
+
+			Label = React.createElement(StudioComponents.Label, {
+				Disabled = true,
+				Size = UDim2.fromScale(1, 1),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Text = if isRefreshing then "..." else `{temporaryState.scaleOS.X}, {temporaryState.scaleOS.Y}`,
+			}),
+			Refresh = React.createElement("ImageLabel", {
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, 0, 0.5, 0),
+				Size = UDim2.fromOffset(REFRESH_ICON.ImageRectSize.X, REFRESH_ICON.ImageRectSize.Y),
+				BackgroundTransparency = 1,
+				ImageRectOffset = REFRESH_ICON.ImageRectOffset,
+				ImageRectSize = REFRESH_ICON.ImageRectSize,
+				Image = REFRESH_ICON.Url,
+				ImageColor3 = theme:GetColor(
+					Enum.StudioStyleGuideColor.MainText,
+					if not refreshHovered
+						then Enum.StudioStyleGuideModifier.Disabled
+						else Enum.StudioStyleGuideModifier.Default
+				),
+			}),
+		}) :: React.ReactNode,
+
 		Disabled = props.Disabled,
 		LayoutOrder = props.LayoutOrder,
 	})
@@ -74,10 +138,10 @@ local function SettingsPanel(props: Props)
 				Padding = UDim.new(0, 0),
 			}),
 
-			-- ScaleOS = React.createElement(ScaleOSComponent, {
-			-- 	Disabled = props.Disabled,
-			-- 	LayoutOrder = 1,
-			-- }),
+			ScaleOS = React.createElement(ScaleOSComponent, {
+				Disabled = props.Disabled,
+				LayoutOrder = 1,
+			}),
 
 			AlphaBleed = React.createElement(StudioProperties.Boolean, {
 				FieldName = "Alpha Bleed",
