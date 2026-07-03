@@ -28,7 +28,9 @@ local function tryConnecting()
 		local connectBinding = camera and camera:FindFirstChild("ConnectBinding") :: BindableFunction?
 
 		if connectBinding then
-			connectBinding:Invoke(script.Parent)
+			pcall(function()
+				connectBinding:Invoke(script.Parent)
+			end)
 		end
 	end
 end
@@ -43,14 +45,19 @@ end
 function Binding.invoke<T..., U...>(identifier: string, ...: T...): U...
 	tryConnecting()
 
-	local results = table.pack(bindable:Invoke(identifier, ...))
-	local success = table.unpack(results, 1, 1)
+	local invokeResults = table.pack(pcall(bindable.Invoke, bindable, identifier, ...))
 
-	if not success then
-		error(table.unpack(results, 2, 2), 2)
+	local invokeSuccess = invokeResults[1]
+	if not invokeSuccess then
+		error(invokeResults[2], 2)
 	end
 
-	return table.unpack(results, 2)
+	local success = invokeResults[2]
+	if not success then
+		error(invokeResults[3], 2)
+	end
+
+	return table.unpack(invokeResults, 3, invokeResults.n)
 end
 
 return Binding

@@ -14,6 +14,8 @@ export type ViewportCaptureTypes = Types.ViewportCaptureTypes
 export type CaptureViewportOptions = Types.CaptureViewportOptions
 export type CaptureUIOptions = Types.CaptureUIOptions
 
+export type RequestRectOptions = Types.RequestRectOptions
+
 -- Public
 
 Bindings.rect = RenderRect
@@ -50,6 +52,41 @@ end
 
 function Bindings.captureUI(options: CaptureUIOptions): MeshPart?
 	return Binding.invoke("captureUI", options)
+end
+
+function Bindings.requestRect(options: RequestRectOptions)
+	local guid: string = Binding.invoke("requestRect", {
+		type = "request",
+		rect = options.rect,
+		scale = options.scale,
+	})
+
+	local cachedResult
+	local resolvedExpect = false
+	local resolvedCancel = false
+
+	local function expect()
+		if not resolvedExpect and not resolvedCancel then
+			resolvedExpect = true
+			cachedResult = Binding.invoke("requestRect", {
+				type = "expect",
+				guid = guid,
+			}) :: Rect?
+		end
+		return cachedResult
+	end
+
+	local function cancel()
+		if not resolvedCancel then
+			resolvedCancel = true
+			Binding.invoke("requestRect", {
+				type = "cancel",
+				guid = guid,
+			})
+		end
+	end
+
+	return expect, cancel
 end
 
 function Bindings.isConnected(): boolean

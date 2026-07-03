@@ -2,7 +2,7 @@
 	"name": "Interface",
 	"syncRules": [
 		{
-		"pattern": "**/*/LICENSE",
+		"pattern": "LICENSE",
 		"use": "moduleScript"
 		}
 	],
@@ -16,7 +16,7 @@
 			"$path": "../../../../wally.toml"
 		},
 		"LICENSE": {
-			"$path": "../../../../LICENSE"
+			"$path": "LICENSE"
 		}
 	}
 }

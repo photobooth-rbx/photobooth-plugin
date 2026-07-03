@@ -1,4 +1,5 @@
 -- Generic
+local useUpdate = require(script.Generic.useUpdate)
 local useConstant = require(script.Generic.useConstant)
 local useMouseDrag = require(script.Generic.useMouseDrag)
 local useSelection = require(script.Generic.useSelection)
@@ -24,6 +25,7 @@ export type EditableImageInfo = useEditableImageInfos.EditableImageInfo
 -- Exported
 
 return {
+	useUpdate = useUpdate,
 	useConstant = useConstant,
 	useMouseDrag = useMouseDrag,
 	useSelection = useSelection,

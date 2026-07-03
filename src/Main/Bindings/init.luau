@@ -2,6 +2,7 @@ local CaptureService = game:GetService("CaptureService") :: CaptureService
 local ServerStorage = game:GetService("ServerStorage") :: ServerStorage
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
+local Future = require(pluginRoot.Packages.Future)
 local Trove = require(pluginRoot.Packages.Trove)
 
 local StateManager = require(pluginRoot.Main.StateManager)
@@ -34,12 +35,32 @@ local function connectBindings(plugin: Plugin, interface: Instance)
 
 	if bindable then
 		bindable.OnInvoke = function(identifier: string, ...: any)
-			local results
-			local packedArgs = table.pack(...)
-			local success, err = pcall(function()
-				local invocation = assert(invocationByIdentifier[identifier], `No invocation found for: {identifier}`)
-				results = table.pack(invocation.callback(table.unpack(packedArgs)))
+			local resultFuture = Future.new() :: Future.Future<boolean, string?, boolean, { any }>
+			local connection = plugin.Unloading:Connect(function()
+				if not resultFuture:isCompleted() then
+					resultFuture:complete(false, "Plugin unloaded.", true, {})
+				end
 			end)
+
+			local packedArgs = table.pack(...)
+			local thread = task.spawn(function()
+				local results = {}
+				local success, err = pcall(function()
+					local invocation =
+						assert(invocationByIdentifier[identifier], `No invocation found for: {identifier}`)
+					results = table.pack(invocation.callback(table.unpack(packedArgs)))
+				end)
+
+				if not resultFuture:isCompleted() then
+					resultFuture:complete(success, err, false, results)
+				end
+			end)
+
+			local success, err, unloaded, results = resultFuture:expect()
+			connection:Disconnect()
+			if unloaded then
+				task.cancel(thread)
+			end
 
 			if success then
 				return true, table.unpack(results)

@@ -6,7 +6,7 @@ if fs.isDir("bindings-package") then
 end
 
 fs.copy("src/Main/Bindings/Interface", "bindings-package")
-fs.copy("LICENSE", "bindings-package/LICENSE")
+-- fs.copy("LICENSE", "bindings-package/LICENSE")
 
 local wallyToml = serde.decode("toml", fs.readFile("wally.toml"))
 local package = wallyToml.package
@@ -20,6 +20,6 @@ fs.writeFile("bindings-package/wally.toml", serde.encode("toml", { package = pac
 local defaultProject = serde.decode("json", fs.readFile("bindings-package/default.project.json"))
 defaultProject.name = "photobooth-bindings"
 defaultProject.tree.Wally["$path"] = "wally.toml"
-defaultProject.tree.LICENSE["$path"] = "LICENSE"
-defaultProject.syncRules[1].pattern = "LICENSE"
+-- defaultProject.tree.LICENSE["$path"] = "LICENSE"
+-- defaultProject.syncRules[1].pattern = "LICENSE"
 fs.writeFile("bindings-package/default.project.json", serde.encode("json", defaultProject, true))

@@ -11,7 +11,7 @@ local RETRY_DELAY = 2
 
 export type Creator = {
 	Id: number,
-	Type: Enum.CreatorType,
+	Type: Enum.AssetCreatorType,
 }
 
 export type Output = { { Name: string, AssetId: number } }
@@ -151,7 +151,7 @@ local function useUpload(params: Params): Controller
 		setGroupError(nil)
 
 		closeTrove:Add(task.spawn(function()
-			if creator.Type == Enum.CreatorType.Group then
+			if creator.Type == Enum.AssetCreatorType.Group then
 				setPhase("Validating")
 				if not params.TestCreator(creator) then
 					setGroupError("Could not upload to this group.", 3)

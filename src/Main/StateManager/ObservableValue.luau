@@ -41,19 +41,22 @@ function ObservableValueClass.update<T>(self: ObservableValue<T>)
 	end
 end
 
-function ObservableValueClass.use<T>(self: ObservableValue<T>)
+local function useInternal<T, U>(self: ObservableValue<T>, read: (T) -> U, predicate: (U, U) -> boolean)
 	local state, setState = React.useState({})
-	local valueRef = React.useRef(self.value)
+	local valueRef = React.useRef(read(self.value))
 
 	React.useEffect(function()
-		if valueRef.current ~= self.value then
-			valueRef.current = self.value
-			setState({})
+		local function refresh()
+			local readValue = read(self.value)
+			if predicate(readValue, valueRef.current) then
+				valueRef.current = readValue
+				setState({})
+			end
 		end
 
+		refresh()
 		local connection = self.signal:Connect(function()
-			valueRef.current = self.value
-			setState({})
+			refresh()
 		end)
 
 		return function()
@@ -61,39 +64,31 @@ function ObservableValueClass.use<T>(self: ObservableValue<T>)
 		end
 	end, { self :: any })
 
-	local updateValue = React.useCallback(function(callback: (T) -> T)
-		self:update()(callback)
-	end, { self :: any, state :: any })
-
-	return valueRef.current, updateValue
+	return valueRef.current, state
 end
 
 function ObservableValueClass.useSpecific<T>(self: ObservableValue<T>)
 	return function<U>(read: (T) -> U)
-		local _state, setState = React.useState({})
-		local valueRef = React.useRef(read(self.value))
+		local value = useInternal(self, read, function(new, prev)
+			return new ~= prev
+		end)
 
-		React.useEffect(function()
-			local function refresh()
-				local readValue = read(self.value)
-				if valueRef.current ~= readValue then
-					valueRef.current = readValue
-					setState({})
-				end
-			end
-
-			refresh()
-			local connection = self.signal:Connect(function()
-				refresh()
-			end)
-
-			return function()
-				connection:Disconnect()
-			end
-		end, { self :: any })
-
-		return valueRef.current
+		return value
 	end
+end
+
+function ObservableValueClass.use<T>(self: ObservableValue<T>)
+	local value, state = useInternal(self, function(selfValue)
+		return selfValue
+	end, function(new, prev)
+		return true
+	end)
+
+	local updateValue = React.useCallback(function(callback: (T) -> T)
+		self:update()(callback)
+	end, { self :: any, state :: any })
+
+	return value, updateValue
 end
 
 function ObservableValueClass.onChanged<T>(self: ObservableValue<T>, callback: () -> ())

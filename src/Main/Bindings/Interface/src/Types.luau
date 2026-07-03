@@ -19,4 +19,9 @@ export type CaptureUIOptions = {
 	alphaBleed: boolean?,
 }
 
+export type RequestRectOptions = {
+	rect: Rect?,
+	scale: Vector2?,
+}
+
 return {}
