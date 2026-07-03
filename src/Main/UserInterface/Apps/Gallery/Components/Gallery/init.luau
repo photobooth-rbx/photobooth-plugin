@@ -7,7 +7,7 @@ local Hooks = require(uiRoot.Hooks)
 
 local useImageControls = require(script.ImageInterface.useImageControls)
 
-local ConfigurationWindow = require(script.ConfigurationWindow)
+local ConfigurationWindow = require(script.ConfigWindow2)
 local ImageInterface = require(script.ImageInterface)
 local UploadWindow = require(script.UploadWindow)
 local ActionBar = require(script.ActionBar)
