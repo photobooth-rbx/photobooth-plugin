@@ -38,6 +38,10 @@ local function ScaleOSComponent(props: { Disabled: boolean?, LayoutOrder: number
 	local isRefreshing, setIsRefreshing = React.useState(false)
 	local refreshHovered, setRefreshHovered = React.useState(false)
 
+	if props.Disabled then
+		refreshHovered = false
+	end
+
 	return React.createElement(StudioProperties.PropertyLine, {
 		FieldName = "OS Scale",
 
@@ -57,7 +61,7 @@ local function ScaleOSComponent(props: { Disabled: boolean?, LayoutOrder: number
 			end,
 
 			[React.Event.Activated] = function()
-				if not isRefreshing then
+				if not props.Disabled and not isRefreshing then
 					setIsRefreshing(true)
 					updateTemporaryState(function(state)
 						state.scaleOS = Screenshot.calculateScaleOS()

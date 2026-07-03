@@ -132,7 +132,9 @@ local function ConfigurationWindow(props: Props)
 					PaddingBottom = UDim.new(0, 4 + 8),
 				}),
 
-				Panel = React.createElement(SettingsPanel, {}),
+				Panel = React.createElement(SettingsPanel, {
+					Disabled = props.Disabled,
+				}),
 			}),
 		}),
 		Version = React.createElement(StudioComponents.Label, {
