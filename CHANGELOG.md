@@ -1,6 +1,14 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Fix quad mesh UVs so that texture is no longer mirrored in the workspace
+- Refactor internal state management system
+- Move UI to app based system for better organization and management
+- Refactor upload panel for better retry logic and (manual input) group support
+- Refactor configuration panel to use studio properties package
+- Add `Bindings.requestRect` which allows devs to request a user defined screen rect with the Photobooth crop UI
+
 ### [2.2.0] - 2026/06/17
 - Add blackout mode to settings which allows the rendering of a black background without influencing the skybox
 - Fixed a render distance bug that occurred when the camera's yaw was axis-aligned and studio quality levels were not set to max
