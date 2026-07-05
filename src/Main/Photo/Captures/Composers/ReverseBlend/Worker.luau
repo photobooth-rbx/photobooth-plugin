@@ -12,19 +12,21 @@ local function worker(
 	onBlack: EditableImage?,
 	colorCorrection: ColorCorrectionEffect
 )
-	local brightness = colorCorrection.Brightness
-	local contrast = colorCorrection.Contrast + 1
-	local saturation = colorCorrection.Saturation + 1
-
-	local tintColor = colorCorrection.TintColor
-	local tint = { tintColor.R, tintColor.G, tintColor.B }
-
 	local rectSize = rect.Max - rect.Min
 	local width, height = rectSize.X, rectSize.Y
 
 	local whiteRetroBuffer = onWhiteRetro:ReadPixelsBuffer(rect.Min, rectSize)
 	local blackRetroBuffer = onBlackRetro:ReadPixelsBuffer(rect.Min, rectSize)
 	local blackBuffer = if onBlack then onBlack:ReadPixelsBuffer(rect.Min, rectSize) else blackRetroBuffer
+
+	task.desynchronize()
+
+	local brightness = colorCorrection.Brightness
+	local contrast = colorCorrection.Contrast + 1
+	local saturation = colorCorrection.Saturation + 1
+
+	local tintColor = colorCorrection.TintColor
+	local tint = { tintColor.R, tintColor.G, tintColor.B }
 
 	for i = 1, width * height do
 		local j = (i - 1) * 4

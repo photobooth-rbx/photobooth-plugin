@@ -4,13 +4,15 @@
 local function worker(img: EditableImage, voronoi: EditableImage, crop: Rect, step: number)
 	local imgSize = img.Size
 	local imgWidth, imgHeight = imgSize.X, imgSize.Y
+	local seedRead = voronoi:ReadPixelsBuffer(Vector2.zero, imgSize)
+
+	task.desynchronize()
 
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
 	local minX, maxX = crop.Min.X, crop.Max.X
 	local minY, maxY = crop.Min.Y, crop.Max.Y
 
-	local seedRead = voronoi:ReadPixelsBuffer(Vector2.zero, imgSize)
 	local seedWrite = buffer.create(cropWidth * cropHeight * 4)
 
 	for y = minY + 1, maxY do

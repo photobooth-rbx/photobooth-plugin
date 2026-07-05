@@ -6,6 +6,8 @@ local function worker(img: EditableImage, crop: Rect)
 	local imgWidth, _imgHeight = imgSize.X, imgSize.Y
 	local imgBuffer = img:ReadPixelsBuffer(Vector2.zero, imgSize)
 
+	task.desynchronize()
+
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
 	local minX, maxX = crop.Min.X, crop.Max.X
