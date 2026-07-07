@@ -29,20 +29,28 @@ local function operation(options: Types.CaptureUIOptions, trove: Trove.Trove)
 	uiBounds:SetColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
 	local onWhite = Screenshot.rect(targetRect)
+	trove:Add(function()
+		onWhite:Destroy()
+	end)
 
 	uiBounds:SetColor(Color3.new(0, 0, 0))
 	SceneControl.yieldUntilNextFrame()
 	local onBlack = Screenshot.rect(targetRect)
+	trove:Add(function()
+		onBlack:Destroy()
+	end)
 
 	local colorCorrection = Instance.new("ColorCorrectionEffect")
 	colorCorrection.Brightness = 1
 	trove:Add(colorCorrection)
 
-	local capture = Composers.reverseBlend(onWhite, onBlack, nil, colorCorrection)
+	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
+	local capture = errorWatch(Composers.reverseBlend(onWhite, onBlack, nil, colorCorrection))
 	if options.alphaBleed then
-		capture = Composers.alphaBleed(capture)
+		capture = errorWatch(Composers.alphaBleed(capture))
 	end
 
+	markComplete()
 	return capture
 end
 

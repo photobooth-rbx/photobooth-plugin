@@ -1,6 +1,6 @@
---!native
 --!optimize 2
 
+@native
 local function worker(img: EditableImage, voronoi: EditableImage, crop: Rect)
 	local imgSize = img.Size
 	local imgWidth = imgSize.X
@@ -13,6 +13,8 @@ local function worker(img: EditableImage, voronoi: EditableImage, crop: Rect)
 	local imgRead = img:ReadPixelsBuffer(Vector2.zero, imgSize)
 	local cropWrite = img:ReadPixelsBuffer(crop.Min, cropSize)
 	local voronoiRead = voronoi:ReadPixelsBuffer(crop.Min, cropSize)
+
+	task.desynchronize()
 
 	for y = minY + 1, maxY do
 		for x = minX + 1, maxX do

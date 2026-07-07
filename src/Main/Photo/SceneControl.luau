@@ -112,6 +112,25 @@ function SceneControl.once<T..., U...>(callback: (T...) -> U...)
 	end
 end
 
+function SceneControl.cleanupOnError(trove: Trove.Trove)
+	local isComplete = false
+
+	local function markComplete()
+		isComplete = true
+	end
+
+	local function addImage(editImage: EditableImage)
+		trove:Add(function()
+			if not isComplete then
+				editImage:Destroy()
+			end
+		end)
+		return editImage
+	end
+
+	return addImage, markComplete
+end
+
 function SceneControl.setProperties(instance: Instance, properties: { [string]: any })
 	local instanceAny = instance :: any
 

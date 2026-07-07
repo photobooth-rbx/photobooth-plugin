@@ -7,7 +7,6 @@ local Trove = require(pluginRoot.Packages.Trove)
 local Sift = require(pluginRoot.Packages.Sift)
 
 local Timeout = require(pluginRoot.Utilities.Timeout)
-local Image = require(pluginRoot.Utilities.Image)
 
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
 local StateManager = require(pluginRoot.Main.StateManager)
@@ -94,7 +93,7 @@ function Photo.captureUI(options: Types.CaptureUIOptions)
 
 	local processor = Captures.UserInterface.Processors[options.type]
 
-	local results: { Image.Image }
+	local results: { EditableImage }
 	local trove = createIsCapturingTrove()
 	local success, err = SceneControl.freeze(false, function()
 		if options.delay and options.delay > 0 then
@@ -134,7 +133,7 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 
 	Blackout.setDisabled("capturing", true)
 
-	local results: { Image.Image }
+	local results: { EditableImage }
 	local trove = createIsCapturingTrove()
 	local success, err = SceneControl.freeze(true, function()
 		results = processor(options, trove)
@@ -164,14 +163,14 @@ function Photo.getQuadMeshPart()
 	return copy
 end
 
-function Photo.export(imgs: { Image.Image }, parent: Instance?)
+function Photo.export(imgs: { EditableImage }, parent: Instance?)
 	local results = {}
 
 	for i, img in imgs do
 		local name = `{DateTime.now():ToIsoDate()}_{i}`
 		local meshPart = Photo.getQuadMeshPart()
 		meshPart.Name = name
-		meshPart.TextureContent = Content.fromObject(img:save())
+		meshPart.TextureContent = Content.fromObject(img)
 		meshPart.Parent = parent
 
 		table.insert(results, meshPart)
