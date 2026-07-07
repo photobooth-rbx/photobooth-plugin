@@ -54,6 +54,7 @@ end
 
 function MeshPartFogBackgroundClass._createInstances(_self: MeshPartFogBackground)
 	local part = Instance.new("Part")
+	part.Archivable = false
 	part.Material = Enum.Material.SmoothPlastic
 	part.CFrame = CFrame.identity
 	part.Size = Vector3.new(1, 1, 1)
@@ -67,6 +68,7 @@ function MeshPartFogBackgroundClass._createInstances(_self: MeshPartFogBackgroun
 	part.Locked = true
 
 	local mesh = Instance.new("SpecialMesh")
+	mesh.Archivable = false
 	mesh.Scale = Vector3.new(PLANE_SCALE, PLANE_SCALE, 0)
 	mesh.MeshType = Enum.MeshType.Brick
 	mesh.Parent = part
