@@ -35,11 +35,8 @@ jobs:
       - name: 🔧 Install Rokit
         uses: CompeyDev/setup-rokit@v0.1.2
 
-      - name: 📦 Install addons
-        run: lune run addons-install
-
-      - name: 📦 Install packages
-        run: lune run wally-install
+      - name: 📦 Install dependencies
+        run: lune run deps-install
 
       - name: 🏗️ Build ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.rbxm
         run: rojo build plugin.project.json --output ${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.rbxm
@@ -61,8 +58,8 @@ jobs:
       - name: 🔧 Install Rokit
         uses: CompeyDev/setup-rokit@v0.1.2
 
-      - name: 📦 Install packages
-        run: lune run wally-install
+      - name: 📦 Install dependencies
+        run: lune run deps-install
 
       - name: 🚧 Create ${{ env.BINDINGS_NAME }} project folder
         run: lune run create-bindings-package
