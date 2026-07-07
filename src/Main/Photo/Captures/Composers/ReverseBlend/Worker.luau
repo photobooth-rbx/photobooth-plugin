@@ -19,8 +19,6 @@ local function worker(
 	local blackRetroBuffer = onBlackRetro:ReadPixelsBuffer(rect.Min, rectSize)
 	local blackBuffer = if onBlack then onBlack:ReadPixelsBuffer(rect.Min, rectSize) else blackRetroBuffer
 
-	task.desynchronize()
-
 	local brightness = colorCorrection.Brightness
 	local contrast = colorCorrection.Contrast + 1
 	local saturation = colorCorrection.Saturation + 1
