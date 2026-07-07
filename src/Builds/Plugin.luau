@@ -1,4 +1,4 @@
-local RunService = game:GetService("RunService") :: RunService
+local RunService = game:GetService("RunService")
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioMode = require(pluginRoot.Utilities.StudioMode)
@@ -95,6 +95,18 @@ function Plugin.build(plugin: Plugin)
 	local toolbar = plugin:CreateToolbar("Photobooth")
 	UserInterface.mountApps(plugin, toolbar)
 	Bindings.setup(plugin)
+
+	-- addons
+	for _, addonModel in pluginRoot.Addons:GetChildren() do
+		local addonRoot = addonModel:FindFirstChild("PluginRoot")
+		local builds = addonRoot and addonRoot:FindFirstChild("Builds")
+		local addonBuild = builds and builds:FindFirstChild("Addon")
+
+		if addonBuild and addonBuild:IsA("ModuleScript") then
+			local addon = require(addonBuild) :: any
+			addon.build(plugin, toolbar)
+		end
+	end
 end
 
 return Plugin

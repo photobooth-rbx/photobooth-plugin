@@ -3,7 +3,7 @@ local net = require("@lune/net")
 local roblox = require("@lune/roblox")
 
 local RBXMS: { [string]: string } = {
-	["auto_capture+post_processing"] = "https://github.com/photobooth-rbx/photobooth-plugin-addons/releases/download/v0.1.0-pre.14/photobooth-addons-v0.1.0-pre.14.rbxm",
+	["auto_capture+post_processing"] = "https://github.com/photobooth-rbx/photobooth-plugin-addons/releases/download/v0.1.0-pre.15/photobooth-addons-v0.1.0-pre.15.rbxm",
 }
 
 if fs.isDir("Addons") then
