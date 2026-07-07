@@ -20,7 +20,7 @@ local function applyBleed(img: EditableImage, voronoi: EditableImage, regions: {
 	local offset = 0
 	local stitched = buffer.create(workingBbox.Width * workingBbox.Height * 4)
 
-	local results = scheduler:workAsync("serial")
+	local results = scheduler:workAsync()
 	scheduler:Destroy()
 
 	for _i, getCropBuffer in results do

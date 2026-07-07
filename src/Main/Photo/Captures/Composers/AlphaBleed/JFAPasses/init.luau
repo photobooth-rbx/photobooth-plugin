@@ -47,7 +47,7 @@ local function jfaPasses(
 		end
 
 		local offset = 0
-		local results = scheduler:workAsync("serial")
+		local results = scheduler:workAsync()
 		for _i, getCropBuffer in results do
 			local cropBuffer = getCropBuffer()
 			buffer.copy(stitched, offset, cropBuffer)

@@ -27,7 +27,7 @@ local function plantSeeds(img: EditableImage, voronoi: EditableImage, regions: {
 	local tXMin, tYMin = math.huge, math.huge
 	local tXMax, tYMax = -math.huge, -math.huge
 
-	local results = scheduler:workAsync("serial")
+	local results = scheduler:workAsync()
 	for _i, getCropBuffer in results do
 		local cropBuffer, chunkHasOpaque, cXMin, cYMin, cXMax, cYMax = getCropBuffer()
 		buffer.copy(stitched, offset, cropBuffer)
