@@ -35,6 +35,9 @@ jobs:
       - name: 🔧 Install Rokit
         uses: CompeyDev/setup-rokit@v0.1.2
 
+      - name: 📦 Install addons
+        run: lune run addons-install
+
       - name: 📦 Install packages
         run: lune run wally-install
 
