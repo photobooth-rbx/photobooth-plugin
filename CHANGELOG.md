@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Refactor configuration panel to use studio properties package
 - Add `Bindings.requestRect` which allows devs to request a user defined screen rect with the Photobooth crop UI
 - Rewrites the background removal and alpha bleeding algorithms to preform much more quickly - especially in high resolution captures
+- Add addons suite which includes the auto capture and post processing tools
 
 ### [2.2.0] - 2026/06/17
 - Add blackout mode to settings which allows the rendering of a black background without influencing the skybox
