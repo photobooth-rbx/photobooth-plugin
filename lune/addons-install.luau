@@ -3,7 +3,7 @@ local net = require("@lune/net")
 local roblox = require("@lune/roblox")
 
 local RBXMS: { [string]: string } = {
-	["auto_capture+post_processing"] = "https://github.com/photobooth-rbx/photobooth-plugin-addons/releases/download/v0.1.0-pre.16/photobooth-addons-v0.1.0-pre.16.rbxm",
+	["auto_capture+post_processing"] = "https://github.com/photobooth-rbx/photobooth-plugin-addons/releases/download/v0.1.0-pre.17/photobooth-addons-v0.1.0-pre.17.rbxm",
 }
 
 if fs.isDir("Addons") then
@@ -28,3 +28,5 @@ for name, link in RBXMS do
 		fs.writeFile(`Addons/{name}.rbxm`, roblox.serializeModel({ model }))
 	end
 end
+
+print("Successfully installed addons")
