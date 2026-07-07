@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Move UI to app based system for better organization and management
 - Refactor upload panel for better retry logic and (manual input) group support
 - Refactor configuration panel to use studio properties package
+- Fix background instances not being marked as archivable = false
 - Add `Bindings.requestRect` which allows devs to request a user defined screen rect with the Photobooth crop UI
 - Rewrites the background removal and alpha bleeding algorithms to preform much more quickly - especially in high resolution captures
 
