@@ -28,7 +28,7 @@ local function reverseBlend(
 		scheduler:schedule(rowRect, onWhiteRetro, onBlackRetro, onBlack, colorCorrection)
 	end
 
-	local results = scheduler:workAsync("serial")
+	local results = scheduler:workAsync()
 
 	local offset = 0
 	local stitched = buffer.create(width * height * 4)
