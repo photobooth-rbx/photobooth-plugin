@@ -1,7 +1,7 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.3.0] - 2026/07/07
 - Fix quad mesh UVs so that texture is no longer mirrored in the workspace
 - Refactor internal state management system
 - Move UI to app based system for better organization and management
