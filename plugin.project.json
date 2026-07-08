@@ -12,6 +12,9 @@
 		"Packages": {
 			"$path": "Packages"
 		},
+		"Addons": {
+			"$path": "Addons"
+		},
 		"Wally": {
 			"$path": "wally.toml"
 		},
