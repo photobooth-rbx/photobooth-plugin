@@ -1,6 +1,10 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.3.1] - 2026/07/08
+- Bump addons suite to 0.1.1
+  - Fixes issue where auto capture was not respecting OS scale
+
 ### [2.3.0] - 2026/07/07
 - Fix quad mesh UVs so that texture is no longer mirrored in the workspace
 - Refactor internal state management system
