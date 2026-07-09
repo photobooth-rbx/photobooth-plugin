@@ -60,16 +60,16 @@ type DesiredCrop = {
 	size: Vector2,
 }
 
-local function toDesiredCrop(rect: Rect, viewportRect: Rect, scaleOS: Vector2): DesiredCrop
+local function toDesiredCrop(rect: Rect, viewportRect: Rect, scaleOS: Vector2)
 	local viewportSize = Vector2.new(viewportRect.Width, viewportRect.Height)
 	local center = (rect.Min + rect.Max) / 2
 	return {
 		centerScale = (center - viewportRect.Min) / viewportSize,
 		size = Vector2.new(rect.Width, rect.Height) / scaleOS,
-	}
+	} :: DesiredCrop
 end
 
-local function fromDesiredCrop(desired: DesiredCrop, viewportRect: Rect, scaleOS: Vector2): Rect
+local function fromDesiredCrop(desired: DesiredCrop, viewportRect: Rect, scaleOS: Vector2)
 	local viewportSize = Vector2.new(viewportRect.Width, viewportRect.Height)
 	local center = viewportRect.Min + desired.centerScale * viewportSize
 	local halfSize = desired.size * scaleOS / 2
