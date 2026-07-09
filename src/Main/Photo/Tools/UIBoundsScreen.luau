@@ -1,3 +1,5 @@
+local StarterGui = game:GetService("StarterGui")
+
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
 local StateManager = require(pluginRoot.Main.StateManager)
@@ -16,8 +18,9 @@ export type UIBounds = typeof(setmetatable(
 		scale: Vector2,
 		subject: GuiObject,
 
-		surfaceGui: SurfaceGui,
-		surfacePart: BasePart,
+		screenGui: ScreenGui,
+
+		showDevelopmentGui: boolean,
 
 		backgroundFrame: Frame,
 		aabbFrame: Frame,
@@ -33,9 +36,12 @@ function UIBoundsClass.new(subject: GuiObject, scale: Vector2): UIBounds
 	self.scale = scale
 	self.subject = subject
 
-	self.surfaceGui, self.surfacePart = self:_createSurface(game:GetService("CoreGui"))
+	self.screenGui = self:_createSurface(StarterGui)
 	self.backgroundFrame, self.aabbFrame = self:_createBackgroundFrame(subject)
-	self.backgroundFrame.Parent = self.surfaceGui
+	self.backgroundFrame.Parent = self.screenGui
+
+	self.showDevelopmentGui = StarterGui.ShowDevelopmentGui
+	StarterGui.ShowDevelopmentGui = true
 
 	self:SetColor(Color3.new(1, 1, 1))
 
@@ -57,36 +63,30 @@ function UIBoundsClass._findNearestStyleLink(self: UIBounds)
 end
 
 function UIBoundsClass._createSurface(self: UIBounds, parent: Instance)
-	local camera = workspace.CurrentCamera
-	local viewportSize = camera.ViewportSize
-	local aspect = viewportSize.X / viewportSize.Y
-	local distance = 0.5 / math.tan(math.rad(camera.FieldOfView / 2))
-
-	local surfacePart = Instance.new("Part")
-	surfacePart.Anchored = true
-	surfacePart.CFrame = camera.CFrame * CFrame.new(0, 0, -(distance + 0.5))
-	surfacePart.Size = Vector3.new(aspect, 1, 1)
-	surfacePart.Parent = parent
-
 	local layerCollector = self.subject:FindFirstAncestorWhichIsA("LayerCollector")
 	local zIndexBehavior = if layerCollector then layerCollector.ZIndexBehavior else Enum.ZIndexBehavior.Sibling
 
-	local canvasScale = StateManager.temporary:get().scaleOS / self.scale
-	local canvasSize = viewportSize * canvasScale
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "UIBounds"
+	screenGui.ZIndexBehavior = zIndexBehavior
+	screenGui.IgnoreGuiInset = true
+	screenGui.DisplayOrder = 2 ^ 31 - 1
+	screenGui.Parent = parent
 
-	local surfaceGui = Instance.new("SurfaceGui")
-	surfaceGui.AlwaysOnTop = true
-	surfaceGui.Face = Enum.NormalId.Back
-	surfaceGui.Name = "UIBounds"
-	surfaceGui.ZIndexBehavior = zIndexBehavior
-	surfaceGui.SizingMode = Enum.SurfaceGuiSizingMode.FixedSize
-	surfaceGui.CanvasSize = canvasSize
-	surfaceGui.Adornee = surfacePart
+	return screenGui
+end
 
-	surfaceGui.Parent = surfacePart
-	surfacePart.Parent = parent
+function UIBoundsClass._resolveUniformScale(self: UIBounds): number
+	local scaleOS = StateManager.temporary:get().scaleOS
+	local uiScale = self.scale / scaleOS
 
-	return surfaceGui, surfacePart
+	assert(
+		uiScale.X == uiScale.Y,
+		`UIBounds: ScreenGui capture only supports uniform scaling, but got scale {self.scale}`
+			.. ` (effective {uiScale} after OS scale {scaleOS}). Non-uniform scaling requires a SurfaceGui canvas.`
+	)
+
+	return uiScale.X
 end
 
 local function isClipped(frame: GuiObject, root: GuiObject): boolean
@@ -243,6 +243,10 @@ function UIBoundsClass._createBackgroundFrame(self: UIBounds, subject: GuiObject
 	backgroundFrame.Size = UDim2.fromOffset(aabbRect.Width + 1, aabbRect.Height + 1)
 	backgroundFrame.BorderSizePixel = 0
 
+	local uiScale = Instance.new("UIScale")
+	uiScale.Scale = self:_resolveUniformScale()
+	uiScale.Parent = backgroundFrame
+
 	local boundingFrame = Instance.new("Frame")
 	boundingFrame.ZIndex = minSubjectZIndex - 1
 	boundingFrame.Size = UDim2.fromOffset(aabbRect.Width, aabbRect.Height)
@@ -276,7 +280,10 @@ end
 -- Public
 
 function UIBoundsClass.GetRect(self: UIBounds)
-	return RenderRect.fromAbs(self.aabbFrame.AbsolutePosition, self.aabbFrame.AbsoluteSize * self.scale)
+	-- aabbFrame's absolute geometry is in on-screen (viewport) pixels and already includes
+	-- the UIScale; convert to captured-screenshot pixels by applying the OS scale.
+	local scaleOS = StateManager.temporary:get().scaleOS
+	return RenderRect.fromAbs(self.aabbFrame.AbsolutePosition * scaleOS, self.aabbFrame.AbsoluteSize * scaleOS)
 end
 
 function UIBoundsClass.SetColor(self: UIBounds, color: Color3)
@@ -284,11 +291,12 @@ function UIBoundsClass.SetColor(self: UIBounds, color: Color3)
 end
 
 function UIBoundsClass.GetLayerCollector(self: UIBounds)
-	return self.surfaceGui
+	return self.screenGui
 end
 
 function UIBoundsClass.Destroy(self: UIBounds)
-	self.surfacePart:Destroy()
+	self.screenGui:Destroy()
+	StarterGui.ShowDevelopmentGui = self.showDevelopmentGui
 end
 
 --
