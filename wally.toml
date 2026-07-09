@@ -21,7 +21,7 @@ GreenTea = "corecii/greentea@0.4.11"
 React = "jsdotlua/react@17.2.1"
 ReactRoblox = "jsdotlua/react-roblox@17.2.1"
 StudioComponents = "sircfenner/studiocomponents@1.2.0"
-StudioProperties = "egomoose/react-studio-properties@1.6.0"
+StudioProperties = "egomoose/react-studio-properties@1.7.1"
 Lucide = "virtualbutfake/lucide-roblox@1.1.3"
 ReactRipple = "littensy/react-ripple@3.0.1"
 
