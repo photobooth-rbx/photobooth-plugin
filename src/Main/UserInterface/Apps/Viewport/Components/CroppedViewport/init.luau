@@ -96,6 +96,17 @@ local function clampRect(
 	local boundMaxX = viewportRect.Max.X - GRABBER_MARGIN * scaleOS.X
 	local boundMaxY = viewportRect.Max.Y - ACTION_BAR_MARGIN * scaleOS.Y
 
+	-- collapse any crossed axis to its midpoint so the crop degrades to a zero-size rect at the center
+	if boundMaxX < boundMinX then
+		boundMinX = (boundMinX + boundMaxX) / 2
+		boundMaxX = boundMinX
+	end
+
+	if boundMaxY < boundMinY then
+		boundMinY = (boundMinY + boundMaxY) / 2
+		boundMaxY = boundMinY
+	end
+
 	local maxWidth = math.min(MAX_CAPTURE_WIDTH * scaleOS.X, boundMaxX - boundMinX)
 	local maxHeight = math.min(MAX_CAPTURE_HEIGHT * scaleOS.Y, boundMaxY - boundMinY)
 
