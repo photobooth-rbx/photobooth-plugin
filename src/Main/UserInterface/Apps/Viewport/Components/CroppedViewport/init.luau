@@ -4,7 +4,6 @@ local React = require(pluginRoot.Packages.React)
 
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
 local Constants = require(pluginRoot.Constants)
-local StateManager = require(pluginRoot.Main.StateManager)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
@@ -55,6 +54,27 @@ local MIN_CAPTURE_WIDTH = math.max(MIN_CAPTURE_HEIGHT, ACTION_BAR.Width, ALIGN_B
 
 local MAX_CAPTURE_HEIGHT = Constants.MaxCaptureRectSize.Y
 local MAX_CAPTURE_WIDTH = Constants.MaxCaptureRectSize.X
+
+type DesiredCrop = {
+	centerScale: Vector2,
+	size: Vector2,
+}
+
+local function toDesiredCrop(rect: Rect, viewportRect: Rect, scaleOS: Vector2): DesiredCrop
+	local viewportSize = Vector2.new(viewportRect.Width, viewportRect.Height)
+	local center = (rect.Min + rect.Max) / 2
+	return {
+		centerScale = (center - viewportRect.Min) / viewportSize,
+		size = Vector2.new(rect.Width, rect.Height) / scaleOS,
+	}
+end
+
+local function fromDesiredCrop(desired: DesiredCrop, viewportRect: Rect, scaleOS: Vector2): Rect
+	local viewportSize = Vector2.new(viewportRect.Width, viewportRect.Height)
+	local center = viewportRect.Min + desired.centerScale * viewportSize
+	local halfSize = desired.size * scaleOS / 2
+	return Rect.new(center - halfSize, center + halfSize)
+end
 
 local function positionRect(rect: Rect, anchorPoint: Vector2, position: Vector2)
 	local size = Vector2.new(rect.Width, rect.Height)
@@ -180,6 +200,7 @@ local function useCaptureRect(
 		{ scaledViewportRect, scaleOS } :: { any }
 	)
 
+	local desiredCropRef = React.useRef(toDesiredCrop(captureRef.current, scaledViewportRect, scaleOS))
 	local captureRect, setCaptureRect = React.useState(function()
 		local clampedCaptureRect = getClampedCaptureRect(captureRef.current, Vector2.zero, Vector2.zero, true, true)
 		return RenderRect.fromRect(clampedCaptureRect)
@@ -187,28 +208,43 @@ local function useCaptureRect(
 
 	local setCaptureRectClamped = React.useCallback(
 		function(rect: Rect, direction: Vector2, delta: Vector2, mirror: boolean, clampMin: boolean)
-			local clampedCaptureRect =
-				RenderRect.fromRect(getClampedCaptureRect(rect, direction, delta, mirror, clampMin))
-			captureRef.current = clampedCaptureRect
-			setCaptureRect(clampedCaptureRect)
+			local clampedCaptureRect = getClampedCaptureRect(rect, direction, delta, mirror, clampMin)
+			local renderedCaptureRect = RenderRect.fromRect(clampedCaptureRect)
+			captureRef.current = renderedCaptureRect
+
+			-- store the desired crop from the unrounded clamped rect. RenderRect rounds each edge
+			-- independently, so re-deriving a later edit from an already-rounded rect biases the crop
+			-- ~0.5px in one direction every time and drifts it off center.
+			desiredCropRef.current = toDesiredCrop(clampedCaptureRect, scaledViewportRect, scaleOS)
+			setCaptureRect(renderedCaptureRect)
 		end,
-		{ getClampedCaptureRect }
+		{ getClampedCaptureRect } :: { any }
 	)
+
+	local setCaptureSize = React.useCallback(function(dimensions: Vector2)
+		local viewportSize = Vector2.new(scaledViewportRect.Width, scaledViewportRect.Height)
+		local center = scaledViewportRect.Min + desiredCropRef.current.centerScale * viewportSize
+		local rect = Rect.new(center - dimensions / 2, center + dimensions / 2)
+		setCaptureRectClamped(rect, Vector2.zero, Vector2.zero, true, false)
+	end, { setCaptureRectClamped } :: { any })
 
 	local updateCaptureRefRef = React.useRef((nil :: any) :: typeof(updateCaptureRef))
 	React.useEffect(function()
 		if updateCaptureRefRef.current ~= updateCaptureRef then
+			-- hard override (open / rect request): snap to the requested rect
 			updateCaptureRefRef.current = updateCaptureRef
 			setCaptureRectClamped(captureRef.current, Vector2.zero, Vector2.zero, true, true)
 		else
-			local newCenter = scaledViewportRect.Min
-				+ Vector2.new(scaledViewportRect.Width, scaledViewportRect.Height) / 2
-			local newCaptureRect = positionRect(captureRect, Vector2.new(0.5, 0.5), newCenter)
-			setCaptureRectClamped(newCaptureRect, Vector2.zero, Vector2.zero, true, true)
+			-- viewport moved/resized: keep the desired crop, only re-clamp it to the new bounds
+			local desiredRect = fromDesiredCrop(desiredCropRef.current, scaledViewportRect, scaleOS)
+			local clampedCaptureRect =
+				RenderRect.fromRect(getClampedCaptureRect(desiredRect, Vector2.zero, Vector2.zero, true, true))
+			captureRef.current = clampedCaptureRect
+			setCaptureRect(clampedCaptureRect)
 		end
 	end, { setCaptureRectClamped, updateCaptureRef })
 
-	return captureRect, setCaptureRectClamped
+	return captureRect, setCaptureRectClamped, setCaptureSize
 end
 
 export type Props = {
@@ -236,7 +272,7 @@ local function CroppedViewport(props: Props & { ViewportRect: Rect })
 	local dragRectRef = React.useRef(Rect.new(0, 0, 0, 0))
 
 	local scaledViewportRect = useScaledViewportRect(props.ViewportRect, props.ScaleOS)
-	local captureRect, setCaptureRect =
+	local captureRect, setCaptureRect, setCaptureSize =
 		useCaptureRect(props.CaptureRectRef, props.UpdateCaptureRectRef, scaledViewportRect, props.ScaleOS)
 
 	local renderedCaptureRect = RenderRect.fromRect(
@@ -334,11 +370,7 @@ local function CroppedViewport(props: Props & { ViewportRect: Rect })
 				ViewportRect = props.ViewportRect,
 				DisplayRect = captureRect,
 
-				OnDimensionInput = function(dimensions)
-					local center = (captureRect.Min + captureRect.Max) / 2
-					local rect = Rect.new(center - dimensions / 2, center + dimensions / 2)
-					setCaptureRect(rect, Vector2.zero, Vector2.zero, true, false)
-				end,
+				OnDimensionInput = setCaptureSize,
 
 				UseRectText = isCropMode or isCropDragging,
 				OnRectInput = function(rect)
