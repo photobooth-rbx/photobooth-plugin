@@ -2,6 +2,7 @@
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Unreleased
+- Fixes the cropped viewport getting reset whenever the viewport size changed
 
 ### [2.3.2] - 2026/07/08
 - Fixes an issue where UI captures were not rendering
