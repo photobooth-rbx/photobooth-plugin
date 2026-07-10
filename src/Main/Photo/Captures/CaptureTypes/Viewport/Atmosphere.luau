@@ -38,7 +38,7 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	-- I use this trick to override the camera's near plane z so we only render the skybox
 	local camera = workspace.CurrentCamera
 	local renderCF = camera.CFrame
-	local nearZ = fogBackground:getNearZ() + 1E-6 -- slight nudge towards the camera
+	local nearZ = fogBackground:getNearZ()
 	local nz = ((camera.NearPlaneZ + nearZ) / camera.NearPlaneZ)
 	camera.CFrame = renderCF * CFrame.new(0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz)
 	trove:Add(function()

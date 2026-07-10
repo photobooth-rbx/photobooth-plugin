@@ -104,7 +104,7 @@ function MeshPartFogBackgroundClass.getNearZ(self: MeshPartFogBackground)
 		nearest = math.min(nearest, (hit - cameraCF.Position):Dot(lv))
 	end
 
-	return -nearest
+	return -nearest + MARGIN_OF_ERROR_DISTANCE
 end
 
 function MeshPartFogBackgroundClass.render(self: MeshPartFogBackground)
