@@ -18,6 +18,7 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	local atmosphere = Lighting:FindFirstChildWhichIsA("Atmosphere")
 
 	local fogBackground = Background.new(workspace)
+	--fogBackground:setMaterial(Enum.Material.Neon)
 	fogBackground:setColor(Color3.new(0, 0, 0))
 	fogBackground:setEnabled(true)
 
@@ -35,12 +36,14 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	-- capture scene w/ atmosphere only skybox
 	-- re-parenting the model is not good b/c it's expensive and it causes particles to restart
 	-- I use this trick to override the camera's near plane z so we only render the skybox
-	-- TODO: I use a fixed 50k value, I should probably calculate this based on the subject distance
 	local camera = workspace.CurrentCamera
 	local renderCF = camera.CFrame
-	local nz = ((camera.NearPlaneZ - 50_000) / camera.NearPlaneZ)
-	local nearZ = CFrame.new(0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz)
-	camera.CFrame = renderCF * nearZ
+	local nearZ = fogBackground:getNearZ() + 1E-6 -- slight nudge towards the camera
+	local nz = ((camera.NearPlaneZ + nearZ) / camera.NearPlaneZ)
+	camera.CFrame = renderCF * CFrame.new(0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz)
+	trove:Add(function()
+		camera.CFrame = renderCF
+	end)
 
 	SceneControl.yieldUntilNextFrame()
 	local atmoOnBlackBackground = Screenshot.rect(options.rect)
@@ -52,8 +55,9 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 
 	-- prepare for retro scene capturing
 	trove:Add(SceneControl.applyRetroLighting())
+	fogBackground:setMaterial(Enum.Material.SmoothPlastic)
 
-	-- atmosphere on/off is not instance, there's are a few lighting update frames
+	-- atmosphere on/off is not instant, there's are a few lighting update frames
 	atmosphere.Parent = nil
 	trove:Add(function()
 		atmosphere.Parent = Lighting
