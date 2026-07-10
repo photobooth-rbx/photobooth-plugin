@@ -78,6 +78,35 @@ end
 
 -- Public
 
+function MeshPartFogBackgroundClass.getNearZ(self: MeshPartFogBackground)
+	local pp = self.part.CFrame.Position
+	local pn = self.part.CFrame.LookVector
+
+	local camera = workspace.CurrentCamera :: Camera
+	local viewport = camera.ViewportSize
+	local cameraCF = camera.CFrame
+	local lv = cameraCF.LookVector
+
+	local corners = {
+		Vector2.new(0, 0),
+		Vector2.new(viewport.X, 0),
+		Vector2.new(0, viewport.Y),
+		Vector2.new(viewport.X, viewport.Y),
+	}
+
+	local nearest = math.huge
+	for _, corner in corners do
+		-- ray / plane intersection
+		local ray = camera:ViewportPointToRay(corner.X, corner.Y)
+		local rp, rd = ray.Origin, ray.Direction
+		local t = (pp - rp):Dot(pn) / rd:Dot(pn)
+		local hit = rp + rd * t
+		nearest = math.min(nearest, (hit - cameraCF.Position):Dot(lv))
+	end
+
+	return -nearest + MARGIN_OF_ERROR_DISTANCE
+end
+
 function MeshPartFogBackgroundClass.render(self: MeshPartFogBackground)
 	local cameraCF = workspace.CurrentCamera.CFrame
 	local intersection = cameraCF * Vector3.new(0, 0, -RENDER_DISTANCE)
@@ -105,6 +134,10 @@ function MeshPartFogBackgroundClass.setEnabled(self: MeshPartFogBackground, enab
 	else
 		self.fogTrove:Clean()
 	end
+end
+
+function MeshPartFogBackgroundClass.setMaterial(self: MeshPartFogBackground, material: Enum.Material)
+	self.part.Material = material
 end
 
 function MeshPartFogBackgroundClass.setColor(self: MeshPartFogBackground, color: Color3)

@@ -45,8 +45,9 @@ local captureTypes = {
 	},
 }
 
+-- selene: allow(empty_if)
 if StateManager.temporary:get().isExperimentalMode then
-	captureTypes.Viewport.Experimental_NSB_A1 = wrap(require(script.CaptureTypes.Viewport.Experimental_NSB_A1))
+	captureTypes.Viewport.Atmosphere_2026_07_10 = wrap(require(script.CaptureTypes.Viewport.Atmosphere))
 end
 
 return {
