@@ -1,9 +1,12 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.4.0] - 2026/07/10
 - Fixes the cropped viewport getting reset whenever the viewport size changed
 - Add new experimental atmosphere capture type
+- Bump addons suite to 0.2.0
+  - Fix partial value property auto-fills for vectors and color3s
+  - When adding base parts directly to auto-capture we now only bound to the top level base part. If you always want the old functionality then put your target inside a model
 
 ### [2.3.2] - 2026/07/08
 - Fixes an issue where UI captures were not rendering
