@@ -77,7 +77,7 @@ local function worker(
 		for k = 0, 2 do
 			local bo = buffer.readu8(atmoSubjectBuffer, j + k) / 255
 			local bb = buffer.readu8(atmoBackgroundBuffer, j + k) / 255
-			rgba[k + 1] = (bo - (1 - pixelAlpha) * bb) / pixelAlpha
+			rgba[k + 1] = math.clamp((bo - (1 - pixelAlpha) * bb) / pixelAlpha, 0, 1)
 		end
 
 		-- color correction
