@@ -1,6 +1,7 @@
 local Lighting = game:GetService("Lighting") :: Lighting
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
+local Atmosphere = require(script.Parent.Atmosphere)
 local Trove = require(pluginRoot.Packages.Trove)
 
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
@@ -15,7 +16,7 @@ local Composers = require(capturesRoot.Composers)
 
 local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove)
 	if Lighting:FindFirstChildWhichIsA("Atmosphere") then
-		error("WARN: Skybox cannot be removed when Atmosphere is present.", 0)
+		return Atmosphere(options, trove)
 	end
 
 	trove:Add(SceneControl.hideScreenUI())

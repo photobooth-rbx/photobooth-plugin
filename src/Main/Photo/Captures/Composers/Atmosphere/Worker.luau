@@ -61,15 +61,16 @@ local function worker(
 			and math.abs(white[3] - black[3]) <= COMPARE_MARGIN
 		)
 
-		local pixelAlpha = 0
+		local pixelAlpha = 1
 		if not isNearMargin then
 			-- the pixels differ between the two versions of the image
 			-- this means their must be some alpha we have to calculate
 			local maxAlpha = 0
 			for k = 1, 3 do
 				local alpha = (white[k] - black[k] - 255) / -255
-				pixelAlpha = math.max(maxAlpha, math.clamp(alpha, 0, 1))
+				maxAlpha = math.max(maxAlpha, math.clamp(alpha, 0, 1))
 			end
+			pixelAlpha = maxAlpha
 		end
 
 		local rgba = { 0, 0, 0, pixelAlpha }

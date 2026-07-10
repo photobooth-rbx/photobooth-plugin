@@ -40,7 +40,6 @@ local captureTypes = {
 		AlphaMask = wrap(require(script.CaptureTypes.UserInterface.AlphaMask)),
 	},
 	Viewport = {
-		Atmosphere = wrap(require(script.CaptureTypes.Viewport.Atmosphere)),
 		NoSkybox = wrap(require(script.CaptureTypes.Viewport.NoSkybox)),
 		Unmodified = wrap(require(script.CaptureTypes.Viewport.Unmodified)),
 	},

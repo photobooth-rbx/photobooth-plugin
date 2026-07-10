@@ -27,13 +27,15 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 
 	-- capture scene w/ atmosphere on black background
 	SceneControl.yieldUntilNextFrame()
-	task.wait(5)
 	local atmoOnBlackSubject = Screenshot.rect(options.rect)
 	trove:Add(function()
 		atmoOnBlackSubject:Destroy()
 	end)
 
 	-- capture scene w/ atmosphere only skybox
+	-- re-parenting the model is not good b/c it's expensive and it causes particles to restart
+	-- I use this trick to override the camera's near plane z so we only render the skybox
+	-- TODO: I use a fixed 50k value, I should probably calculate this based on the subject distance
 	local camera = workspace.CurrentCamera
 	local renderCF = camera.CFrame
 	local nz = ((camera.NearPlaneZ - 50_000) / camera.NearPlaneZ)
@@ -41,7 +43,6 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	camera.CFrame = renderCF * nearZ
 
 	SceneControl.yieldUntilNextFrame()
-	task.wait(5)
 	local atmoOnBlackBackground = Screenshot.rect(options.rect)
 	trove:Add(function()
 		atmoOnBlackBackground:Destroy()
@@ -52,15 +53,16 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	-- prepare for retro scene capturing
 	trove:Add(SceneControl.applyRetroLighting())
 
-	-- atmosphere off is instant
+	-- atmosphere on/off is not instance, there's are a few lighting update frames
 	atmosphere.Parent = nil
 	trove:Add(function()
 		atmosphere.Parent = Lighting
 	end)
 
+	task.wait(0.5)
+
 	-- capture on retro black
 	SceneControl.yieldUntilNextFrame()
-	task.wait(5)
 	local onBlackRetro = Screenshot.rect(options.rect)
 	trove:Add(function()
 		onBlackRetro:Destroy()
@@ -69,11 +71,13 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	-- capture on retro white
 	fogBackground:setColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
-	task.wait(5)
 	local onWhiteRetro = Screenshot.rect(options.rect)
 	trove:Add(function()
 		onWhiteRetro:Destroy()
 	end)
+
+	atmosphere.Parent = Lighting
+	task.wait(0.5)
 
 	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
 	local capture = errorWatch(
