@@ -1,9 +1,8 @@
-local Lighting = game:GetService("Lighting") :: Lighting
+local Lighting = game:GetService("Lighting")
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local Trove = require(pluginRoot.Packages.Trove)
-
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
+local Trove = require(pluginRoot.Packages.Trove)
 
 local photoRoot = script:FindFirstAncestor("Photo")
 local Screenshot = require(photoRoot.Captures.Screenshot)
@@ -13,50 +12,10 @@ local SceneControl = require(photoRoot.SceneControl)
 local capturesRoot = script:FindFirstAncestor("Captures")
 local Composers = require(capturesRoot.Composers)
 
-local function getAppliedAtmosphere(): Atmosphere?
-	local children = Lighting:GetChildren()
-	for i = #children, 1, -1 do
-		local child = children[i]
-		if child:IsA("Atmosphere") then
-			return child
-		end
-	end
-	return nil
-end
-
 local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove)
 	trove:Add(SceneControl.hideScreenUI())
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())
-
-	-- capture on graded black
-	local gradedOnBlack
-	local preRetroYieldCount = 1
-	if SceneControl.isGradedLightingRequired() or Lighting.ExposureCompensation ~= 0 then
-		local undoGradedLighting = trove:Add(SceneControl.applyGradedLighting())
-
-		local atmosphere = getAppliedAtmosphere()
-		if atmosphere then
-			preRetroYieldCount = 100
-
-			trove:Add(SceneControl.setProperties(atmosphere, {
-				Haze = 10,
-				Glare = 0,
-				Color = Color3.new(0, 0, 0),
-				Decay = Color3.new(0, 0, 0),
-			}))
-		end
-
-		-- SceneControl.yieldUntilNextFrame()
-		gradedOnBlack = Screenshot.rect(options.rect)
-		trove:Add(function()
-			gradedOnBlack:Destroy()
-		end)
-
-		undoGradedLighting()
-	end
-
-	-- prepare for retro scene capturing
-	trove:Add(SceneControl.applyRetroLighting())
+	local atmosphere = Lighting:FindFirstChildWhichIsA("Atmosphere")
 
 	local fogBackground = Background.new(workspace)
 	fogBackground:setColor(Color3.new(0, 0, 0))
@@ -66,10 +25,42 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 		fogBackground:Destroy()
 	end))
 
+	-- capture scene w/ atmosphere on black background
+	SceneControl.yieldUntilNextFrame()
+	task.wait(5)
+	local atmoOnBlackSubject = Screenshot.rect(options.rect)
+	trove:Add(function()
+		atmoOnBlackSubject:Destroy()
+	end)
+
+	-- capture scene w/ atmosphere only skybox
+	local camera = workspace.CurrentCamera
+	local renderCF = camera.CFrame
+	local nz = ((camera.NearPlaneZ - 50_000) / camera.NearPlaneZ)
+	local nearZ = CFrame.new(0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz)
+	camera.CFrame = renderCF * nearZ
+
+	SceneControl.yieldUntilNextFrame()
+	task.wait(5)
+	local atmoOnBlackBackground = Screenshot.rect(options.rect)
+	trove:Add(function()
+		atmoOnBlackBackground:Destroy()
+	end)
+
+	camera.CFrame = renderCF
+
+	-- prepare for retro scene capturing
+	trove:Add(SceneControl.applyRetroLighting())
+
+	-- atmosphere off is instant
+	atmosphere.Parent = nil
+	trove:Add(function()
+		atmosphere.Parent = Lighting
+	end)
+
 	-- capture on retro black
-	for _i = 1, preRetroYieldCount do
-		SceneControl.yieldUntilNextFrame()
-	end
+	SceneControl.yieldUntilNextFrame()
+	task.wait(5)
 	local onBlackRetro = Screenshot.rect(options.rect)
 	trove:Add(function()
 		onBlackRetro:Destroy()
@@ -78,14 +69,16 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	-- capture on retro white
 	fogBackground:setColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
+	task.wait(5)
 	local onWhiteRetro = Screenshot.rect(options.rect)
 	trove:Add(function()
 		onWhiteRetro:Destroy()
 	end)
 
-	-- remove background & alpha bleed
 	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
-	local capture = errorWatch(Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, colorCorrection))
+	local capture = errorWatch(
+		Composers.atmosphere(onWhiteRetro, onBlackRetro, atmoOnBlackSubject, atmoOnBlackBackground, colorCorrection)
+	)
 	if options.alphaBleed then
 		capture = errorWatch(Composers.alphaBleed(capture))
 	end

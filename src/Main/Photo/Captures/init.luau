@@ -40,13 +40,15 @@ local captureTypes = {
 		AlphaMask = wrap(require(script.CaptureTypes.UserInterface.AlphaMask)),
 	},
 	Viewport = {
+		Atmosphere = wrap(require(script.CaptureTypes.Viewport.Atmosphere)),
 		NoSkybox = wrap(require(script.CaptureTypes.Viewport.NoSkybox)),
 		Unmodified = wrap(require(script.CaptureTypes.Viewport.Unmodified)),
 	},
 }
 
+-- selene: allow(empty_if)
 if StateManager.temporary:get().isExperimentalMode then
-	captureTypes.Viewport.Experimental_NSB_A1 = wrap(require(script.CaptureTypes.Viewport.Experimental_NSB_A1))
+	-- no experiments currently
 end
 
 return {
