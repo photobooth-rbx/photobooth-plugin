@@ -12,7 +12,13 @@ local SceneControl = require(photoRoot.SceneControl)
 local capturesRoot = script:FindFirstAncestor("Captures")
 local Composers = require(capturesRoot.Composers)
 
+local NoSkybox = require(script.Parent.NoSkybox)
+
 local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove)
+	if not Lighting:FindFirstChildWhichIsA("Atmosphere") then
+		return NoSkybox(options, trove)
+	end
+
 	trove:Add(SceneControl.hideScreenUI())
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())
 	local atmosphere = Lighting:FindFirstChildWhichIsA("Atmosphere")
