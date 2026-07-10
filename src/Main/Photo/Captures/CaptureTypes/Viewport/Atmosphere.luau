@@ -18,7 +18,7 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	local atmosphere = Lighting:FindFirstChildWhichIsA("Atmosphere")
 
 	local fogBackground = Background.new(workspace)
-	--fogBackground:setMaterial(Enum.Material.Neon)
+	fogBackground:setMaterial(Enum.Material.Neon)
 	fogBackground:setColor(Color3.new(0, 0, 0))
 	fogBackground:setEnabled(true)
 
