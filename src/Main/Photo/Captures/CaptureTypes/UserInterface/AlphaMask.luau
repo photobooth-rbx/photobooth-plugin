@@ -23,20 +23,26 @@ local function operation(options: Types.CaptureUIOptions, trove: Trove.Trove)
 	end)
 
 	local targetRect = uiBounds:GetRect()
+	local isFullscreen = Screenshot.isFullscreenRect(targetRect)
+
+	local isEmulator, undoEmulator = SceneControl.emulatorEnforcement()
+	trove:Add(undoEmulator)
 
 	uiBounds:SetColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
-	local onWhite = Screenshot.rect(targetRect)
+	local onWhite = Screenshot.rect(targetRect, isFullscreen, isEmulator)
 	trove:Add(function()
 		onWhite:Destroy()
 	end)
 
 	uiBounds:SetColor(Color3.new(0, 0, 0))
 	SceneControl.yieldUntilNextFrame()
-	local onBlack = Screenshot.rect(targetRect)
+	local onBlack = Screenshot.rect(targetRect, isFullscreen, isEmulator)
 	trove:Add(function()
 		onBlack:Destroy()
 	end)
+
+	undoEmulator()
 
 	local colorCorrection = Instance.new("ColorCorrectionEffect")
 	colorCorrection.Brightness = 1
