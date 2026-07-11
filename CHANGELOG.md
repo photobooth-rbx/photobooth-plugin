@@ -3,7 +3,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### [2.5.0] - 2026/07/10
 - Bump addons suite to 0.3.0
-  - Reverts base part change to auto-capture from v2.4.0. Can now add an attachment named "PhoboothAutoCapturePivot" to act as a non-center offset
+  - Reverts base part change to auto-capture from v2.4.0. Can now add an attachment named “PhotoboothAutoCapturePivot” as a child of the target to act as a non-center offset
   - Adds a field of view slider to the properties list
 
 ### [2.4.0] - 2026/07/10
