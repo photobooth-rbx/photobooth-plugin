@@ -89,6 +89,8 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 		onWhiteRetro:Destroy()
 	end)
 
+	undoEmulator()
+
 	atmosphere.Parent = Lighting
 	task.wait(0.5)
 

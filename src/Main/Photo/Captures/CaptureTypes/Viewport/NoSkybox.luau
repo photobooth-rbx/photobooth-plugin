@@ -62,6 +62,8 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 		onWhiteRetro:Destroy()
 	end)
 
+	undoEmulator()
+
 	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
 	local capture = errorWatch(Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, colorCorrection))
 	if options.alphaBleed then

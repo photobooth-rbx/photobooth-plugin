@@ -182,9 +182,11 @@ function SceneControl.emulatorEnforcement()
 		end)
 	end
 
-	return isEmulator, function()
+	local cleanup = SceneControl.once(function()
 		trove:Destroy()
-	end
+	end)
+
+	return isEmulator, cleanup
 end
 
 function SceneControl.hideScreenUI()

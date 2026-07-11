@@ -16,6 +16,8 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	SceneControl.yieldUntilNextFrame()
 	local capture = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 
+	undoEmulator()
+
 	return capture
 end
 
