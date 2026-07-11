@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Better emulator support allows using more than just actual resolution
+
 ### [2.5.0] - 2026/07/10
 - Bump addons suite to 0.3.0
   - Reverts base part change to auto-capture from v2.4.0. Can now add an attachment named “PhotoboothAutoCapturePivot” as a child of the target to act as a non-center offset

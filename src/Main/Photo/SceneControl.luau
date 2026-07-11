@@ -1,12 +1,13 @@
+local StudioDeviceSimulatorService = game:GetService("StudioDeviceSimulatorService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Trove = require(pluginRoot.Packages.Trove)
 
 local photoRoot = script:FindFirstAncestor("Photo")
 local UIHider = require(photoRoot.Tools.UIHider)
-
-local Lighting = game:GetService("Lighting") :: Lighting
-local RunService = game:GetService("RunService") :: RunService
-local UserInputService = game:GetService("UserInputService") :: UserInputService
 
 local SceneControl = {}
 
@@ -159,6 +160,33 @@ function SceneControl.freeze(isViewport: boolean, callback: () -> ())
 	local success, err: string? = pcall(callback)
 	trove:Destroy()
 	return success, err
+end
+
+function SceneControl.emulatorEnforcement()
+	local trove = Trove.new()
+	local deviceId = StudioDeviceSimulatorService:GetDeviceAsync()
+	local isEmulator = deviceId ~= "default"
+
+	if isEmulator then
+		local scalingMode = StudioDeviceSimulatorService:GetScalingModeAsync()
+		local isActualResolution = scalingMode == Enum.DeviceSimulatorScalingMode.ActualResolution
+
+		if not isActualResolution then
+			StudioDeviceSimulatorService:SetScalingModeAsync(Enum.DeviceSimulatorScalingMode.ActualResolution)
+		end
+
+		trove:Add(function()
+			if not isActualResolution then
+				StudioDeviceSimulatorService:SetScalingModeAsync(scalingMode)
+			end
+		end)
+	end
+
+	local cleanup = SceneControl.once(function()
+		trove:Destroy()
+	end)
+
+	return isEmulator, cleanup
 end
 
 function SceneControl.hideScreenUI()

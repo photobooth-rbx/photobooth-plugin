@@ -14,6 +14,7 @@ local StateManager = require(pluginRoot.Main.StateManager)
 local SceneControl = require(script.SceneControl)
 local Blackout = require(script.Tools.Blackout)
 local Captures = require(script.Captures)
+local Screenshot = require(script.Captures.Screenshot)
 
 local Photo = {}
 
@@ -135,8 +136,9 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 
 	local results: { EditableImage }
 	local trove = createIsCapturingTrove()
+	local isFullscreen = Screenshot.isFullscreenRect(options.rect)
 	local success, err = SceneControl.freeze(true, function()
-		results = processor(options, trove)
+		results = processor(options, isFullscreen, trove)
 	end)
 
 	trove:Destroy()

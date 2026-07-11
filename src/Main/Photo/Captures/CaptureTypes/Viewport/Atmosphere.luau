@@ -14,10 +14,13 @@ local Composers = require(capturesRoot.Composers)
 
 local NoSkybox = require(script.Parent.NoSkybox)
 
-local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove)
+local function operation(options: Types.CaptureViewportOptions, isFullscreen: boolean?, trove: Trove.Trove)
 	if not Lighting:FindFirstChildWhichIsA("Atmosphere") then
-		return NoSkybox(options, trove)
+		return NoSkybox(options, isFullscreen, trove)
 	end
+
+	local isEmulator, undoEmulator = SceneControl.emulatorEnforcement()
+	trove:Add(undoEmulator)
 
 	trove:Add(SceneControl.hideScreenUI())
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())
@@ -34,7 +37,7 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 
 	-- capture scene w/ atmosphere on black background
 	SceneControl.yieldUntilNextFrame()
-	local atmoOnBlackSubject = Screenshot.rect(options.rect)
+	local atmoOnBlackSubject = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
 		atmoOnBlackSubject:Destroy()
 	end)
@@ -52,7 +55,7 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	end)
 
 	SceneControl.yieldUntilNextFrame()
-	local atmoOnBlackBackground = Screenshot.rect(options.rect)
+	local atmoOnBlackBackground = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
 		atmoOnBlackBackground:Destroy()
 	end)
@@ -73,7 +76,7 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 
 	-- capture on retro black
 	SceneControl.yieldUntilNextFrame()
-	local onBlackRetro = Screenshot.rect(options.rect)
+	local onBlackRetro = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
 		onBlackRetro:Destroy()
 	end)
@@ -81,10 +84,12 @@ local function operation(options: Types.CaptureViewportOptions, trove: Trove.Tro
 	-- capture on retro white
 	fogBackground:setColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
-	local onWhiteRetro = Screenshot.rect(options.rect)
+	local onWhiteRetro = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
 		onWhiteRetro:Destroy()
 	end)
+
+	undoEmulator()
 
 	atmosphere.Parent = Lighting
 	task.wait(0.5)
