@@ -4,6 +4,9 @@ local Sift = require(pluginRoot.Packages.Sift)
 local StateManager = require(pluginRoot.Main.StateManager)
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
 
+local OPEN_GL_WARN =
+	"WARN: 'Studio Settings > Rendering > Graphics Mode = OpenGL' is unsupported by Photobooth due to a Roblox bug."
+
 -- Private
 
 local ticket = 0
@@ -14,6 +17,10 @@ local function wrap<T...>(callback: (T...) -> ...EditableImage)
 	local myTicket = ticket
 
 	local function wrapped(...: T...)
+		if settings().Rendering.GraphicsMode == Enum.GraphicsMode.OpenGL then
+			error(OPEN_GL_WARN, 0)
+		end
+
 		return { callback(...) }
 	end
 
