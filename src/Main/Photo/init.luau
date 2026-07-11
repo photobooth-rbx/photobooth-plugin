@@ -14,6 +14,7 @@ local StateManager = require(pluginRoot.Main.StateManager)
 local SceneControl = require(script.SceneControl)
 local Blackout = require(script.Tools.Blackout)
 local Captures = require(script.Captures)
+local Screenshot = require(script.Captures.Screenshot)
 
 local Photo = {}
 
@@ -136,7 +137,17 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 	local results: { EditableImage }
 	local trove = createIsCapturingTrove()
 	local success, err = SceneControl.freeze(true, function()
-		results = processor(options, trove)
+		SceneControl.emulatorEnforcement(function(isEmulator, recalculateScaleOS)
+			if recalculateScaleOS then
+				local newScaleOS = Screenshot.calculateScaleOS()
+				StateManager.temporary:update()(function(state)
+					state.scaleOS = newScaleOS
+					return state
+				end)
+			end
+
+			results = processor(options, isEmulator, trove)
+		end)
 	end)
 
 	trove:Destroy()

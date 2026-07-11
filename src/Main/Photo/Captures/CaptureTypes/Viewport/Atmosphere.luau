@@ -14,9 +14,9 @@ local Composers = require(capturesRoot.Composers)
 
 local NoSkybox = require(script.Parent.NoSkybox)
 
-local function operation(options: Types.CaptureViewportOptions, trove: Trove.Trove)
+local function operation(options: Types.CaptureViewportOptions, isEmulator: boolean, trove: Trove.Trove)
 	if not Lighting:FindFirstChildWhichIsA("Atmosphere") then
-		return NoSkybox(options, trove)
+		return NoSkybox(options, isEmulator, trove)
 	end
 
 	trove:Add(SceneControl.hideScreenUI())

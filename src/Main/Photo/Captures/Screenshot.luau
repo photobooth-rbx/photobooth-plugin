@@ -26,7 +26,7 @@ local function captureEditableImage()
 	return editImage
 end
 
-local function screenshot(rect: Rect?)
+local function screenshot(rect: Rect?, skipScaleValidation: boolean?)
 	local editImage = captureEditableImage()
 
 	local result
@@ -34,7 +34,7 @@ local function screenshot(rect: Rect?)
 		local viewportSize = workspace.CurrentCamera.ViewportSize :: Vector2
 		local scale = editImage.Size / viewportSize
 
-		if scale ~= StateManager.temporary:get().scaleOS then
+		if not skipScaleValidation and scale ~= StateManager.temporary:get().scaleOS then
 			error("WARN: " .. OS_MISMATCH, 0)
 		end
 
@@ -85,16 +85,16 @@ function Screenshot.isFullscreenRect(rect: Rect)
 	return rect.Min == Vector2.zero and rect.Max == scaledViewportSize
 end
 
-function Screenshot.rect(rect: Rect)
+function Screenshot.rect(rect: Rect, skipScaleValidation: boolean?)
 	if Screenshot.isFullscreenRect(rect) then
-		return screenshot()
+		return screenshot(nil, skipScaleValidation)
 	else
 		assert(
 			not (rect.Width > Constants.MaxCaptureRectSize.X or rect.Height > Constants.MaxCaptureRectSize.Y),
 			`Capture target is larger than {Constants.MaxCaptureRectSize.X} x {Constants.MaxCaptureRectSize.Y}.`
 		)
 
-		return screenshot(rect)
+		return screenshot(rect, skipScaleValidation)
 	end
 end
 
