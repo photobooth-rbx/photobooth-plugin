@@ -14,7 +14,10 @@ local scheduler = Parallel.new(32, {
 local function reverseBlend(
 	onWhiteRetro: EditableImage,
 	onBlackRetro: EditableImage,
-	onBlack: EditableImage?,
+
+	subjectOnBlack: EditableImage?,
+	backgroundOnBlack: EditableImage?,
+
 	colorCorrection: ColorCorrectionEffect
 )
 	scheduler:waitForReady()
@@ -25,7 +28,7 @@ local function reverseBlend(
 	local sourceRect = Rect.new(0, 0, width, height)
 	local rows = RectSlicer.rows(sourceRect, scheduler:getActorCount())
 	for _, rowRect in rows do
-		scheduler:schedule(rowRect, onWhiteRetro, onBlackRetro, onBlack, colorCorrection)
+		scheduler:schedule(rowRect, onWhiteRetro, onBlackRetro, subjectOnBlack, backgroundOnBlack, colorCorrection)
 	end
 
 	local results = scheduler:workAsync()

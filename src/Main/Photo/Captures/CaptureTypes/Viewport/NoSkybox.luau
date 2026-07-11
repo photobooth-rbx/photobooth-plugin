@@ -13,10 +13,6 @@ local capturesRoot = script:FindFirstAncestor("Captures")
 local Composers = require(capturesRoot.Composers)
 
 local function operation(options: Types.CaptureViewportOptions, isFullscreen: boolean?, trove: Trove.Trove)
-	if Lighting:FindFirstChildWhichIsA("Atmosphere") then
-		error("WARN: Skybox cannot be removed when Atmosphere is present.", 0)
-	end
-
 	local isEmulator, undoEmulator = SceneControl.emulatorEnforcement()
 	trove:Add(undoEmulator)
 
@@ -32,7 +28,45 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	end))
 
 	local gradedOnBlack
-	if SceneControl.isGradedLightingRequired() or Lighting.ExposureCompensation ~= 0 then
+	local atmoOnBlackSubject
+	local atmoOnBlackBackground
+	local setAtmosphereHidden
+
+	if Lighting:FindFirstChildWhichIsA("Atmosphere") then
+		fogBackground:setMaterial(Enum.Material.Neon)
+
+		setAtmosphereHidden = SceneControl.getAtmosphereHider()
+		trove:Add(function()
+			setAtmosphereHidden(false)
+		end)
+
+		SceneControl.yieldUntilNextFrame()
+		atmoOnBlackSubject = Screenshot.rect(options.rect, isFullscreen, isEmulator)
+		trove:Add(function()
+			atmoOnBlackSubject:Destroy()
+		end)
+
+		-- capture scene w/ atmosphere only skybox
+		-- re-parenting the model is not good b/c it's expensive and it causes particles to restart
+		-- I use this trick to override the camera's near plane z so we only render the skybox
+		local camera = workspace.CurrentCamera
+		local renderCF = camera.CFrame
+		local nearZ = fogBackground:getNearZ()
+		local nz = ((camera.NearPlaneZ + nearZ) / camera.NearPlaneZ)
+		camera.CFrame = renderCF * CFrame.new(0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz, 0, 0, 0, 1 / nz)
+		trove:Add(function()
+			camera.CFrame = renderCF
+		end)
+
+		SceneControl.yieldUntilNextFrame()
+		atmoOnBlackBackground = Screenshot.rect(options.rect, isFullscreen, isEmulator)
+		trove:Add(function()
+			atmoOnBlackBackground:Destroy()
+		end)
+
+		camera.CFrame = renderCF
+		fogBackground:setMaterial(Enum.Material.SmoothPlastic)
+	elseif SceneControl.isGradedLightingRequired() or Lighting.ExposureCompensation ~= 0 then
 		local undoGradedLighting = trove:Add(SceneControl.applyGradedLighting())
 
 		SceneControl.yieldUntilNextFrame()
@@ -47,6 +81,11 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	-- prepare for retro scene capturing
 	trove:Add(SceneControl.applyRetroLighting())
 
+	if setAtmosphereHidden then
+		setAtmosphereHidden(true)
+		task.wait(0.5)
+	end
+
 	-- capture on retro black
 	SceneControl.yieldUntilNextFrame()
 	local onBlackRetro = Screenshot.rect(options.rect, isFullscreen, isEmulator)
@@ -56,6 +95,11 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 	-- capture on retro white
 	fogBackground:setColor(Color3.new(1, 1, 1))
+
+	if setAtmosphereHidden then
+		task.wait(0.5)
+	end
+
 	SceneControl.yieldUntilNextFrame()
 	local onWhiteRetro = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
@@ -64,8 +108,27 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 	undoEmulator()
 
+	if setAtmosphereHidden then
+		setAtmosphereHidden(false)
+		task.wait(0.5)
+	end
+
+	local capture
 	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
-	local capture = errorWatch(Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, colorCorrection))
+	if not setAtmosphereHidden then
+		capture = errorWatch(Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, nil, colorCorrection))
+	else
+		capture = errorWatch(
+			Composers.reverseBlend(
+				onWhiteRetro,
+				onBlackRetro,
+				atmoOnBlackSubject,
+				atmoOnBlackBackground,
+				colorCorrection
+			)
+		)
+	end
+
 	if options.alphaBleed then
 		capture = errorWatch(Composers.alphaBleed(capture))
 	end
