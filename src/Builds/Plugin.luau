@@ -28,7 +28,11 @@ end
 
 local function updateScaleOS()
 	local Screenshot = require(pluginRoot.Main.Photo.Captures.Screenshot)
+	local SceneControl = require(pluginRoot.Main.Photo.SceneControl)
+
+	local _isEmulator, undoEmulator = SceneControl.emulatorEnforcement()
 	local scale = Screenshot.calculateScaleOS()
+	undoEmulator()
 
 	StateManager.temporary:update()(function(state)
 		state.scaleOS = scale
