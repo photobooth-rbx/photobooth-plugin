@@ -12,15 +12,13 @@ local SceneControl = require(photoRoot.SceneControl)
 local capturesRoot = script:FindFirstAncestor("Captures")
 local Composers = require(capturesRoot.Composers)
 
-local function operation(
-	options: Types.CaptureViewportOptions,
-	isFullscreen: boolean?,
-	isEmulator: boolean?,
-	trove: Trove.Trove
-)
+local function operation(options: Types.CaptureViewportOptions, isFullscreen: boolean?, trove: Trove.Trove)
 	if Lighting:FindFirstChildWhichIsA("Atmosphere") then
 		error("WARN: Skybox cannot be removed when Atmosphere is present.", 0)
 	end
+
+	local isEmulator, undoEmulator = SceneControl.emulatorEnforcement()
+	trove:Add(undoEmulator)
 
 	trove:Add(SceneControl.hideScreenUI())
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())

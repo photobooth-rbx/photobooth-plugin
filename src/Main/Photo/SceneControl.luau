@@ -162,20 +162,28 @@ function SceneControl.freeze(isViewport: boolean, callback: () -> ())
 	return success, err
 end
 
-function SceneControl.emulatorEnforcement(callback: (boolean) -> ())
-	local success, err: string?
+function SceneControl.emulatorEnforcement()
+	local trove = Trove.new()
 	local deviceId = StudioDeviceSimulatorService:GetDeviceAsync()
-	if deviceId == "default" then
-		success, err = pcall(callback, false)
-	else
+	local isEmulator = deviceId ~= "default"
+
+	if isEmulator then
 		local scalingMode = StudioDeviceSimulatorService:GetScalingModeAsync()
-		StudioDeviceSimulatorService:SetScalingModeAsync(Enum.DeviceSimulatorScalingMode.ActualResolution)
-		success, err = pcall(callback, true)
-		StudioDeviceSimulatorService:SetScalingModeAsync(scalingMode)
+		local isActualResolution = scalingMode == Enum.DeviceSimulatorScalingMode.ActualResolution
+
+		if not isActualResolution then
+			StudioDeviceSimulatorService:SetScalingModeAsync(Enum.DeviceSimulatorScalingMode.ActualResolution)
+		end
+
+		trove:Add(function()
+			if not isActualResolution then
+				StudioDeviceSimulatorService:SetScalingModeAsync(scalingMode)
+			end
+		end)
 	end
 
-	if not success then
-		error(err, 0)
+	return isEmulator, function()
+		trove:Destroy()
 	end
 end
 

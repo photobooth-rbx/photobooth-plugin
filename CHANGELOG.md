@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Better emulator support allows using fit to window
+
 ### [2.4.0] - 2026/07/10
 - Fixes the cropped viewport getting reset whenever the viewport size changed
 - Add new experimental atmosphere capture type

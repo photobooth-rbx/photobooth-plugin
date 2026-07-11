@@ -14,15 +14,13 @@ local Composers = require(capturesRoot.Composers)
 
 local NoSkybox = require(script.Parent.NoSkybox)
 
-local function operation(
-	options: Types.CaptureViewportOptions,
-	isFullscreen: boolean?,
-	isEmulator: boolean?,
-	trove: Trove.Trove
-)
+local function operation(options: Types.CaptureViewportOptions, isFullscreen: boolean?, trove: Trove.Trove)
 	if not Lighting:FindFirstChildWhichIsA("Atmosphere") then
-		return NoSkybox(options, isFullscreen, isEmulator, trove)
+		return NoSkybox(options, isFullscreen, trove)
 	end
+
+	local isEmulator, undoEmulator = SceneControl.emulatorEnforcement()
+	trove:Add(undoEmulator)
 
 	trove:Add(SceneControl.hideScreenUI())
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())

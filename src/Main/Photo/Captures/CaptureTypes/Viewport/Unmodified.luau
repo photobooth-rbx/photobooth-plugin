@@ -7,12 +7,10 @@ local photoRoot = script:FindFirstAncestor("Photo")
 local Screenshot = require(photoRoot.Captures.Screenshot)
 local SceneControl = require(photoRoot.SceneControl)
 
-local function operation(
-	options: Types.CaptureViewportOptions,
-	isFullscreen: boolean?,
-	isEmulator: boolean?,
-	trove: Trove.Trove
-)
+local function operation(options: Types.CaptureViewportOptions, isFullscreen: boolean?, trove: Trove.Trove)
+	local isEmulator, undoEmulator = SceneControl.emulatorEnforcement()
+	trove:Add(undoEmulator)
+
 	trove:Add(SceneControl.hideScreenUI())
 
 	SceneControl.yieldUntilNextFrame()
