@@ -85,8 +85,12 @@ function Screenshot.isFullscreenRect(rect: Rect)
 	return rect.Min == Vector2.zero and rect.Max == scaledViewportSize
 end
 
-function Screenshot.rect(rect: Rect, skipScaleValidation: boolean?)
-	if Screenshot.isFullscreenRect(rect) then
+function Screenshot.rect(rect: Rect, isFullscreen: boolean?, skipScaleValidation: boolean?)
+	if isFullscreen == nil then
+		isFullscreen = Screenshot.isFullscreenRect(rect)
+	end
+
+	if isFullscreen then
 		return screenshot(nil, skipScaleValidation)
 	else
 		assert(

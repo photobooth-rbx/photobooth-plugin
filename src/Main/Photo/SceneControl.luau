@@ -162,15 +162,20 @@ function SceneControl.freeze(isViewport: boolean, callback: () -> ())
 	return success, err
 end
 
-function SceneControl.emulatorEnforcement(callback: (boolean, boolean) -> ())
+function SceneControl.emulatorEnforcement(callback: (boolean) -> ())
+	local success, err: string?
 	local deviceId = StudioDeviceSimulatorService:GetDeviceAsync()
 	if deviceId == "default" then
-		callback(false, false)
+		success, err = pcall(callback, false)
 	else
 		local scalingMode = StudioDeviceSimulatorService:GetScalingModeAsync()
 		StudioDeviceSimulatorService:SetScalingModeAsync(Enum.DeviceSimulatorScalingMode.ActualResolution)
-		callback(true, scalingMode ~= Enum.DeviceSimulatorScalingMode.ActualResolution)
+		success, err = pcall(callback, true)
 		StudioDeviceSimulatorService:SetScalingModeAsync(scalingMode)
+	end
+
+	if not success then
+		error(err, 0)
 	end
 end
 

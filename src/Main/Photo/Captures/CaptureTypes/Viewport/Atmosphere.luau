@@ -14,9 +14,14 @@ local Composers = require(capturesRoot.Composers)
 
 local NoSkybox = require(script.Parent.NoSkybox)
 
-local function operation(options: Types.CaptureViewportOptions, isEmulator: boolean, trove: Trove.Trove)
+local function operation(
+	options: Types.CaptureViewportOptions,
+	isFullscreen: boolean?,
+	isEmulator: boolean?,
+	trove: Trove.Trove
+)
 	if not Lighting:FindFirstChildWhichIsA("Atmosphere") then
-		return NoSkybox(options, isEmulator, trove)
+		return NoSkybox(options, isFullscreen, isEmulator, trove)
 	end
 
 	trove:Add(SceneControl.hideScreenUI())
@@ -34,7 +39,7 @@ local function operation(options: Types.CaptureViewportOptions, isEmulator: bool
 
 	-- capture scene w/ atmosphere on black background
 	SceneControl.yieldUntilNextFrame()
-	local atmoOnBlackSubject = Screenshot.rect(options.rect)
+	local atmoOnBlackSubject = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
 		atmoOnBlackSubject:Destroy()
 	end)
@@ -52,7 +57,7 @@ local function operation(options: Types.CaptureViewportOptions, isEmulator: bool
 	end)
 
 	SceneControl.yieldUntilNextFrame()
-	local atmoOnBlackBackground = Screenshot.rect(options.rect)
+	local atmoOnBlackBackground = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
 		atmoOnBlackBackground:Destroy()
 	end)
@@ -73,7 +78,7 @@ local function operation(options: Types.CaptureViewportOptions, isEmulator: bool
 
 	-- capture on retro black
 	SceneControl.yieldUntilNextFrame()
-	local onBlackRetro = Screenshot.rect(options.rect)
+	local onBlackRetro = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
 		onBlackRetro:Destroy()
 	end)
@@ -81,7 +86,7 @@ local function operation(options: Types.CaptureViewportOptions, isEmulator: bool
 	-- capture on retro white
 	fogBackground:setColor(Color3.new(1, 1, 1))
 	SceneControl.yieldUntilNextFrame()
-	local onWhiteRetro = Screenshot.rect(options.rect)
+	local onWhiteRetro = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 	trove:Add(function()
 		onWhiteRetro:Destroy()
 	end)

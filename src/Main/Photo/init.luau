@@ -136,17 +136,10 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 
 	local results: { EditableImage }
 	local trove = createIsCapturingTrove()
+	local isFullscreen = Screenshot.isFullscreenRect(options.rect)
 	local success, err = SceneControl.freeze(true, function()
-		SceneControl.emulatorEnforcement(function(isEmulator, recalculateScaleOS)
-			if recalculateScaleOS then
-				local newScaleOS = Screenshot.calculateScaleOS()
-				StateManager.temporary:update()(function(state)
-					state.scaleOS = newScaleOS
-					return state
-				end)
-			end
-
-			results = processor(options, isEmulator, trove)
+		SceneControl.emulatorEnforcement(function(isEmulator)
+			results = processor(options, isFullscreen, isEmulator, trove)
 		end)
 	end)
 
