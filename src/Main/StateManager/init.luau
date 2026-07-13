@@ -1,5 +1,8 @@
+local EncodingService = game:GetService("EncodingService")
+
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local ObservableValue = require(pluginRoot.Utilities.ObservableValue)
+local Bufferize = require(pluginRoot.Packages.Bufferize)
 
 local SaveVersions = require(script.SaveVersions)
 
@@ -28,8 +31,10 @@ State.temporary = ObservableValue.new(table.clone(DEFAULT_TEMPORARY))
 
 function State.initPluginSaving(plugin: Plugin)
 	local _success, _err: string? = pcall(function()
-		local pluginSave = plugin:GetSetting(PLUGIN_SAVED_KEY) :: SaveVersions.Saved?
-		local pluginLoaded = pluginSave and SaveVersions.load(pluginSave)
+		local pluginSave = plugin:GetSetting(PLUGIN_SAVED_KEY) :: string?
+		local encoded = pluginSave and EncodingService:Base64Decode(buffer.fromstring(pluginSave))
+		local decodedSave = encoded and Bufferize.decode(encoded)
+		local pluginLoaded = decodedSave and SaveVersions.load(decodedSave)
 		if pluginLoaded then
 			assert(pluginLoaded.settings, "Failed to load saved settings.")
 			State.settings:set(pluginLoaded.settings)
@@ -50,7 +55,8 @@ function State.initPluginSaving(plugin: Plugin)
 			postProcessingPresets = State.postProcessingPresets:get(),
 		})
 
-		plugin:SetSetting(PLUGIN_SAVED_KEY, pluginSave)
+		local encoded = EncodingService:Base64Encode(Bufferize.encode(pluginSave))
+		plugin:SetSetting(PLUGIN_SAVED_KEY, buffer.tostring(encoded))
 	end)
 end
 
