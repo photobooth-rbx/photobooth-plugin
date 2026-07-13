@@ -93,7 +93,7 @@ jobs:
         run: lune run create-uploader-standalone
       
       - name: 🏗️ Build ${{ env.UPLOADER_NAME }}-${{ github.ref_name }}.rbxm
-        run: rojo build uploader-plugin.project.json --output {{ env.UPLOADER_NAME }}-${{ github.ref_name }}.rbxm
+        run: rojo build uploader-plugin.project.json --output ${{ env.UPLOADER_NAME }}-${{ github.ref_name }}.rbxm
 
       - name: 📤 Upload to Release
         shell: bash
