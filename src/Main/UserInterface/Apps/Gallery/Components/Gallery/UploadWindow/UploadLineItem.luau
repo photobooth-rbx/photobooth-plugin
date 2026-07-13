@@ -5,7 +5,7 @@ local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local LucideButton = require(uiRoot.Components.LucideButton)
+local LucideIconButton = require(uiRoot.Components.LucideIconButton)
 local Hooks = require(uiRoot.Hooks)
 
 local OUTLINE_THICKNESS = 1
@@ -342,7 +342,7 @@ local function UploadLineItem(props: Props)
 
 						CancelButton = not props.StatusText
 							and not props.AssetId
-							and React.createElement(LucideButton, {
+							and React.createElement(LucideIconButton, {
 								AnchorPoint = Vector2.new(1, 0),
 								Position = UDim2.fromScale(1, 0),
 								Size = UDim2.fromOffset(

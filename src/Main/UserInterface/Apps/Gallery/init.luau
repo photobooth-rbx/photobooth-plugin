@@ -70,7 +70,7 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 			return state.isCapturing
 		end)
 
-		local galleryListExpanded = StateManager.saved:useSpecific()(function(state)
+		local galleryListExpanded = StateManager.settings:useSpecific()(function(state)
 			return state.galleryListExpanded
 		end)
 
@@ -98,7 +98,7 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 			and React.createElement(Gallery, {
 				IsExpanded = galleryListExpanded,
 				SetIsExpanded = function()
-					StateManager.saved:update()(function(state)
+					StateManager.settings:update()(function(state)
 						state.galleryListExpanded = not state.galleryListExpanded
 						return state
 					end)

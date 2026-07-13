@@ -50,12 +50,12 @@ local function updateScaleOS()
 end
 
 local function updateExperimentalMode()
-	local experimentalModeEnabled = StateManager.saved:get().experimentalModeEnabled
+	local experimentalModeEnabled = StateManager.settings:get().experimentalModeEnabled
 	if not Constants.AllowExperimentalMode then
 		experimentalModeEnabled = false
 	end
 
-	StateManager.saved:update()(function(state)
+	StateManager.settings:update()(function(state)
 		state.experimentalModeEnabled = experimentalModeEnabled
 		return state
 	end)

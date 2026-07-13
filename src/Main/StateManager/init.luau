@@ -1,7 +1,10 @@
+local pluginRoot = script:FindFirstAncestor("PluginRoot")
+local ObservableValue = require(pluginRoot.Utilities.ObservableValue)
+
 local SaveVersions = require(script.SaveVersions)
-local ObservableValue = require(script.ObservableValue)
 
 local PLUGIN_SAVED_KEY = "egomoose_photobooth_save"
+
 local DEFAULT_TEMPORARY = {
 	scaleOS = Vector2.one,
 
@@ -16,20 +19,31 @@ local DEFAULT_TEMPORARY = {
 
 local State = {}
 
-State.saved = ObservableValue.new(SaveVersions.default())
+local defaultSave = SaveVersions.default()
+State.settings = ObservableValue.new(defaultSave.settings)
+State.postProcessingPresets = ObservableValue.new(defaultSave.postProcessingPresets)
+
 State.temporary = ObservableValue.new(table.clone(DEFAULT_TEMPORARY))
 
 function State.initPluginSaving(plugin: Plugin)
-	local _success, _err = pcall(function()
+	local _success, _err: string? = pcall(function()
 		local pluginSave = plugin:GetSetting(PLUGIN_SAVED_KEY) :: SaveVersions.Saved?
 		local pluginLoaded = pluginSave and SaveVersions.load(pluginSave)
 		if pluginLoaded then
-			State.saved:set(pluginLoaded)
+			assert(pluginLoaded.settings, "Failed to load saved settings.")
+			State.settings:set(pluginLoaded.settings)
+
+			assert(pluginLoaded.postProcessingPresets, "Failed to load post-processing presets.")
+			State.postProcessingPresets:set(pluginLoaded.postProcessingPresets)
 		end
 	end)
 
 	plugin.Unloading:Connect(function()
-		local pluginSave = SaveVersions.save(State.saved:get())
+		local pluginSave = SaveVersions.save({
+			settings = State.settings:get(),
+			postProcessingPresets = State.postProcessingPresets:get(),
+		})
+
 		plugin:SetSetting(PLUGIN_SAVED_KEY, pluginSave)
 	end)
 end

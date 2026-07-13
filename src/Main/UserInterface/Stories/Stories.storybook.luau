@@ -4,14 +4,18 @@ local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 
+local storyRoots = {}
+for _, moduleScript in uiRoot.Apps:QueryDescendants("ModuleScript") do
+	if moduleScript.Name:match("%.story$") then
+		table.insert(storyRoots, moduleScript.Parent)
+	end
+end
+
+table.insert(storyRoots, uiRoot.Stories.Debug)
+
 return {
 	name = "Photobooth",
-	storyRoots = {
-		uiRoot.Apps.Gallery.Components.Gallery,
-		uiRoot.Apps.Viewport.Components.CroppedViewport,
-		uiRoot.Apps.Viewport.Components.FullViewport,
-		uiRoot.Stories.Debug,
-	},
+	storyRoots = storyRoots,
 	packages = {
 		React = React,
 		ReactRoblox = ReactRoblox,

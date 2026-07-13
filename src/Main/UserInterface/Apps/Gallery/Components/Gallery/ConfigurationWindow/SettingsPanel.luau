@@ -110,7 +110,7 @@ export type Props = {
 
 local function SettingsPanel(props: Props)
 	local theme = StudioComponents.useTheme()
-	local savedState, updateSavedState = StateManager.saved:use()
+	local savedState, updateSavedState = StateManager.settings:use()
 	local temporaryState, updateTemporaryState = StateManager.temporary:use()
 
 	local viewportCaptureTypes = useDropdown(Captures.Viewport.Order)

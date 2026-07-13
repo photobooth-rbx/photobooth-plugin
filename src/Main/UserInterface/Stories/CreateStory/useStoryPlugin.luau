@@ -4,6 +4,7 @@ local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local React = require(pluginRoot.Packages.React)
 
 local function createPlugin()
+	-- selene: allow(undefined_variable)
 	return PluginManager():CreatePlugin() :: Plugin
 end
 

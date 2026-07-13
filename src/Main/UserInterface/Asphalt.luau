@@ -18,7 +18,10 @@ local Asphalt = {
 			["gallery-plugin-button"] = "rbxassetid://137631523576803",
 			["import-plugin-button"] = "rbxassetid://93841425745197",
 			["serve-png-button"] = "rbxassetid://126424579232705",
+			["sparkles-button"] = "rbxassetid://114393379766986",
+			["switch-camera-button"] = "rbxassetid://134828197455971",
 			["ui-plugin-button"] = "rbxassetid://117013484484739",
+			["upload-button"] = "rbxassetid://135109337598299",
 		},
 		light = {
 			["camera-plugin-button"] = "rbxassetid://139614590109912",
@@ -27,7 +30,10 @@ local Asphalt = {
 			["gallery-plugin-button"] = "rbxassetid://107146451135397",
 			["import-plugin-button"] = "rbxassetid://123120682485448",
 			["serve-png-button"] = "rbxassetid://105742661438126",
+			["sparkles-button"] = "rbxassetid://80224020596064",
+			["switch-camera-button"] = "rbxassetid://114981773688555",
 			["ui-plugin-button"] = "rbxassetid://84282489852197",
+			["upload-button"] = "rbxassetid://130128412218899",
 		},
 	},
 	swatches = {

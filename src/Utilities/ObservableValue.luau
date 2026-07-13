@@ -80,7 +80,7 @@ end
 function ObservableValueClass.use<T>(self: ObservableValue<T>)
 	local value, state = useInternal(self, function(selfValue)
 		return selfValue
-	end, function(new, prev)
+	end, function()
 		return true
 	end)
 
