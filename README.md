@@ -4,19 +4,22 @@
 [links/itch]: https://egomoose.itch.io/rbx-photobooth-plugin
 [links/discord]: https://discord.gg/VgxVYZHV3N
 [links/devforum]: https://devforum.roblox.com/t/3401720
+[links/community]: https://www.roblox.com/communities/944974637
 [links/gltf-site]: https://photobooth-rbx.github.io/photobooth-plugin-site/
+[links/gltf-beta]: https://devforum.roblox.com/t/gltf-export-beta-available-now/3905928
 
 <!-- Badges -->
 
 [badges/roblox]: https://raw.githubusercontent.com/gist/cxmeel/0dbc95191f239b631c3874f4ccf114e2/raw/roblox_dev.svg
 [badges/itch]: https://raw.githubusercontent.com/gist/cxmeel/0dbc95191f239b631c3874f4ccf114e2/raw/itch.svg
 [badges/discord]: https://raw.githubusercontent.com/gist/cxmeel/0dbc95191f239b631c3874f4ccf114e2/raw/discord.svg
+[badges/download]: https://raw.githubusercontent.com/gist/cxmeel/0dbc95191f239b631c3874f4ccf114e2/raw/download.svg
 
 ## Developer Request
 
 This project is AGPL-3.0. If you modify this plugin and use it in a public-facing project, you are obligated to make your modified source code available. While I can't stop you from using modifications privately I strongly encourage you to contribute improvements back. If you've optimized something or added a feature that helps you or your team, please consider a PR so everyone benefits.
 
-This plugin is still being sold for money as a pre-built rbxm on the creator-store and itch.io offering convenience for those unfamiliar with building roblox projects and auto-updates for creator store users. I strongly request that you do not publicly distribute any builds as this is my primary way of earning money off the project.
+This plugin is still being sold for money as a pre-built rbxm on the Creator Store and itch.io, offering convenience for those unfamiliar with building Roblox projects and auto-updates for Creator Store users. I strongly request that you do not publicly distribute any builds as this is my primary way of earning money off the project.
 
 While the source is open, building and maintaining this tool takes significant time. The best way to ensure this plugin remains updated and compatible with the latest Roblox engine changes is to purchase the pre-built version on the Creator Store or Itch. Thanks!
 
@@ -24,15 +27,13 @@ While the source is open, building and maintaining this tool takes significant t
 
 ![](docs/assets/readme/general/header.png)
 
-Photobooth is a plugin that allows you to capture images of the workspace or UI elements entirely in Roblox studio.
+Photobooth is a plugin that allows you to capture images of the workspace or UI elements entirely in Roblox Studio. It features the ability to remove skyboxes/backgrounds from images, tools to batch capture many images at once, post-processing effects, and bindings that let developers write their own capture workflows.
 
-Notably, it features the ability to remove skyboxes/backgrounds from images and bindings to allow developers to write their own capture workflows.
-
-Results are output as editable images stored as a mesh part's texture.
+Results are output as editable images stored on a mesh part's texture.
 
 [![Get it on Roblox][badges/roblox]][links/roblox] [![Get it on Itch.io][badges/itch]][links/itch] [![Join us on Discord][badges/discord]][links/discord]
 
-[Devforum post][links/devforum]
+[Devforum post][links/devforum] · [Community][links/community]
 
 <details>
 <summary>Examples</summary>
@@ -44,130 +45,124 @@ Results are output as editable images stored as a mesh part's texture.
 ![](docs/assets/readme/examples/Tree.png)
 </details>
 
+## Table of Contents
+
+- [Limitations](#limitations)
+- [OS Scaling](#os-scaling)
+- [Capturing](#capturing)
+  - [Cropped Viewport Captures](#cropped-viewport-captures)
+  - [Full Viewport Captures](#full-viewport-captures)
+  - [UI Captures](#ui-captures)
+- [Auto Capture](#auto-capture)
+- [Post-Processing Effects](#post-processing-effects)
+- [Saving Captures as PNGs](#saving-captures-as-pngs)
+  - [glTF Exports](#gltf-exports)
+- [Uploading](#uploading)
+- [Advanced](#advanced)
+  - [Experimental Mode](#experimental-mode)
+  - [Bindings](#bindings)
+- [Support & Community](#support--community)
+- [License](#license)
+
+
+
 ## Limitations
 
-Photobooth has a couple of limitations that are worth noting. For most users these will likely not be of significant impact, but I'm listing them here so people can see them before getting the plugin.
+Photobooth has a couple of limitations that are worth noting. For most users these will likely not be of significant impact, but they're listed here so people can see them before getting the plugin.
 
-General:
-- The plugin can capture any resolution desired, but there are some stipulations. Please read the "Full Viewport Captures" section for more details.
-- Photobooth can only be used during edit mode in studio. It cannot be used to capture anything during a studio play session.
-- The built-in upload feature is currently disabled. You can still upload, but you have to write code to do it yourself. Read more about this further down the post.
-- Using the emulator + photobooth only works correctly when on "actual resolution"
-- The viewport must be visible when capturing. You cannot tab out of studio or switch to the script editor while a capture is in progress.
-- `Studio Settings > Rendering > Graphics Mode = OpenGL` is unsupported (this is a Roblox bug).
-- `Studio Settings > Rendering > Graphics Mode = Vulkan` is supported, but some users experience a bug where emulators that match their display resolution force them into fullscreen and won’t allow them to take captures.
-
-Skybox removal:
-- No atmosphere / fog support.
+- Photobooth can only be used during **edit mode** in Studio. It cannot capture anything during a Studio play session.
+- The viewport must be **visible** when capturing. You cannot tab out of Studio or switch to the script editor while a capture is in progress.
+- `Studio Settings > Rendering > Graphics Mode = OpenGL` is **unsupported** (this is a Roblox bug). The plugin will warn you if you attempt to capture in this mode.
+- `Studio Settings > Rendering > Graphics Mode = Vulkan` is supported, but some users experience a bug where emulators that match their display resolution force them into fullscreen and won't allow them to take captures.
+- **Atmosphere** is supported. **Fog is not** — if you attempt to capture with fog it will hide itself.
 - Anything that cannot be frozen in place on screen is not supported. For example:
-	- Terrain grass.
-	- Force-field material.
+  - Terrain grass.
+  - Force-field material with a moving texture.
 - Retro color grading is highly recommended for best results, but not mandatory.
 
-**Warning: This plugin will cause the screen to flash when removing skyboxes. Those with photosensitive epilepsy are advised caution when using this plugin.**
+> **Warning:** This plugin will cause the screen to flash when removing skyboxes. Those with photosensitive epilepsy are advised caution when using this plugin.
 
-## Bindings
+## OS Scaling
 
-This plugin can be used for automation purposes. An example use case might be capturing icons for all the inventory items in your game thereby allowing you to avoid using viewport frames which are more expensive than traditional images.
+With the advent of high resolution monitors many computers use scaling options built into their operating system to ensure that applications rendered on screen are not too small. Roblox, however, always captures in full resolution, leading to a number of UX problems.
 
-To use this feature open the viewer and in the settings menu toggle "Bindings" to `true`.
-
-![](docs/assets/readme/general/bindings_enabled.png)
-
-Roblox may prompt you for script injection permissions.
-
-![](docs/assets/readme/general/script_injection.png)
-
-This will create a `ModuleScript` underneath `ServerStorage` which provides a typed interface that can be used to create automated capture workflows. Included are a couple of common template workflows to get you started.
-
-For example:
-
-```luau
-local Photobooth = require(game.ServerStorage.Photobooth.Bindings)
-
-local capture = Photobooth.captureViewport({
-	rect = Rect.new(0, 0, 300, 300),
-	type = "NoSkybox",
-})
-capture.Name = "Example"
-capture.Parent = game.StarterGui
-```
-
-Fullscreen captures can be made with bindings by passing a rect that represents the viewport. I.e.
-
-```luau
-local viewportSize = workspace.CurrentCamera.ViewportSize
-local capture = Photobooth.captureViewport({
-	rect = Rect.new(Vector2.zero, viewportSize),
-	type = "NoSkybox",
-})
-```
-
-Captures should be parented as a descendant of StarterGui. This ensures that they can be properly exported as pngs.
-
-### OS scaling
-
-With the advent of high resolution monitors many computers use scaling options built into their operating system to ensure that applications rendered on screen are not too small. Roblox however, always captures in full resolution leading to a number of UX problems.
-
-Photobooth will attempt to resolve this issue automatically, but for the highest quality image when using bindings it is strongly recommended to use your monitor's true resolution.
+Photobooth will attempt to function with your device's os scale in mind, but for the highest quality image it is strongly recommended to use your monitor's true resolution — i.e. scale 100% and the display resolution that matches your monitor.
 
 ![](docs/assets/readme/general/scale150.png)
 
-*i.e. use scale 100% and the display resolution that matches your monitor.*
-
 <details>
 <summary>Or on Mac</summary>
-
 ![](docs/assets/readme/general/scale_mac.png)
 </details>
 
-## Full Viewport Captures
+## Capturing
 
-In cropped capture mode this plugin has a `2048 x 2048` limit. However, it is possible to circumvent this by capturing the entire viewport window. You can toggle to full viewport capture mode from the action bar or in the settings menu.
+### Cropped Viewport Captures
 
-To set an arbitrary size you can either resize your viewport (not recommended) or take advantage of custom device resolutions on the emulator.
+In cropped capture mode you can draw a rectangle over the viewport to capture a specific region. This mode has a `2048 x 2048` limit. For anything larger, use full viewport captures.
+
+While in cropped capture mode you can hold the shift key to drag your capture rectangle around the viewport and resize non-symmetrically. You can also hold the control / command key to maintain aspect ratio when sizing from the corners.
+
+### Full Viewport Captures
+
+It is possible to circumvent the cropped-mode limit of `2048 x 2048 by capturing the entire viewport window. You can toggle to full viewport capture mode from the action bar or in the settings menu.
+
+To set an arbitrary resolution you can either resize your viewport (not recommended) or take advantage of custom device resolutions in the emulator.
 
 ![](docs/assets/readme/general/emulator.jpg)
 
-It's very important that you use the "Actual Resolution" option when capturing in the emulator. For very large dimensions that don't fit on screen I recommend temporarily switching to "Fit to Window", setting up the scene, and then switching back to "Actual resolution" once you're ready to capture.
+When photobooth captures in the emulator it requires you use the "actual resolution" mode in the emulator. If you attempt a capture while not in this mode photobooth will briefly switch to it and back for the duration of the capture.
 
-> **Note:** Full viewport captures will result in images with their dimensions as `viewportSize * osScale`. It is highly recommened to adjust your display settings such that os scale is `(1, 1)` when using full viewport captures.
+> **Note:** Full viewport captures will result in images with their dimensions as `viewportSize * osScale`. It is highly recommended to adjust your display settings such that OS scale is `(1, 1)` when using full viewport captures.
 
-## Experimental Mode
+### UI Captures
 
-As of v1.2.0 Photobooth now supports a new setting called experimental mode. Enabling this requires restarting studio and is not available during team create sessions.
+In addition to the workspace, Photobooth can capture UI elements. This is useful for flattening complex GUIs into a single image. Select a `GuiObject` in the explorer and then select the UI button on the plugin toolbar and the capture will commence.
 
-Experimental mode is a way to provide speculative features to the public without making any guarantees that the behavior will remain supported in the future. If you enable this mode you should be aware that any behavior it exposes may be removed and should not be relied on.
+## Auto Capture
 
-<details>
-<summary>Experimental Features:</summary>
+Auto Capture lets you batch capture many targets in sequence rather than framing each one by hand.
 
-- `Experimental_NSB_A1` is a viewport capture mode that attempts to allow capturing with atmosphere in lighting
+By default the camera frames the bounding box of the target. To capture from a non-centered offset, add an `Attachment` named `PhotoboothAutoCapturePivot` as a child of the target — the capture will pivot around it. A field-of-view slider is also available in the properties list.
 
-</details>
+## Post-Processing Effects
 
+Photobooth includes post-processing tools that can be applied to your captures after they're taken, letting you tune the final result without re-capturing.
 
 ## Saving Captures as PNGs
 
-If you want to save any of the plugin captures to your computer, you can do so by right clicking the exported mesh part and selecting "Export Selection". This will prompt you to export the mesh in `.obj` format which will include the texture of the mesh in `.png` format. Both the `.obj` and `.mtl` files can be discarded.
+If you want to save any of the plugin captures to your computer, right-click the exported mesh part and select **"Export as Obj"**. This will prompt you to export the mesh in `.obj` format, which includes the texture as a `.png`. Both the `.obj` and `.mtl` files can be discarded.
 
-If you want to export many images at the same time. First group all the mesh parts together as a model and then export that model.
+To export many images at the same time first select all the mesh parts at you want, and then export that selection.
 
 <img src="docs/assets/readme/general/exportA.png" height=400> <img src="docs/assets/readme/general/exportB.png" height=400>
 
-#### GLTF Exports
+### glTF Exports
 
-Alternatively, you can also export your photobooth selection in the [glTF format](https://devforum.roblox.com/t/gltf-export-beta-available-now/3905928). This may be preferable as many users have reported that sometimes exporting as an obj can crash studio.
+Alternatively, you can export your Photobooth selection in the [glTF format][links/gltf-beta]. This may be preferable, as many users have reported that exporting as an `.obj` can sometimes not work in studio due to Roblox bugs.
 
-In order to extract the pngs from the glTF file you'll need an additional tool. For convenience I've created a website found [here][links/gltf-site] where you can drag and drop the export and get the resulting pngs.
+To extract the pngs from a glTF file you'll need an additional tool. For convenience I've created a [website][links/gltf-site] where you can drag and drop the export and get the resulting pngs.
 
 ## Uploading
 
-**This feature is currently disabled!**
+Photobooth also offers the ability to upload your captures directly to roblox to either your account or a group you have permission to upload images to.
 
-Uploading will be enabled in the future once Roblox provides the proper security tooling to allow creator store plugins to upload assets on your behalf. More detail from Roblox [here.](https://devforum.roblox.com/t/beta-lua-asset-creation-for-creator-tooling-with-createassetasync/3294134)
+Currently this feature is disabled by default because it requires that the CreateAssetAsync beta is enabled and the plugin is locally installed. You can read more about that from Roblox [here.](https://devforum.roblox.com/t/3294134)
 
-For now, developers will have to write their own code to upload editable images.
+If you really find yourself needing the uploader feature I've created a standalone uploader plugin that you can install locally.
+
+[![Download Uploader][badges/download]][links/roblox]
+
+<details>
+<summary>How to install</summary>
+
+1. Take the rbxm and put it in "Plugins > Plugin Folder".
+2. Open "File > Studio Betas" and enable the "CreateAssetAsync Lua API" beta.
+3. Restart studio.
+</details>
+<br/>
+
+You can also write your own code to upload editable images if you don’t want to install the local plugin:
 
 <details>
 <summary>Sample Code</summary>
@@ -200,6 +195,59 @@ end
 </details>
 <br/>
 
-When this feature is enabled this is what the upload process will look like:
+## Advanced
 
-<img src="docs/assets/readme/general/upload.png" width=70%>
+### Experimental Mode
+
+As of v1.2.0, Photobooth supports a setting called **experimental mode**. Enabling it requires restarting Studio and is not available during team create sessions.
+
+Experimental mode is a way to provide speculative features to the public without any guarantee that the behavior will remain supported in the future. If you enable this mode, be aware that any behavior it exposes may be removed and should not be relied on.
+
+### Bindings
+
+This plugin can be used for automation purposes. An example use case might be capturing icons for all the inventory items in your game, thereby allowing you to avoid using viewport frames, which are more expensive than traditional images.
+
+To use this feature, open the viewer and in the settings menu toggle **"Bindings"** to `true`.
+
+![](docs/assets/readme/general/bindings_enabled.png)
+
+Roblox may prompt you for script injection permissions.
+
+![](docs/assets/readme/general/script_injection.png)
+
+This creates a `ModuleScript` underneath `ServerStorage` which provides a typed interface for building automated capture workflows. A couple of common template workflows are included to get you started.
+
+```luau
+local Photobooth = require(game.ServerStorage.Photobooth.Bindings)
+
+local capture = Photobooth.captureViewport({
+	rect = Rect.new(0, 0, 300, 300),
+	type = "NoSkybox",
+})
+capture.Name = "Example"
+capture.Parent = game.StarterGui
+```
+
+Fullscreen captures can be made with bindings by passing a rect that represents the viewport:
+
+```luau
+local viewportSize = workspace.CurrentCamera.ViewportSize
+local capture = Photobooth.captureViewport({
+	rect = Rect.new(Vector2.zero, viewportSize),
+	type = "NoSkybox",
+})
+```
+
+Captures should be parented as a descendant of `StarterGui`. This ensures they can be properly exported as pngs.
+
+> **OS scaling note:** For the highest quality image when using bindings, it is strongly recommended to use your monitor's true resolution (scale 100%). See [OS Scaling](#os-scaling).
+
+## Support & Community
+
+- [**Devforum post**][links/devforum] — primary support channel for technical issues.
+- [**Discord**][links/discord] — chat with the community.
+- [**Roblox Community**][links/community]
+
+## License
+
+This project is licensed under **AGPL-3.0**. See [Developer Request](#developer-request) for what that means in practice.
