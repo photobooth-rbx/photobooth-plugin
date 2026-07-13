@@ -35,7 +35,7 @@ Results are output as editable images stored on a mesh part's texture.
 
 [Devforum post][links/devforum] · [Community][links/community]
 
-![](docs/assets/readme/creator%20store/trailer.mp4)
+[](docs/assets/readme/creator%20store/trailer.mp4)
 
 <details>
 <summary>Examples</summary>
