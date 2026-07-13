@@ -3,7 +3,7 @@ local HttpService = game:GetService("HttpService")
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local gt = require(pluginRoot.Packages.GreenTea)
 
-local UserInterface = require(pluginRoot.Main.UserInterface)
+local ViewportApp = require(pluginRoot.Main.UserInterface.Apps.Viewport)
 
 local strLimited = gt.string({ bytes = 200 })
 
@@ -31,16 +31,16 @@ local typechecker = gt.fn(
 	gt.returns(gt.opt(gt.union(strLimited, gt.Rect())))
 )
 
-local function callback(options: typeof(gtOptions))
+local function callback(options: typeof(gtOptions)): (string | Rect)?
 	if options.type == "request" then
 		local castedOptions = options :: typeof(requestOptions)
 		local guid = HttpService:GenerateGUID(false)
-		UserInterface.requestRect(guid, castedOptions.rect, castedOptions.scale)
+		ViewportApp.requestRect(guid, castedOptions.rect, castedOptions.scale)
 		return guid
 	end
 
 	local castedOptions = options :: typeof(expectOptions) | typeof(cancelOptions)
-	local control = UserInterface.getRectRequestByGuid(castedOptions.guid)
+	local control = ViewportApp.getRectRequestByGuid(castedOptions.guid)
 	if control then
 		if options.type == "expect" then
 			return control.expect()

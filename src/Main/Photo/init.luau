@@ -6,8 +6,6 @@ local Future = require(pluginRoot.Packages.Future)
 local Trove = require(pluginRoot.Packages.Trove)
 local Sift = require(pluginRoot.Packages.Sift)
 
-local Timeout = require(pluginRoot.Utilities.Timeout)
-
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
 local StateManager = require(pluginRoot.Main.StateManager)
 
@@ -36,7 +34,6 @@ local function createIsCapturingTrove()
 		end)
 	end)
 
-	Timeout.tryYield(true)
 	return trove
 end
 
@@ -89,7 +86,7 @@ end
 function Photo.captureUI(options: Types.CaptureUIOptions)
 	options = Sift.Dictionary.merge({
 		delay = 0,
-		alphaBleed = StateManager.saved:get().alphaBleedingEnabled,
+		alphaBleed = StateManager.settings:get().alphaBleedingEnabled,
 	}, options)
 
 	local processor = Captures.UserInterface.Processors[options.type]
@@ -123,7 +120,7 @@ end
 function Photo.captureViewport(options: Types.CaptureViewportOptions)
 	options = Sift.Dictionary.merge({
 		delay = 0,
-		alphaBleed = StateManager.saved:get().alphaBleedingEnabled,
+		alphaBleed = StateManager.settings:get().alphaBleedingEnabled,
 	}, options)
 
 	local processor = Captures.Viewport.Processors[options.type]

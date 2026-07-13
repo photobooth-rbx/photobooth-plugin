@@ -70,7 +70,7 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 			return state.isCapturing
 		end)
 
-		local galleryListExpanded = StateManager.saved:useSpecific()(function(state)
+		local galleryListExpanded = StateManager.settings:useSpecific()(function(state)
 			return state.galleryListExpanded
 		end)
 
@@ -98,7 +98,7 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 			and React.createElement(Gallery, {
 				IsExpanded = galleryListExpanded,
 				SetIsExpanded = function()
-					StateManager.saved:update()(function(state)
+					StateManager.settings:update()(function(state)
 						state.galleryListExpanded = not state.galleryListExpanded
 						return state
 					end)
@@ -135,22 +135,6 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 				end,
 				TestCreator = function(creator)
 					return creator.Id > 0
-				end,
-				OnUploadComplete = function(completed)
-					local module = Instance.new("ModuleScript")
-					module.Name = `{DateTime.now():ToIsoDate()} - Photobooth Upload`
-
-					ScriptEditorService:UpdateSourceAsync(module, function()
-						local output = "return {\n"
-						for _, entry in completed do
-							output = output .. `\t["{entry.Name}"] = "rbxassetid://{entry.AssetId}",\n`
-						end
-						return output .. "}"
-					end)
-					module.Parent = StarterGui
-
-					ScriptEditorService:OpenScriptDocumentAsync(module)
-					SelectionService:Set({ module })
 				end,
 
 				Disabled = isCapturing,

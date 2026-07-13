@@ -93,7 +93,7 @@ local function createBindings(plugin: Plugin)
 	camera.Archivable = false
 	trove:Add(camera)
 
-	interface.Parent = camera
+	interface.Parent = camera :: any
 	return camera
 end
 
@@ -113,9 +113,9 @@ end
 -- Public
 
 function Bindings.setup(plugin: Plugin)
-	setEnabled(plugin, StateManager.saved:get().bindingsEnabled)
-	local connection = StateManager.saved:onChanged(function()
-		setEnabled(plugin, StateManager.saved:get().bindingsEnabled)
+	setEnabled(plugin, StateManager.settings:get().bindingsEnabled)
+	local connection = StateManager.settings:onChanged(function()
+		setEnabled(plugin, StateManager.settings:get().bindingsEnabled)
 	end)
 
 	local camera = Instance.new("Camera")
