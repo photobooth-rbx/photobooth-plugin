@@ -11,6 +11,7 @@
 		"editor.formatOnSave": false
 	},
 	"stylua.targetReleaseVersion": "latest",
+	"luau-lsp.diagnostics.strictDatamodelTypes": true,
 	"luau-lsp.sourcemap.rojoProjectFile": "analysis.project.json",
 	"luau-lsp.types.definitionFiles": {
 		"general": ".vscode/definitions.d.luau"

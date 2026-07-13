@@ -47,7 +47,7 @@ local function ConfigurationWindow(props: Props)
 		return state.isExperimentalMode
 	end)
 
-	local experimentalModeEnabled = StateManager.saved:useSpecific()(function(state)
+	local experimentalModeEnabled = StateManager.settings:useSpecific()(function(state)
 		return state.experimentalModeEnabled
 	end)
 

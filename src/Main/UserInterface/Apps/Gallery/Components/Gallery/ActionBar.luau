@@ -5,7 +5,7 @@ local React = require(pluginRoot.Packages.React)
 local Constants = require(pluginRoot.Constants)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local LucideButton = require(uiRoot.Components.LucideButton)
+local LucideIconButton = require(uiRoot.Components.LucideIconButton)
 
 local useImageControls = require(script.Parent.ImageInterface.useImageControls)
 
@@ -78,7 +78,7 @@ local function ActionBar(props: Props)
 			Position = UDim2.fromScale(0, 0.5),
 			Size = UDim2.fromOffset(16 * 6, 16),
 		}, {
-			LeftButton = React.createElement(LucideButton, {
+			LeftButton = React.createElement(LucideIconButton, {
 				AnchorPoint = Vector2.new(0, 0.5),
 				Position = UDim2.new(0, 0, 0.5, 0),
 				Size = UDim2.fromOffset(LEFT_ICON.ImageRectSize.X, LEFT_ICON.ImageRectSize.Y),
@@ -110,7 +110,7 @@ local function ActionBar(props: Props)
 				TextTruncate = Enum.TextTruncate.AtEnd,
 			}),
 
-			RightButton = React.createElement(LucideButton, {
+			RightButton = React.createElement(LucideIconButton, {
 				AnchorPoint = Vector2.new(1, 0.5),
 				Position = UDim2.new(1, 0, 0.5, 0),
 				Size = UDim2.fromOffset(RIGHT_ICON.ImageRectSize.X, RIGHT_ICON.ImageRectSize.Y),
@@ -140,7 +140,7 @@ local function ActionBar(props: Props)
 			}),
 
 			Controls = CONTROLS_ENABLED and React.createElement(React.Fragment, nil, {
-				ZoomOut = React.createElement(LucideButton, {
+				ZoomOut = React.createElement(LucideIconButton, {
 					LayoutOrder = 1,
 					AnchorPoint = Vector2.new(0, 0.5),
 					Position = UDim2.new(0, 0, 0.5, 0),
@@ -175,7 +175,7 @@ local function ActionBar(props: Props)
 					TextYAlignment = Enum.TextYAlignment.Center,
 				}),
 
-				ZoomIn = React.createElement(LucideButton, {
+				ZoomIn = React.createElement(LucideIconButton, {
 					LayoutOrder = 3,
 					AnchorPoint = Vector2.new(0, 0.5),
 					Position = UDim2.new(0, 0, 0.5, 0),
@@ -194,7 +194,7 @@ local function ActionBar(props: Props)
 					end,
 				}),
 
-				Reset = React.createElement(LucideButton, {
+				Reset = React.createElement(LucideIconButton, {
 					LayoutOrder = 4,
 					AnchorPoint = Vector2.new(0, 0.5),
 					Position = UDim2.new(0, 0, 0.5, 0),

@@ -4,31 +4,39 @@ local Sift = require(pluginRoot.Packages.Sift)
 local SaveFormatV1 = {}
 
 export type Serialized = {
-	alphaBleedingEnabled: boolean,
-	bindingsEnabled: boolean,
-	galleryListExpanded: boolean,
-	experimentalModeEnabled: boolean,
+	settings: {
+		alphaBleedingEnabled: boolean,
+		bindingsEnabled: boolean,
+		galleryListExpanded: boolean,
+		experimentalModeEnabled: boolean,
+	},
+
+	postProcessingPresets: { any },
 }
 
 export type Deserialized = {
-	alphaBleedingEnabled: boolean,
-	bindingsEnabled: boolean,
-	galleryListExpanded: boolean,
-	experimentalModeEnabled: boolean,
-}
+	settings: {
+		alphaBleedingEnabled: boolean,
+		bindingsEnabled: boolean,
+		galleryListExpanded: boolean,
+		experimentalModeEnabled: boolean,
+	},
 
-local function toboolean(bool: boolean)
-	return if typeof(bool) == "boolean" then bool else nil
-end
+	postProcessingPresets: { any },
+}
 
 SaveFormatV1.version = 1
 
 function SaveFormatV1.default(): Deserialized
 	return {
-		alphaBleedingEnabled = true,
-		bindingsEnabled = false,
-		galleryListExpanded = true,
-		experimentalModeEnabled = false,
+		settings = {
+			alphaBleedingEnabled = true,
+			bindingsEnabled = false,
+			galleryListExpanded = true,
+			experimentalModeEnabled = false,
+		},
+
+		postProcessingPresets = {},
 	}
 end
 
@@ -37,21 +45,15 @@ function SaveFormatV1.migrate(_previousSerialized: any)
 end
 
 function SaveFormatV1.serialize(deserialized: Deserialized): Serialized
+	local default = SaveFormatV1.default()
 	return {
-		alphaBleedingEnabled = not not deserialized.alphaBleedingEnabled,
-		bindingsEnabled = not not deserialized.bindingsEnabled,
-		galleryListExpanded = not not deserialized.galleryListExpanded,
-		experimentalModeEnabled = not not deserialized.experimentalModeEnabled,
+		settings = Sift.Dictionary.merge(default.settings, deserialized.settings),
+		postProcessingPresets = deserialized.postProcessingPresets or {},
 	}
 end
 
 function SaveFormatV1.deserialize(serialized: Serialized): Deserialized
-	return Sift.Dictionary.mergeDeep(SaveFormatV1.default(), {
-		alphaBleedingEnabled = toboolean(serialized.alphaBleedingEnabled),
-		bindingsEnabled = toboolean(serialized.bindingsEnabled),
-		galleryListExpanded = toboolean(serialized.galleryListExpanded),
-		experimentalModeEnabled = toboolean(serialized.experimentalModeEnabled),
-	})
+	return Sift.Dictionary.merge(SaveFormatV1.default(), serialized)
 end
 
 return SaveFormatV1

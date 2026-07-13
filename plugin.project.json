@@ -2,7 +2,7 @@
 	"name": "PluginRoot",
 	"syncRules": [
 		{
-			"pattern": "LICENSE",
+			"pattern": "**/LICENSE",
 			"use": "moduleScript"
 		}
 	],
@@ -11,9 +11,6 @@
 		"$path": "default.project.json",
 		"Packages": {
 			"$path": "Packages"
-		},
-		"Addons": {
-			"$path": "Addons"
 		},
 		"Wally": {
 			"$path": "wally.toml"

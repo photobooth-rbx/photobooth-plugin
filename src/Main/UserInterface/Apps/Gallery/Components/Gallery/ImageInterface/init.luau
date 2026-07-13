@@ -4,7 +4,7 @@ local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local LucideButton = require(uiRoot.Components.LucideButton)
+local LucideIconButton = require(uiRoot.Components.LucideIconButton)
 local Hooks = require(uiRoot.Hooks)
 
 local useImageControls = require(script.useImageControls)
@@ -113,7 +113,7 @@ local function ImageInterface(props: Props)
 				MaxSize = Vector2.new(200, math.huge),
 			}),
 
-			MinMaxButton = React.createElement(LucideButton, {
+			MinMaxButton = React.createElement(LucideIconButton, {
 				AnchorPoint = Vector2.new(0, 1),
 				Position = UDim2.new(1, 0, 1, 0),
 				Size = UDim2.fromOffset(minMaxIcon.ImageRectSize.X, minMaxIcon.ImageRectSize.Y),

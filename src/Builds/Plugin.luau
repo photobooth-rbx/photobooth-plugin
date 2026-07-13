@@ -50,12 +50,12 @@ local function updateScaleOS()
 end
 
 local function updateExperimentalMode()
-	local experimentalModeEnabled = StateManager.saved:get().experimentalModeEnabled
+	local experimentalModeEnabled = StateManager.settings:get().experimentalModeEnabled
 	if not Constants.AllowExperimentalMode then
 		experimentalModeEnabled = false
 	end
 
-	StateManager.saved:update()(function(state)
+	StateManager.settings:update()(function(state)
 		state.experimentalModeEnabled = experimentalModeEnabled
 		return state
 	end)
@@ -99,18 +99,6 @@ function Plugin.build(plugin: Plugin)
 	local toolbar = plugin:CreateToolbar("Photobooth")
 	UserInterface.mountApps(plugin, toolbar)
 	Bindings.setup(plugin)
-
-	-- addons
-	for _, addonModel in pluginRoot.Addons:GetChildren() do
-		local addonRoot = addonModel:FindFirstChild("PluginRoot")
-		local builds = addonRoot and addonRoot:FindFirstChild("Builds")
-		local addonBuild = builds and builds:FindFirstChild("Addon")
-
-		if addonBuild and addonBuild:IsA("ModuleScript") then
-			local addon = require(addonBuild) :: any
-			addon.build(plugin, toolbar)
-		end
-	end
 end
 
 return Plugin
