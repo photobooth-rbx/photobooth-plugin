@@ -35,8 +35,7 @@ Results are output as editable images stored on a mesh part's texture.
 
 [Devforum post][links/devforum] · [Community][links/community]
 
-
-
+https://github.com/user-attachments/assets/8ba14795-c398-4e1d-b660-f64eec1f0795
 
 <details>
 <summary>Examples</summary>
@@ -47,9 +46,6 @@ Results are output as editable images stored on a mesh part's texture.
 ![](docs/assets/readme/examples/Spaceship.png)
 ![](docs/assets/readme/examples/Tree.png)
 </details>
-</br>
-
-<video src="docs/assets/readme/creator%20store/trailer.mp4" controls></video>
 
 ## Table of Contents
 
