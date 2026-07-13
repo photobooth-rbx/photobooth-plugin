@@ -1,7 +1,7 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.6.0] - 2026/07/13
 - Better emulator support allows using more than just actual resolution
 - Add a error for attempts to capture with openGL graphics mode
 - Reorganize project to better include the addons and avoid constant version pinning
