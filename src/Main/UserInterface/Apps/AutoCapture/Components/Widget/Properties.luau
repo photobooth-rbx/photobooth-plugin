@@ -2,6 +2,8 @@ local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioProperties = require(pluginRoot.Packages.StudioProperties)
 local React = require(pluginRoot.Packages.React)
 
+local Captures = require(pluginRoot.Main.Photo.Captures)
+
 local AutoCaptureRoot = script:FindFirstAncestor("AutoCapture")
 local Controller = require(AutoCaptureRoot.Controller)
 
@@ -64,7 +66,7 @@ local function Properties(props: Props, ref: any)
 			CaptureType = React.createElement(StudioProperties.Dropdown, {
 				FieldName = "Capture Type",
 
-				List = { "NoSkybox", "Unmodified" },
+				List = Captures.Viewport.Order,
 				Value = dynamic.captureType,
 				OnValueSubmitted = function(newValue)
 					props.Controller.dynamicObservableState:update()(function(state)

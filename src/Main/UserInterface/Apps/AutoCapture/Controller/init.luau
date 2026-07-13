@@ -7,6 +7,7 @@ local Signal = require(pluginRoot.Packages.Signal)
 local Trove = require(pluginRoot.Packages.Trove)
 
 local Photo = require(pluginRoot.Main.Photo)
+local Captures = require(pluginRoot.Main.Photo.Captures)
 
 local appRoot = script:FindFirstAncestor("AutoCapture")
 local RenderPriorities = require(appRoot.RenderPriorities)
@@ -49,7 +50,7 @@ end
 local function createDynamicObservableState()
 	return ObservableValue.new({
 		alphaBleed = true,
-		captureType = "NoSkybox",
+		captureType = Captures.Viewport.Order[1],
 
 		isFullScreen = false,
 		captureDelay = 0,
