@@ -3,6 +3,7 @@ local ObservableValue = require(pluginRoot.Utilities.ObservableValue)
 
 local SaveVersions = require(script.SaveVersions)
 
+local SAVING_ENABLED = true
 local PLUGIN_SAVED_KEY = "egomoose_photobooth_save"
 
 local DEFAULT_TEMPORARY = {
@@ -39,6 +40,11 @@ function State.initPluginSaving(plugin: Plugin)
 	end)
 
 	plugin.Unloading:Connect(function()
+		if not SAVING_ENABLED then
+			plugin:SetSetting(PLUGIN_SAVED_KEY, nil)
+			return
+		end
+
 		local pluginSave = SaveVersions.save({
 			settings = State.settings:get(),
 			postProcessingPresets = State.postProcessingPresets:get(),
