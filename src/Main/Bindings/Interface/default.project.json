@@ -2,7 +2,7 @@
 	"name": "Interface",
 	"syncRules": [
 		{
-		"pattern": "LICENSE",
+		"pattern": "**/LICENSE",
 		"use": "moduleScript"
 		}
 	],

@@ -8,6 +8,9 @@
 /assets/icons/asphalt/processed
 /.vscode/settings.json
 
+uploader-plugin.project.json
+/uploader-src
+
 /bindings-package
 /.build
 

@@ -1,20 +1,23 @@
-local AutoCapture = require(script.Apps.AutoCapture)
-local ViewportApp = require(script.Apps.Viewport)
-local CaptureUIApp = require(script.Apps.CaptureUI)
-local GalleryApp = require(script.Apps.Gallery)
-local PostProcessing = require(script.Apps.PostProcessing)
-
 local UserInterface = {}
 
-function UserInterface.mountApps(plugin: Plugin, toolbar: PluginToolbar)
-	ViewportApp.mount(plugin, toolbar)
-	CaptureUIApp.mount(plugin, toolbar)
-	GalleryApp.mount(plugin, toolbar)
-	AutoCapture.mount(plugin, toolbar)
-	PostProcessing.mount(plugin, toolbar)
+local function tryMountApps(plugin: Plugin, toolbar: PluginToolbar, appNames: { string })
+	for _, appName in appNames do
+		local appModule = script.Apps:FindFirstChild(appName)
+		if appModule then
+			local app = require(appModule) :: any
+			app.mount(plugin, toolbar)
+		end
+	end
 end
 
-UserInterface.requestRect = ViewportApp.requestRect
-UserInterface.getRectRequestByGuid = ViewportApp.getRectRequestByGuid
+function UserInterface.mountApps(plugin: Plugin, toolbar: PluginToolbar)
+	tryMountApps(plugin, toolbar, {
+		"Viewport",
+		"CaptureUI",
+		"Gallery",
+		"AutoCapture",
+		"PostProcessing",
+	})
+end
 
 return UserInterface

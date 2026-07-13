@@ -6,8 +6,6 @@ local Future = require(pluginRoot.Packages.Future)
 local Trove = require(pluginRoot.Packages.Trove)
 local Sift = require(pluginRoot.Packages.Sift)
 
-local Timeout = require(pluginRoot.Utilities.Timeout)
-
 local Types = require(pluginRoot.Main.Bindings.Interface.Types)
 local StateManager = require(pluginRoot.Main.StateManager)
 
@@ -36,7 +34,6 @@ local function createIsCapturingTrove()
 		end)
 	end)
 
-	Timeout.tryYield(true)
 	return trove
 end
 

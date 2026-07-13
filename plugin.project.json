@@ -2,7 +2,7 @@
 	"name": "PluginRoot",
 	"syncRules": [
 		{
-			"pattern": "LICENSE",
+			"pattern": "**/LICENSE",
 			"use": "moduleScript"
 		}
 	],
