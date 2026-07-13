@@ -5,7 +5,7 @@ local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
 
 local ImageList = require(script.ImageList)
-local Uploader = require(script.Uploader)
+local Uploader = require(script.Parent.Uploader)
 
 type EditableImageInfo = Hooks.EditableImageInfo
 

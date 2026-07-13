@@ -35,9 +35,6 @@ return CreateStory.theme(function(props)
 				task.wait(0.5)
 				return creator.Id > 0
 			end,
-			OnUploadComplete = function(completed)
-				print(completed)
-			end,
 
 			Disabled = not not props.Disabled,
 		}),

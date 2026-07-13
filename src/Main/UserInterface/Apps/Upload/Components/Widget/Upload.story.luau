@@ -33,9 +33,6 @@ local function Component(props: { Size: UDim2, Disabled: boolean? })
 			TestCreator = function(creator)
 				return creator.Id > 0
 			end,
-			OnUploadComplete = function(output)
-				print("[UploadWindow story] complete:", output)
-			end,
 
 			OnCancel = function()
 				print("[UploadWindow story] cancelled")

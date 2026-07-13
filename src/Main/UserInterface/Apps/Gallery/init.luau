@@ -136,22 +136,6 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 				TestCreator = function(creator)
 					return creator.Id > 0
 				end,
-				OnUploadComplete = function(completed)
-					local module = Instance.new("ModuleScript")
-					module.Name = `{DateTime.now():ToIsoDate()} - Photobooth Upload`
-
-					ScriptEditorService:UpdateSourceAsync(module, function()
-						local output = "return {\n"
-						for _, entry in completed do
-							output = output .. `\t["{entry.Name}"] = "rbxassetid://{entry.AssetId}",\n`
-						end
-						return output .. "}"
-					end)
-					module.Parent = StarterGui
-
-					ScriptEditorService:OpenScriptDocumentAsync(module)
-					SelectionService:Set({ module })
-				end,
 
 				Disabled = isCapturing,
 			})

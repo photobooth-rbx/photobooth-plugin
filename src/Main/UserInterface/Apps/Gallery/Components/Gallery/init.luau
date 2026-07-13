@@ -5,11 +5,12 @@ local React = require(pluginRoot.Packages.React)
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
 
+local Uploader = require(uiRoot.Apps.Upload.Components.Uploader)
+
 local useImageControls = require(script.ImageInterface.useImageControls)
 
 local ConfigurationWindow = require(script.ConfigurationWindow)
 local ImageInterface = require(script.ImageInterface)
-local UploadWindow = require(script.UploadWindow)
 local ActionBar = require(script.ActionBar)
 
 export type Props = {
@@ -19,14 +20,8 @@ export type Props = {
 	BackgroundType: string,
 	SetBackgroundType: (string) -> (),
 
-	TryUpload: UploadWindow.TryUpload,
-	TestCreator: UploadWindow.TestCreator,
-	OnUploadComplete: ({
-		{
-			Name: string,
-			AssetId: number,
-		}
-	}) -> (),
+	TryUpload: Uploader.TryUpload,
+	TestCreator: Uploader.TestCreator,
 
 	Disabled: boolean,
 }
@@ -89,23 +84,28 @@ local function Gallery(props: Props)
 			AutoButtonColor = false,
 			ZIndex = 3,
 		}, {
-			Upload = uploadInfos and React.createElement(UploadWindow, {
+			Upload = uploadInfos and React.createElement("Frame", {
+				BackgroundTransparency = 1,
 				AnchorPoint = Vector2.new(0.5, 0.5),
 				Position = UDim2.fromScale(0.5, 0.5),
 				Size = UDim2.new(1, -20, 1, -20),
+			}, {
+				UISizeConstraint = React.createElement("UISizeConstraint", {
+					MinSize = Vector2.new(0, 0),
+					MaxSize = Vector2.new(350, 400),
+				}),
+				Uploader = React.createElement(Uploader, {
+					Size = UDim2.fromScale(1, 1),
 
-				UploadInfos = uploadInfos,
-				SetUploadInfos = setUploadInfos,
+					UploadInfos = uploadInfos,
+					TryUpload = props.TryUpload,
+					TestCreator = props.TestCreator,
+					OnClose = function()
+						setUploadInfos(nil)
+					end,
 
-				TryUpload = props.TryUpload,
-				TestCreator = props.TestCreator,
-				OnUploadComplete = props.OnUploadComplete,
-
-				OnCancel = function()
-					setUploadInfos(nil)
-				end,
-
-				Disabled = props.Disabled,
+					Disabled = props.Disabled,
+				}),
 			}),
 			Configuration = selectedTab == "Settings" and React.createElement(ConfigurationWindow, {
 				AnchorPoint = Vector2.new(0.5, 0.5),

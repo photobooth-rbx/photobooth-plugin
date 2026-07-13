@@ -11,9 +11,7 @@ local React = require(pluginRoot.Packages.React)
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
 
-local hooksRoot = script.Parent.Parent.Parent.Hooks
-local useUpload = require(hooksRoot.useUpload)
-
+local useUpload = require(script.useUpload)
 local UploadLineItem = require(script.UploadLineItem)
 local CreatorSelect = require(script.CreatorSelect)
 
