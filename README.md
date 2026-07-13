@@ -39,4 +39,4 @@ Results are output as editable images stored on a mesh part’s texture.
 
 https://github.com/user-attachments/assets/8ba14795-c398-4e1d-b660-f64eec1f0795
 
-You'd like a full rundown of the plugin checkout the devforum post linked above.
+If you'd like a full rundown of the plugin checkout the devforum post linked above.
