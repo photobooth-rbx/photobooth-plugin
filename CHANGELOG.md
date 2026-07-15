@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.1] - 2026/07/15
+- Fix auto capture on OS scaled devices
+
 ### [2.6.0] - 2026/07/13
 - Better emulator support allows using more than just actual resolution
 - Add a error for attempts to capture with openGL graphics mode
