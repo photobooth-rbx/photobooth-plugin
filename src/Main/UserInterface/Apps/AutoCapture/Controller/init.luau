@@ -8,6 +8,7 @@ local Trove = require(pluginRoot.Packages.Trove)
 
 local Photo = require(pluginRoot.Main.Photo)
 local Captures = require(pluginRoot.Main.Photo.Captures)
+local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
 
 local appRoot = script:FindFirstAncestor("AutoCapture")
 local RenderPriorities = require(appRoot.RenderPriorities)
@@ -714,13 +715,23 @@ end
 function AutoCaptureControllerClass.capture(self: AutoCaptureController, scaleOS: Vector2)
 	self.isCapturing = true
 
+	local camera = workspace.CurrentCamera
+	local viewportSize = camera.ViewportSize
+
+	local viewportDelta = (viewportSize * scaleOS) - viewportSize
+	local absPosition = self.captureRect.Min + viewportDelta / 2
+	local absSize = self.captureRect.Max - self.captureRect.Min
+
+	local center = absPosition + absSize / 2
+	local offset = (absSize / 2) * scaleOS
+	local scaledRect = RenderRect.fromRect(Rect.new(center - offset, center + offset))
+
 	local dynamic = self.dynamicObservableState:get()
 	local result = Photo.captureViewport({
-		rect = self.captureRect,
+		rect = scaledRect,
 		type = dynamic.captureType :: any,
 		delay = dynamic.captureDelay,
 		alphaBleed = dynamic.alphaBleed,
-		scale = scaleOS,
 	})
 
 	local exported = Photo.export(result, nil)
