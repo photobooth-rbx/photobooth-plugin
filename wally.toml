@@ -1,7 +1,7 @@
 [package]
 name = "egomoose/photobooth-plugin"
 description = "A plugin for capturing images in Roblox studio."
-repository = "https://github.com/EgoMoose/photobooth-plugin"
+repository = "https://github.com/photobooth-rbx/photobooth-plugin"
 version = "2.6.1"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
