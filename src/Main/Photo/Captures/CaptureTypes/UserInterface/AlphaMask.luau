@@ -5,7 +5,7 @@ local Trove = require(pluginRoot.Packages.Trove)
 local photoRoot = script:FindFirstAncestor("Photo")
 local Screenshot = require(photoRoot.Captures.Screenshot)
 local SceneControl = require(photoRoot.SceneControl)
-local UIBounds = require(photoRoot.Tools.UIBoundsScreen)
+local UIBounds = require(photoRoot.Tools.UIBounds)
 local UIHider = require(photoRoot.Tools.UIHider)
 
 local capturesRoot = script:FindFirstAncestor("Captures")
@@ -49,7 +49,7 @@ local function operation(options: Types.CaptureUIOptions, trove: Trove.Trove)
 	trove:Add(colorCorrection)
 
 	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
-	local capture = errorWatch(Composers.reverseBlend(onWhite, onBlack, nil, colorCorrection))
+	local capture = errorWatch(Composers.reverseBlend(onWhite, onBlack, nil, nil, colorCorrection))
 	if options.alphaBleed then
 		capture = errorWatch(Composers.alphaBleed(capture))
 	end
