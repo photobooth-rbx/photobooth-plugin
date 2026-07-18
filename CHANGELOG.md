@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.2] - 2026/07/18
+- Revert to old UI capture method (Roblox disabled the FFlag that was causing problems)
+
 ### [2.6.1] - 2026/07/15
 - Fix auto capture on OS scaled devices
 
