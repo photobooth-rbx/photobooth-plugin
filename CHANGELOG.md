@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.3] - 2026/07/18
+- Fix script injection check on auto-captures when the workspace has scripts in it
+
 ### [2.6.2] - 2026/07/18
 - Revert to old UI capture method (Roblox disabled the FFlag that was causing problems)
 

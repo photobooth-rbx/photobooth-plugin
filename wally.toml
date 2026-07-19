@@ -2,7 +2,7 @@
 name = "egomoose/photobooth-plugin"
 description = "A plugin for capturing images in Roblox studio."
 repository = "https://github.com/photobooth-rbx/photobooth-plugin"
-version = "2.6.2"
+version = "2.6.3"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 license = "AGPL-3.0"
