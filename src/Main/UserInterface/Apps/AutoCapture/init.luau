@@ -25,11 +25,21 @@ local AutoCapture = {}
 local function hideWorkspace(callback: () -> ())
 	local terrain = workspace.Terrain
 	local camera = workspace.CurrentCamera
-	local children = workspace:GetChildren()
+
+	local foundLuaSourceContainer = workspace:FindFirstChildWhichIsA("LuaSourceContainer", true)
+	if foundLuaSourceContainer then
+		-- This may seem like a really funny thing to do. Why create a module and immediately destroy it?
+		-- This will trigger the script injection permissions check which is needed to re-parent the user's scripts back
+		-- into the workspace. If we don't have this then we may error post-callback and the workspace will be unintentionally cleared
+		local probe = Instance.new("ModuleScript")
+		probe.Parent = workspace
+		probe:Destroy()
+	end
 
 	local recording = ChangeHistoryService:TryBeginRecording("AutoCapture", "Auto Capture")
 
 	local hidden = {}
+	local children = workspace:GetChildren()
 	for _, child in children do
 		if child ~= camera and child ~= terrain then
 			table.insert(hidden, {
