@@ -82,7 +82,6 @@ local function MenuItem(props: ItemProps)
 			BackgroundTransparency = 1,
 			Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE),
 			Image = props.Icon,
-			ImageColor3 = textColor,
 			LayoutOrder = 2,
 		}),
 
