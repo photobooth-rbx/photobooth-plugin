@@ -168,8 +168,37 @@ local function OverlayMenu(props: Props)
 	)
 end
 
+export type Controls = {
+	origin: Vector2?,
+	open: (screenPosition: Vector2) -> (),
+	close: () -> (),
+}
+
+-- Manages the open/closed state of a context menu and converts an absolute screen
+-- position (e.g. from an InputObject) into a position relative to the overlay layer,
+-- which is what OverlayMenu expects for its `Origin` prop.
+local function useContextMenu(): Controls
+	local overlayMenuFrame = OverlayLayer.useTarget()
+	local origin, setOrigin = React.useState(nil :: Vector2?)
+
+	local open = React.useCallback(function(screenPosition: Vector2)
+		setOrigin(screenPosition - overlayMenuFrame.AbsolutePosition)
+	end, { overlayMenuFrame } :: { any })
+
+	local close = React.useCallback(function()
+		setOrigin(nil :: any)
+	end, {})
+
+	return {
+		origin = origin,
+		open = open,
+		close = close,
+	}
+end
+
 return {
 	component = OverlayMenu,
 	useTarget = OverlayLayer.useTarget,
+	useContextMenu = useContextMenu,
 	provider = OverlayLayer.provider,
 }

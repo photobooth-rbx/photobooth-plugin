@@ -3,14 +3,12 @@ local StudioComponents = require(pluginRoot.Packages.StudioComponents)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
+local OverlayMenu = require(uiRoot.Components.OverlayMenu)
 local Asphalt = require(uiRoot.Asphalt)
 local Hooks = require(uiRoot.Hooks)
 
 local postProcessingRoot = script:FindFirstAncestor("PostProcessing")
 local Controller = require(postProcessingRoot.Controller)
-
-local widgetRoot = script:FindFirstAncestor("Widget")
-local OverlayMenu = require(widgetRoot.OverlayMenu)
 
 local HighResImageSplit = require(script.HighResImageSplit)
 
@@ -30,41 +28,20 @@ export type Props = {
 	Layers: { Controller.RenderLayer },
 }
 
-local function useBackgroundType()
-	local origin, setOrigin = React.useState(nil :: Vector2?)
-	local value, setValue = React.useState("Checkerboard")
-
-	local openMenu = React.useCallback(function(newOrigin: Vector2)
-		setOrigin(newOrigin)
-	end, {})
-
-	local closeMenu = React.useCallback(function()
-		setOrigin(nil :: any)
-	end, {})
-
-	return {
-		origin = origin,
-		value = value,
-		setValue = setValue,
-		open = openMenu,
-		close = closeMenu,
-	}
-end
-
 local function DisplayImage(props: Props)
 	local theme = StudioComponents.useTheme()
-	local backgroundType = useBackgroundType()
-	local overlayMenuFrame = OverlayMenu.useTarget()
+	local menu = OverlayMenu.useContextMenu()
+	local backgroundValue, setBackgroundValue = React.useState("Checkerboard")
 
 	local menuItems: { OverlayMenu.Item } = {}
 	for _, name in BACKGROUND_TYPES do
 		table.insert(menuItems, {
 			Text = name,
 			Icon = Asphalt.menu[name:lower()] or "",
-			Selected = name == backgroundType.value,
+			Selected = name == backgroundValue,
 			OnActivated = function()
-				backgroundType.setValue(name)
-				backgroundType.close()
+				setBackgroundValue(name)
+				menu.close()
 			end,
 		})
 	end
@@ -166,9 +143,7 @@ local function DisplayImage(props: Props)
 						Size = UDim2.fromScale(1, 1),
 						[React.Event.InputBegan] = function(_, input: InputObject)
 							if input.UserInputType == Enum.UserInputType.MouseButton2 then
-								local origin = Vector2.new(input.Position.X, input.Position.Y)
-									- overlayMenuFrame.AbsolutePosition
-								backgroundType.open(origin)
+								menu.open(Vector2.new(input.Position.X, input.Position.Y))
 							end
 						end,
 					}),
@@ -180,7 +155,7 @@ local function DisplayImage(props: Props)
 					ClipsDescendants = true,
 					ZIndex = -1,
 				}, {
-					Checkerboard = backgroundType.value == "Checkerboard" and React.createElement("ImageLabel", {
+					Checkerboard = backgroundValue == "Checkerboard" and React.createElement("ImageLabel", {
 						BackgroundTransparency = 1,
 						Image = Asphalt.misc.checkerboard,
 						ScaleType = Enum.ScaleType.Tile,
@@ -190,14 +165,14 @@ local function DisplayImage(props: Props)
 						ImageColor3 = theme:GetColor(Enum.StudioStyleGuideColor.Titlebar),
 					}),
 
-					Black = backgroundType.value == "Black" and React.createElement("ImageLabel", {
+					Black = backgroundValue == "Black" and React.createElement("ImageLabel", {
 						BorderSizePixel = 0,
 						BackgroundTransparency = 0,
 						BackgroundColor3 = Color3.new(0, 0, 0),
 						Size = UDim2.fromScale(1, 1),
 					}),
 
-					White = backgroundType.value == "White" and React.createElement("ImageLabel", {
+					White = backgroundValue == "White" and React.createElement("ImageLabel", {
 						BorderSizePixel = 0,
 						BackgroundTransparency = 0,
 						BackgroundColor3 = Color3.new(1, 1, 1),
@@ -227,10 +202,10 @@ local function DisplayImage(props: Props)
 			}),
 		}),
 
-		Menu = backgroundType.origin and React.createElement(OverlayMenu.component, {
-			Origin = backgroundType.origin,
+		Menu = menu.origin and React.createElement(OverlayMenu.component, {
+			Origin = menu.origin,
 			Items = menuItems,
-			OnClose = backgroundType.close,
+			OnClose = menu.close,
 			ZIndex = 10,
 		}),
 	})

@@ -4,11 +4,14 @@ local React = require(pluginRoot.Packages.React)
 local Constants = require(pluginRoot.Constants)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
+local OverlayMenu = require(uiRoot.Components.OverlayMenu)
 local Asphalt = require(uiRoot.Asphalt)
 local Hooks = require(uiRoot.Hooks)
 
 local useImageControls = require(script.Parent.Parent.useImageControls)
 local HighResImageSplit = require(script.HighResImageSplit)
+
+local BACKGROUND_TYPES = { "Checkerboard", "Black", "White", "None" }
 
 local OUTLINE_THICKNESS = 2
 local DIMENSIONS_FONT_SIZE = 7
@@ -31,40 +34,22 @@ export type Props = {
 	ViewerRef: { current: GuiObject? },
 }
 
-local function makeBackgroundTypeAction(text: string, backgroundType: string, setBackgroundType: (string) -> ())
-	local renderText = text
-	if text == backgroundType then
-		renderText = `>  {text}`
-	end
-
-	return {
-		Text = renderText,
-		Icon = Asphalt.menu[text:lower()],
-		OnTriggered = function()
-			setBackgroundType(text)
-		end,
-	}
-end
-
-local function usePluginMenu(backgroundType: string, setBackgroundType: (string) -> ())
-	return Hooks.usePluginMenu(React.useMemo(function()
-		return {
-			Title = "Photobooth_Gallery_Alpha_Background",
-			Icon = "",
-
-			Actions = {
-				makeBackgroundTypeAction("Checkerboard", backgroundType, setBackgroundType),
-				makeBackgroundTypeAction("Black", backgroundType, setBackgroundType),
-				makeBackgroundTypeAction("White", backgroundType, setBackgroundType),
-				makeBackgroundTypeAction("None", backgroundType, setBackgroundType),
-			},
-		}
-	end, { backgroundType, setBackgroundType } :: { any }))
-end
-
 local function DisplayImage(props: Props)
 	local theme = StudioComponents.useTheme()
-	local openMenu = usePluginMenu(props.BackgroundType, props.SetBackgroundType)
+	local menu = OverlayMenu.useContextMenu()
+
+	local menuItems: { OverlayMenu.Item } = {}
+	for _, name in BACKGROUND_TYPES do
+		table.insert(menuItems, {
+			Text = name,
+			Icon = Asphalt.menu[name:lower()] or "",
+			Selected = name == props.BackgroundType,
+			OnActivated = function()
+				props.SetBackgroundType(name)
+				menu.close()
+			end,
+		})
+	end
 
 	local bottomLabel = React.useRef(nil :: TextLabel?)
 	local bottomLabelTextFits = Hooks.useRefProperty(bottomLabel, "TextFits", true)
@@ -183,13 +168,31 @@ local function DisplayImage(props: Props)
 				AutoButtonColor = false,
 				ZIndex = 2,
 
-				[React.Event.InputBegan] = if CONTROLS_ENABLED then controls.dragger.onInputBegan else nil,
-				[React.Event.InputChanged] = if CONTROLS_ENABLED then controls.onInputChanged else nil,
-				[React.Event.InputEnded] = if CONTROLS_ENABLED then controls.dragger.onInputEnded else nil,
-				[React.Event.MouseButton2Click] = function()
-					openMenu()
+				[React.Event.InputBegan] = function(rbx: GuiObject, input: InputObject)
+					if input.UserInputType == Enum.UserInputType.MouseButton2 then
+						menu.open(Vector2.new(input.Position.X, input.Position.Y))
+					elseif CONTROLS_ENABLED then
+						controls.dragger.onInputBegan(rbx, input)
+					end
+				end,
+				[React.Event.InputChanged] = function(rbx: GuiObject, input: InputObject)
+					if CONTROLS_ENABLED then
+						controls.onInputChanged(rbx, input)
+					end
+				end,
+				[React.Event.InputEnded] = function(rbx: GuiObject, input: InputObject)
+					if CONTROLS_ENABLED then
+						controls.dragger.onInputEnded(rbx, input)
+					end
 				end,
 			}),
+		}),
+
+		Menu = menu.origin and React.createElement(OverlayMenu.component, {
+			Origin = menu.origin,
+			Items = menuItems,
+			OnClose = menu.close,
+			ZIndex = 10,
 		}),
 
 		UnattachedDimensions = not bottomLabelTextFits and React.createElement("TextLabel", {
