@@ -12,7 +12,6 @@ local useShake = require(script.Animation.useShake)
 -- Plugin
 local usePlugin = require(script.Plugin.usePlugin)
 local useIsStory = require(script.Plugin.useIsStory)
-local usePluginMenu = require(script.Plugin.usePluginMenu)
 local useDockButton = require(script.Plugin.useDockButton)
 local useIsLocalPlugin = require(script.Plugin.useIsLocalPlugin)
 local useHasCreateAssetPermission = require(script.Plugin.useHasCreateAssetPermission)
@@ -37,7 +36,6 @@ return {
 
 	usePlugin = usePlugin,
 	useIsStory = useIsStory,
-	usePluginMenu = usePluginMenu,
 	useDockButton = useDockButton,
 	useIsLocalPlugin = useIsLocalPlugin,
 	useHasCreateAssetPermission = useHasCreateAssetPermission,

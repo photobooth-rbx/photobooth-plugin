@@ -12,12 +12,12 @@ local Controller = require(postProcessingRoot.Controller)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local LucideIconButton = require(uiRoot.Components.LucideIconButton)
+local OverlayMenu = require(uiRoot.Components.OverlayMenu)
 local Hooks = require(uiRoot.Hooks)
 
 local EffectsList = require(script.EffectsList)
 local PresetsList = require(script.PresetsList)
 local ImageViewer = require(script.ImageViewer)
-local OverlayMenu = require(script.OverlayMenu)
 
 local ACTION_BAR_HEIGHT = 38
 
