@@ -3,6 +3,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Unreleased
 - Unify right click menu across both the post processing and gallery apps
+- Fix color correction application on atmosphere present captures
+- Fix cloud hiding on atmosphere present captures
 
 ### [2.6.3] - 2026/07/18
 - Fix script injection check on auto-captures when the workspace has scripts in it
