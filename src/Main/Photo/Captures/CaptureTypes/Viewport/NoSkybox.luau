@@ -18,10 +18,13 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 	trove:Add(SceneControl.hideScreenUI())
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())
+	local undoColorCorrection = trove:Add(SceneControl.hideColorCorrections())
 
 	local fogBackground = Background.new(workspace)
 	fogBackground:setColor(Color3.new(0, 0, 0))
 	fogBackground:setEnabled(true)
+
+	local unhideClouds = trove:Add(SceneControl.hideClouds())
 
 	trove:Add(SceneControl.once(function()
 		fogBackground:Destroy()
@@ -67,15 +70,11 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 		camera.CFrame = renderCF
 		fogBackground:setMaterial(Enum.Material.SmoothPlastic)
 	elseif SceneControl.isGradedLightingRequired() or Lighting.ExposureCompensation ~= 0 then
-		local undoGradedLighting = trove:Add(SceneControl.applyGradedLighting())
-
 		SceneControl.yieldUntilNextFrame()
 		gradedOnBlack = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 		trove:Add(function()
 			gradedOnBlack:Destroy()
 		end)
-
-		undoGradedLighting()
 	end
 
 	-- prepare for retro scene capturing
@@ -107,6 +106,8 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	end)
 
 	undoEmulator()
+	unhideClouds()
+	undoColorCorrection()
 
 	if setAtmosphereHidden then
 		setAtmosphereHidden(false)
