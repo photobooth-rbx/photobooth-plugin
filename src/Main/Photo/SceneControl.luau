@@ -230,13 +230,11 @@ function SceneControl.getAtmosphereHider()
 end
 
 function SceneControl.isGradedLightingRequired()
-	if not Lighting:FindFirstChildWhichIsA("Atmosphere") then
-		local children = Lighting:GetChildren()
-		for i = #children, 1, -1 do
-			local child = children[i]
-			if child:IsA("ColorGradingEffect") and child.Enabled then
-				return child.TonemapperPreset ~= Enum.TonemapperPreset.Retro
-			end
+	local children = Lighting:GetChildren()
+	for i = #children, 1, -1 do
+		local child = children[i]
+		if child:IsA("ColorGradingEffect") and child.Enabled then
+			return child.TonemapperPreset ~= Enum.TonemapperPreset.Retro
 		end
 	end
 	return true
@@ -272,11 +270,24 @@ function SceneControl.applyRetroLighting()
 	retroGrading.TonemapperPreset = Enum.TonemapperPreset.Retro
 	retroGrading.Parent = Lighting
 
+	local effects = {}
+	for _, child in Lighting:GetChildren() do
+		if child:IsA("ColorGradingEffect") then
+			child.Parent = nil
+			table.insert(effects, child)
+		end
+	end
+
 	return SceneControl.once(function()
 		unhideClouds()
 		setAtmosphereHidden(false)
+
 		Lighting.ExposureCompensation = exposureCompensation
 		retroGrading:Destroy()
+
+		for _, effect in effects do
+			effect.Parent = Lighting
+		end
 	end)
 end
 
