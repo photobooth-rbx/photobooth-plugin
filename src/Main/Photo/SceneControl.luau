@@ -242,7 +242,7 @@ function SceneControl.isGradedLightingRequired()
 	return true
 end
 
-function SceneControl.applyGradedLighting()
+function SceneControl.hideClouds()
 	local clouds = {}
 	for _, child in workspace.Terrain:GetChildren() do
 		if child:IsA("Clouds") then
@@ -259,7 +259,7 @@ function SceneControl.applyGradedLighting()
 end
 
 function SceneControl.applyRetroLighting()
-	local undoGradedLighting = SceneControl.applyGradedLighting()
+	local unhideClouds = SceneControl.hideClouds()
 	local setAtmosphereHidden = SceneControl.getAtmosphereHider()
 
 	setAtmosphereHidden(true)
@@ -267,29 +267,16 @@ function SceneControl.applyRetroLighting()
 	local exposureCompensation = Lighting.ExposureCompensation
 	Lighting.ExposureCompensation = 0
 
-	local effects = {}
-	for _, child in Lighting:GetChildren() do
-		if child:IsA("ColorGradingEffect") then
-			child.Parent = nil
-			table.insert(effects, child)
-		end
-	end
-
 	local retroGrading = Instance.new("ColorGradingEffect")
 	retroGrading.Name = "PhotoboothRetroGrading"
 	retroGrading.TonemapperPreset = Enum.TonemapperPreset.Retro
 	retroGrading.Parent = Lighting
 
 	return SceneControl.once(function()
-		undoGradedLighting()
+		unhideClouds()
 		setAtmosphereHidden(false)
-
 		Lighting.ExposureCompensation = exposureCompensation
-
 		retroGrading:Destroy()
-		for _, effect in effects do
-			effect.Parent = Lighting
-		end
 	end)
 end
 
