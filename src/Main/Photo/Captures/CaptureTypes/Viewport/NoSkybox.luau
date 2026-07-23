@@ -18,6 +18,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 	trove:Add(SceneControl.hideScreenUI())
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())
+	local undoColorCorrection = trove:Add(SceneControl.hideColorCorrections())
 
 	local fogBackground = Background.new(workspace)
 	fogBackground:setColor(Color3.new(0, 0, 0))
@@ -107,6 +108,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	end)
 
 	undoEmulator()
+	undoColorCorrection()
 
 	if setAtmosphereHidden then
 		setAtmosphereHidden(false)

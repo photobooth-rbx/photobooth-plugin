@@ -85,22 +85,6 @@ local function freezeEmitters()
 	end)
 end
 
-local function hideColorCorrections()
-	local effects = {}
-	for _, child in Lighting:GetChildren() do
-		if child:IsA("ColorCorrectionEffect") then
-			table.insert(effects, child)
-			child.Parent = nil
-		end
-	end
-
-	return SceneControl.once(function()
-		for _, effect in effects do
-			effect.Parent = Lighting
-		end
-	end)
-end
-
 -- Public
 
 function SceneControl.once<T..., U...>(callback: (T...) -> U...)
@@ -196,6 +180,22 @@ function SceneControl.hideScreenUI()
 	end)
 end
 
+function SceneControl.hideColorCorrections()
+	local effects = {}
+	for _, child in Lighting:GetChildren() do
+		if child:IsA("ColorCorrectionEffect") then
+			table.insert(effects, child)
+			child.Parent = nil
+		end
+	end
+
+	return SceneControl.once(function()
+		for _, effect in effects do
+			effect.Parent = Lighting
+		end
+	end)
+end
+
 function SceneControl.getAppliedColorCorrectionCopy()
 	local effects = {}
 	for _, child in Lighting:GetChildren() do
@@ -243,8 +243,6 @@ function SceneControl.isGradedLightingRequired()
 end
 
 function SceneControl.applyGradedLighting()
-	local undoHideColorCorrections = hideColorCorrections()
-
 	local clouds = {}
 	for _, child in workspace.Terrain:GetChildren() do
 		if child:IsA("Clouds") then
@@ -254,7 +252,6 @@ function SceneControl.applyGradedLighting()
 	end
 
 	return SceneControl.once(function()
-		undoHideColorCorrections()
 		for _, cloud in clouds do
 			cloud.Parent = workspace.Terrain
 		end
@@ -263,7 +260,6 @@ end
 
 function SceneControl.applyRetroLighting()
 	local undoGradedLighting = SceneControl.applyGradedLighting()
-	local undoHideColorCorrections = hideColorCorrections()
 	local setAtmosphereHidden = SceneControl.getAtmosphereHider()
 
 	setAtmosphereHidden(true)
@@ -286,8 +282,6 @@ function SceneControl.applyRetroLighting()
 
 	return SceneControl.once(function()
 		undoGradedLighting()
-		undoHideColorCorrections()
-
 		setAtmosphereHidden(false)
 
 		Lighting.ExposureCompensation = exposureCompensation
