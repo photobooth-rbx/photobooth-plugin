@@ -265,11 +265,6 @@ function SceneControl.applyRetroLighting()
 	local exposureCompensation = Lighting.ExposureCompensation
 	Lighting.ExposureCompensation = 0
 
-	local retroGrading = Instance.new("ColorGradingEffect")
-	retroGrading.Name = "PhotoboothRetroGrading"
-	retroGrading.TonemapperPreset = Enum.TonemapperPreset.Retro
-	retroGrading.Parent = Lighting
-
 	local effects = {}
 	for _, child in Lighting:GetChildren() do
 		if child:IsA("ColorGradingEffect") then
@@ -278,16 +273,22 @@ function SceneControl.applyRetroLighting()
 		end
 	end
 
+	local retroGrading = Instance.new("ColorGradingEffect")
+	retroGrading.Name = "PhotoboothRetroGrading"
+	retroGrading.TonemapperPreset = Enum.TonemapperPreset.Retro
+	retroGrading.Parent = Lighting
+
 	return SceneControl.once(function()
 		unhideClouds()
 		setAtmosphereHidden(false)
 
 		Lighting.ExposureCompensation = exposureCompensation
-		retroGrading:Destroy()
 
 		for _, effect in effects do
 			effect.Parent = Lighting
 		end
+
+		retroGrading:Destroy()
 	end)
 end
 
