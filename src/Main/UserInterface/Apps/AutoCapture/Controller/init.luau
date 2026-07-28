@@ -16,6 +16,8 @@ local RenderPriorities = require(appRoot.RenderPriorities)
 local AnimationManager = require(script.AnimationManager)
 local PointCloud = require(script.PointCloud)
 
+local CAMERA_TYPE = Enum.CameraType.Scriptable
+
 local YAW_INIT = math.pi
 local PITCH_INIT = 0
 local PITCH_LIMIT = math.rad(89)
@@ -195,11 +197,16 @@ local function viewProjectionEdgeHits(cloud: { Vector3 }, axis: "X" | "Y", depth
 	return max, min
 end
 
-local function getStudioSetting<T>(key: string, default: T)
-	local success, value = pcall(function()
-		return (settings().Studio :: any)[key] :: T
-	end)
-	return if success then value else default
+local function getStudioSetting<T>(keys: { string }, default: T): T
+	for _, key in keys do
+		local success, value = pcall(function()
+			return (settings().Studio :: any)[key] :: T
+		end)
+		if success then
+			return value
+		end
+	end
+	return default
 end
 
 -- Methods
@@ -231,15 +238,17 @@ function AutoCaptureControllerClass._listenOrbitInput(self: AutoCaptureControlle
 	local rotating = false
 	local cleanupTrove = Trove.new()
 
-	cleanupTrove:Add(UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if not gameProcessed and input.UserInputType == Enum.UserInputType.MouseButton2 then
+	cleanupTrove:Add(UserInputService.InputBegan:Connect(function(input, _gameProcessed)
+		if input.UserInputType == Enum.UserInputType.MouseButton2 then
 			rotating = true
+			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
 		end
 	end))
 
 	cleanupTrove:Add(UserInputService.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton2 then
 			rotating = false
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		end
 	end))
 
@@ -337,7 +346,7 @@ function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 				size = Vector2.new(1, 1),
 			})
 
-		camera.CameraType = Enum.CameraType.Scriptable
+		camera.CameraType = CAMERA_TYPE
 		camera.CFrame = distortedCF
 		camera.Focus = distortedCF
 
@@ -414,7 +423,7 @@ function AutoCaptureControllerClass._hookPointCloud(self: AutoCaptureController)
 				size = Vector2.new(1, 1),
 			})
 
-		camera.CameraType = Enum.CameraType.Scriptable
+		camera.CameraType = CAMERA_TYPE
 		camera.CFrame = distortedCF
 		camera.Focus = distortedCF
 
@@ -446,18 +455,33 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 
 	local position = startCF.Position
 	local pitch, yaw = startCF:ToEulerAnglesYXZ()
+	local rotating = false
 	local moveSpeed = 0
 
 	local function isShiftDown()
 		return UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
 	end
 
+	cleanupTrove:Add(UserInputService.InputBegan:Connect(function(input, _gameProcessed)
+		if input.UserInputType == Enum.UserInputType.MouseButton2 then
+			rotating = true
+			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCurrentPosition
+		end
+	end))
+
+	cleanupTrove:Add(UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton2 then
+			rotating = false
+			UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		end
+	end))
+
 	cleanupTrove:Add(UserInputService.InputChanged:Connect(function(input, _gameProcessed)
 		if self.isInputFrozen then
 			return
 		end
 
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
+		if rotating and input.UserInputType == Enum.UserInputType.MouseMovement then
 			yaw -= input.Delta.X * FREE_LOOK_SENSITIVITY
 			pitch = math.clamp(pitch - input.Delta.Y * FREE_LOOK_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT)
 		end
@@ -472,14 +496,14 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		local dynamic = self.dynamicObservableState:get()
 
 		local camera = workspace.CurrentCamera
-		camera.CameraType = Enum.CameraType.Scriptable
+		camera.CameraType = CAMERA_TYPE
 		camera.FieldOfView = dynamic.fov
 
 		local rotation = CFrame.fromEulerAnglesYXZ(pitch, yaw, 0)
 
 		if not self.isInputFrozen then
-			local studioCameraSpeed = getStudioSetting("Camera Speed", 1.5) * 10
-			local studioShiftSpeed = getStudioSetting("Shift Speed", 0.2) * 10
+			local studioCameraSpeed = getStudioSetting({ "Camera Speed" }, 1.5) * 10
+			local studioShiftSpeed = getStudioSetting({ "Camera Shift Speed", "Shift Speed" }, 0.2) * 10
 
 			if isShiftDown() then
 				moveSpeed = studioShiftSpeed
