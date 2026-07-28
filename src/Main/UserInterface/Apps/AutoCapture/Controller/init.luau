@@ -502,8 +502,8 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		local rotation = CFrame.fromEulerAnglesYXZ(pitch, yaw, 0)
 
 		if not self.isInputFrozen then
-			local studioCameraSpeed = getStudioSetting({ "Camera Speed" }, 1.5) * 10
-			local studioShiftSpeed = getStudioSetting({ "Camera Shift Speed", "Shift Speed" }, 0.2) * 10
+			local studioCameraSpeed = 15 --getStudioSetting({ "Camera Speed" }, 1.5) * 10
+			local studioShiftSpeed = 2 --getStudioSetting({ "Camera Shift Speed", "Shift Speed" }, 0.2) * 10
 
 			if isShiftDown() then
 				moveSpeed = studioShiftSpeed
