@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.6.5] - 2026/07/28
+- Fix auto capture new studio camera beta support
+
 ### [2.6.4] - 2026/07/23
 - Unify right click menu across both the post processing and gallery apps
 - Fix color correction application on atmosphere present captures
