@@ -72,13 +72,13 @@ end
 local function useCaptureRect()
 	local captureRectRef = React.useRef(createCenterRect(Vector2.new(0.5, 0.5)))
 	local desiredCropRef = React.useRef(nil :: CroppedViewport.DesiredCrop?)
-	local updateTicket, setUpdateTicket = React.useState(0)
+	local updateTicket, setUpdateTicket = React.useState(1)
 
 	local update = React.useCallback(function(newRect: Rect)
 		captureRectRef.current = newRect
 		desiredCropRef.current = nil
-		setUpdateTicket(function(count)
-			return count + 1
+		setUpdateTicket(function(ticket)
+			return -ticket
 		end)
 	end, { updateTicket })
 
