@@ -20,7 +20,6 @@ local RenderRect = require(bindingRoot.Helpers.RenderRect)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local ToolbarButton = require(uiRoot.Helpers.ToolbarButton)
-local Hooks = require(uiRoot.Hooks)
 
 local CroppedViewport = require(script.Components.CroppedViewport)
 local FullViewport = require(script.Components.FullViewport)
@@ -71,26 +70,28 @@ local function createCenterRect(scale: Vector2, scaleOS: Vector2?)
 end
 
 local function useCaptureRect()
-	-- we use a ref b/c in most cases we don't need to re-render the whole tree when we update this value
-	-- we have a custom update value which can be used to trigger re-renders, but it's used only when
-	-- there's a hard override we want to set (which doesn't occur often)
 	local captureRectRef = React.useRef(createCenterRect(Vector2.new(0.5, 0.5)))
-	local forceUpdate = Hooks.useUpdate()
+	local desiredCropRef = React.useRef(nil :: CroppedViewport.DesiredCrop?)
+	local updateTicket, setUpdateTicket = React.useState(0)
 
 	local update = React.useCallback(function(newRect: Rect)
 		captureRectRef.current = newRect
-		forceUpdate()
-	end, { forceUpdate })
+		desiredCropRef.current = nil
+		setUpdateTicket(function(count)
+			return count + 1
+		end)
+	end, { updateTicket })
 
-	return captureRectRef, update
+	return captureRectRef, desiredCropRef, update
 end
 
 local function appComponent(props: { Button: PluginToolbarButton })
 	local isEnabled, setIsEnabled = React.useState(false)
 	local rectRequest, removeRectRequest = useRectRequest()
-	local captureRectRef, updateCaptureRectRef = useCaptureRect()
-	local screenGuiRef = React.useRef(nil :: ScreenGui?)
+	local captureRectRef, desiredCropRef, updateCaptureRectRef = useCaptureRect()
+
 	local isFirstAppOpenRef = React.useRef(true)
+	local screenGuiRef = React.useRef(nil :: ScreenGui?)
 
 	local isCapturing = StateManager.temporary:useSpecific()(function(state)
 		return state.isCapturing
@@ -205,6 +206,7 @@ local function appComponent(props: { Button: PluginToolbarButton })
 				IsRectRequest = not not rectRequest,
 				ScaleOS = if rectRequest then rectRequest.scaleOS else scaleOS,
 				CaptureRectRef = captureRectRef,
+				DesiredCropRef = desiredCropRef,
 				UpdateCaptureRectRef = updateCaptureRectRef,
 				OnMaximize = onMinMax,
 				OnCapture = onCapture,
