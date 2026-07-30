@@ -107,9 +107,7 @@ local function appComponent(props: { Button: PluginToolbarButton })
 		local trove = Trove.new()
 		trove:Add(props.Button.Click:Connect(function()
 			local newIsEnabled = not isEnabled
-			if newIsEnabled then
-				updateCaptureRectRef(createCenterRect(Vector2.new(0.5, 0.5)))
-			else
+			if not newIsEnabled then
 				ViewportApp.clearAllRectRequests()
 			end
 			setIsEnabled(newIsEnabled)

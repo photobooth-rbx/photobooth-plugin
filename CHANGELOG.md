@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Fixes the cropped viewport rect getting reset whenever the viewport app was closed and reopened
+
 ### [2.6.5] - 2026/07/28
 - Fix auto capture new studio camera beta support
 
