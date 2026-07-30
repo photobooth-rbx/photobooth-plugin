@@ -513,7 +513,7 @@ return function(props: Props)
 		Active = false,
 		ref = viewportRef,
 	}, {
-		Core = props.Visible and isReady and React.createElement(CroppedViewport, {
+		Core = isReady and React.createElement(CroppedViewport, {
 			ScaleOS = props.ScaleOS,
 			IsRectRequest = props.IsRectRequest,
 			ViewportRect = viewportRect,
