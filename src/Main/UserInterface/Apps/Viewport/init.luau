@@ -90,6 +90,7 @@ local function appComponent(props: { Button: PluginToolbarButton })
 	local rectRequest, removeRectRequest = useRectRequest()
 	local captureRectRef, updateCaptureRectRef = useCaptureRect()
 	local screenGuiRef = React.useRef(nil :: ScreenGui?)
+	local isFirstAppOpenRef = React.useRef(true)
 
 	local isCapturing = StateManager.temporary:useSpecific()(function(state)
 		return state.isCapturing
@@ -109,6 +110,9 @@ local function appComponent(props: { Button: PluginToolbarButton })
 			local newIsEnabled = not isEnabled
 			if not newIsEnabled then
 				ViewportApp.clearAllRectRequests()
+			elseif isFirstAppOpenRef.current then
+				isFirstAppOpenRef.current = false
+				updateCaptureRectRef(createCenterRect(Vector2.new(0.5, 0.5)))
 			end
 			setIsEnabled(newIsEnabled)
 		end))
