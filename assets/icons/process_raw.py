@@ -3,7 +3,8 @@ import shutil
 from PIL import Image
 
 def recolorImage(img_path, r, g, b):
-    img = Image.open(img_path)
+    # palette and grayscale pngs index as a single value rather than a tuple
+    img = Image.open(img_path).convert("RGBA")
     pixels = img.load()
 
     for y in range(img.height):
@@ -24,7 +25,7 @@ def recolorFolder(folder_path, new_folder_path, r, g, b):
             recolored = recolorImage(os.path.join(folder_path, file_name), r, g, b)
             recolored.save(os.path.join(new_folder_path, file_name))
 
-file_parent_path = os.path.join(os.path.abspath(__file__), os.path.pardir)
+file_parent_path = os.path.dirname(os.path.abspath(__file__))
 output_folder_path = os.path.join(file_parent_path, "asphalt", "processed")
 raw_path = os.path.join(file_parent_path, "raw")
 
@@ -35,3 +36,5 @@ os.makedirs(output_folder_path)
 
 recolorFolder(raw_path, os.path.join(output_folder_path, "dark"), 225, 225, 225)
 recolorFolder(raw_path, os.path.join(output_folder_path, "light"), 94, 94, 94)
+recolorFolder(raw_path, os.path.join(output_folder_path, "dark_selected"), 82, 139, 255)
+recolorFolder(raw_path, os.path.join(output_folder_path, "light_selected"), 112, 160, 255)
