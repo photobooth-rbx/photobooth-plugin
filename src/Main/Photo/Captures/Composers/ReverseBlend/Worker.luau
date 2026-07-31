@@ -2,7 +2,7 @@
 
 local COMPARE_MARGIN = 0
 local WHITE = 0xFFFFFFFF
-local BLACK = 0x000000FF
+local BLACK = 0xFF000000
 
 @native
 local function worker(

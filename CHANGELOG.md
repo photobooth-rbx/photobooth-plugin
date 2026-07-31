@@ -4,6 +4,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Unreleased
 - Fixes the cropped viewport rect getting reset whenever the viewport app was closed and reopened
 - Fixes the cropped viewport rect jumping when the viewport was resized while in fullscreen
+- Fixes fast reverse blend path trying to match a big-endian value with a little-endian one
 
 ### [2.6.5] - 2026/07/28
 - Fix auto capture new studio camera beta support
