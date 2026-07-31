@@ -1,8 +1,5 @@
 local AssetService = game:GetService("AssetService")
 local HttpService = game:GetService("HttpService")
-local ScriptEditorService = game:GetService("ScriptEditorService")
-local SelectionService = game:GetService("Selection")
-local StarterGui = game:GetService("StarterGui")
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioComponents = require(pluginRoot.Packages.StudioComponents)
@@ -12,7 +9,6 @@ local React = require(pluginRoot.Packages.React)
 local Blackout = require(pluginRoot.Main.Photo.Tools.Blackout)
 local StateManager = require(pluginRoot.Main.StateManager)
 local Constants = require(pluginRoot.Constants)
-local Photo = require(pluginRoot.Main.Photo)
 local Wally = require(pluginRoot.Wally)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
