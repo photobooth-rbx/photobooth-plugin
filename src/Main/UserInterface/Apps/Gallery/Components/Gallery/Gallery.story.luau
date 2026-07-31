@@ -11,6 +11,7 @@ return CreateStory.theme(function(props)
 	local theme = StudioComponents.useTheme()
 	local backgroundType, setBackgroundType = React.useState("Checkerboard")
 	local isExpanded, setIsExpanded = React.useState(true)
+	local listScale, setListScale = React.useState(0.25)
 
 	return React.createElement("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -22,6 +23,9 @@ return CreateStory.theme(function(props)
 		Widget = React.createElement(Gallery, {
 			IsExpanded = isExpanded,
 			SetIsExpanded = setIsExpanded,
+
+			ListScale = listScale,
+			SetListScale = setListScale,
 
 			BackgroundType = backgroundType,
 			SetBackgroundType = setBackgroundType,

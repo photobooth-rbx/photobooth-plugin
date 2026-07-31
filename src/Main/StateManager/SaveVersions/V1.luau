@@ -8,6 +8,7 @@ export type Serialized = {
 		alphaBleedingEnabled: boolean,
 		bindingsEnabled: boolean,
 		galleryListExpanded: boolean,
+		galleryListScale: number,
 		experimentalModeEnabled: boolean,
 	},
 
@@ -19,6 +20,7 @@ export type Deserialized = {
 		alphaBleedingEnabled: boolean,
 		bindingsEnabled: boolean,
 		galleryListExpanded: boolean,
+		galleryListScale: number,
 		experimentalModeEnabled: boolean,
 	},
 
@@ -33,6 +35,7 @@ function SaveFormatV1.default(): Deserialized
 			alphaBleedingEnabled = true,
 			bindingsEnabled = false,
 			galleryListExpanded = true,
+			galleryListScale = 0.25,
 			experimentalModeEnabled = false,
 		},
 

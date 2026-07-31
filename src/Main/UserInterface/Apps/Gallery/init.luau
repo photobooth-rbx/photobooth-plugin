@@ -68,6 +68,10 @@ function GalleryApp.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 			return state.galleryListExpanded
 		end)
 
+		local galleryListScale = StateManager.settings:useSpecific()(function(state)
+			return state.galleryListScale
+		end)
+
 		local backgroundType, setBackgroundType = React.useState("Checkerboard")
 
 		React.useEffect(function()
@@ -94,6 +98,14 @@ function GalleryApp.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 				SetIsExpanded = function()
 					StateManager.settings:update()(function(state)
 						state.galleryListExpanded = not state.galleryListExpanded
+						return state
+					end)
+				end,
+
+				ListScale = galleryListScale,
+				SetListScale = function(scale)
+					StateManager.settings:update()(function(state)
+						state.galleryListScale = scale
 						return state
 					end)
 				end,

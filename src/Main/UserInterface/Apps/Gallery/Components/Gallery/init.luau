@@ -18,6 +18,9 @@ export type Props = {
 	IsExpanded: boolean,
 	SetIsExpanded: (boolean) -> (),
 
+	ListScale: number,
+	SetListScale: (number) -> (),
+
 	BackgroundType: string,
 	SetBackgroundType: (string) -> (),
 
@@ -131,6 +134,9 @@ local function Gallery(props: Props)
 
 				IsExpanded = props.IsExpanded,
 				SetIsExpanded = props.SetIsExpanded,
+
+				ListScale = props.ListScale,
+				SetListScale = props.SetListScale,
 
 				SelectedIndex = selectedIndex,
 				SetSelectedIndex = setSelectedIndex,
