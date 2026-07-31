@@ -3,7 +3,7 @@ local Button = require(script.Button)
 local MENU_BUTTON_ID = "egomoose_photobooth_compact_button"
 local MENU_BUTTON_TOOLTIP = "Open the Photobooth menu"
 local MENU_BUTTON_TEXT = "Photobooth"
-local MENU_BUTTON_ICON = "camera-plugin-button"
+local MENU_BUTTON_ICON = "logo"
 
 local MENU_ID = "egomoose_photobooth_compact_menu"
 local MENU_TITLE = "Photobooth"

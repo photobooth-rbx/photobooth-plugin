@@ -31,9 +31,9 @@ export type Button = typeof(setmetatable(
 	ButtonClass
 ))
 
-local function getIconVariant(selected: boolean): string
+local function getIconVariant(state: string?): string
 	local themeName = settings().Studio.Theme.Name:lower()
-	return if selected then `{themeName}_selected` else themeName
+	return if state then `{themeName}_{state}` else themeName
 end
 
 function ButtonStatic.new(id: string, toolTip: string, iconName: string, text: string, toolbar: PluginToolbar?)
@@ -81,10 +81,16 @@ function ButtonStatic.new(id: string, toolTip: string, iconName: string, text: s
 end
 
 function ButtonClass._refreshIcon(self: Button)
-	self.iconVariant = getIconVariant(self.instance == nil and self.active)
+	local instance = self.instance
+
+	local state: string? = nil
+	if not instance then
+		state = if not self.enabled then "disabled" elseif self.active then "selected" else nil
+	end
+
+	self.iconVariant = getIconVariant(state)
 	self.icon = assert(Asphalt.processed[self.iconVariant][self.iconName] :: string?)
 
-	local instance = self.instance
 	if instance then
 		instance.Icon = self.icon
 	end
@@ -97,11 +103,17 @@ function ButtonClass.Activate(self: Button)
 end
 
 function ButtonClass.SetEnabled(self: Button, enabled: boolean)
+	if self.enabled == enabled then
+		return
+	end
+
 	self.enabled = enabled
 
 	local instance = self.instance
 	if instance then
 		instance.Enabled = enabled
+	else
+		self:_refreshIcon()
 	end
 end
 
