@@ -13,7 +13,8 @@ local function worker(
 	subjectOnBlack: EditableImage?,
 	backgroundOnBlack: EditableImage?,
 
-	colorCorrection: ColorCorrectionEffect
+	colorCorrection: ColorCorrectionEffect,
+	partialCorrection: boolean?
 )
 	local rectSize = rect.Max - rect.Min
 	local width, height = rectSize.X, rectSize.Y
@@ -86,8 +87,10 @@ local function worker(
 		local gray = 0.345 * rgba[1] + 0.553 * rgba[2] + 0.114 * rgba[3]
 		for k = 1, 3 do
 			local component = rgba[k]
-			component = component * saturation + (1 - saturation) * gray -- saturation
-			component = ((component - 0.5) * math.max(0, contrast)) + 0.5 -- contrast
+			if not partialCorrection then
+				component = component * saturation + (1 - saturation) * gray -- saturation
+				component = ((component - 0.5) * math.max(0, contrast)) + 0.5 -- contrast
+			end
 			component = component + brightness -- brightness
 			component = component * tint[k] -- tint
 			rgba[k] = math.clamp(component, 0, 1)

@@ -54,7 +54,7 @@ local captureTypes = {
 
 -- selene: allow(empty_if)
 if StateManager.temporary:get().isExperimentalMode then
-	-- no experimental capture types currently
+	captureTypes.Viewport.NSBCC_EXP = wrap(require(script.CaptureTypes.Viewport.NSBCC_EXP))
 end
 
 return {
