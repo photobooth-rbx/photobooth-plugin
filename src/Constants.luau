@@ -2,8 +2,7 @@
 -- so do not use roblox data types
 
 return {
-	CompactToolbarButton = true,
-
+	CompactToolbarButton = false,
 	AllowExperimentalMode = true,
 
 	TileHighResImagesEnabled = true,
