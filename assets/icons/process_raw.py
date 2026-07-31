@@ -35,6 +35,9 @@ if os.path.isdir(output_folder_path):
 os.makedirs(output_folder_path)
 
 recolorFolder(raw_path, os.path.join(output_folder_path, "dark"), 225, 225, 225)
-recolorFolder(raw_path, os.path.join(output_folder_path, "light"), 94, 94, 94)
 recolorFolder(raw_path, os.path.join(output_folder_path, "dark_selected"), 82, 139, 255)
+recolorFolder(raw_path, os.path.join(output_folder_path, "dark_disabled"), 125, 126, 128)
+
+recolorFolder(raw_path, os.path.join(output_folder_path, "light"), 94, 94, 94)
 recolorFolder(raw_path, os.path.join(output_folder_path, "light_selected"), 112, 160, 255)
+recolorFolder(raw_path, os.path.join(output_folder_path, "light_disabled"), 174, 174, 174)
