@@ -22,7 +22,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 	local tmpCorrection = Instance.new("ColorCorrectionEffect")
 	tmpCorrection.Saturation = colorCorrection.Saturation
-	tmpCorrection.Contrast = math.max(0, colorCorrection.Contrast)
+	tmpCorrection.Contrast = colorCorrection.Contrast
 	tmpCorrection.Parent = Lighting
 
 	local destroyTmpCorrection = trove:Add(SceneControl.once(function()
