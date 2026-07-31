@@ -9,14 +9,17 @@ local CroppedViewport = require(script.Parent)
 return CreateStory.theme(function(props)
 	local isDisabled, setIsDisabled = React.useState(false)
 	local captureRectRef = React.useRef(Rect.new(0, 0, 512, 512))
+	local desiredCropRef = React.useRef(nil :: CroppedViewport.DesiredCrop?)
 	local updateCaptureRectRef = React.useCallback(function(rect: Rect)
 		captureRectRef.current = rect
+		desiredCropRef.current = nil
 	end, {})
 
 	return React.createElement(CroppedViewport, {
 		ScaleOS = Vector2.new(1, 1),
 		IsRectRequest = false,
 		CaptureRectRef = captureRectRef,
+		DesiredCropRef = desiredCropRef,
 		UpdateCaptureRectRef = updateCaptureRectRef,
 
 		OnReady = function(viewport)
