@@ -1,8 +1,5 @@
 local AssetService = game:GetService("AssetService")
 local HttpService = game:GetService("HttpService")
-local ScriptEditorService = game:GetService("ScriptEditorService")
-local SelectionService = game:GetService("Selection")
-local StarterGui = game:GetService("StarterGui")
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local StudioComponents = require(pluginRoot.Packages.StudioComponents)
@@ -12,11 +9,10 @@ local React = require(pluginRoot.Packages.React)
 local Blackout = require(pluginRoot.Main.Photo.Tools.Blackout)
 local StateManager = require(pluginRoot.Main.StateManager)
 local Constants = require(pluginRoot.Constants)
-local Photo = require(pluginRoot.Main.Photo)
 local Wally = require(pluginRoot.Wally)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local ToolbarButton = require(uiRoot.Helpers.ToolbarButton)
+local Toolbar = require(uiRoot.Helpers.Toolbar)
 
 local Gallery = require(script.Components.Gallery)
 
@@ -46,15 +42,13 @@ local function mountBlackoutMode(plugin: Plugin)
 	end)
 end
 
-function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
+function GalleryApp.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 	-- stylua: ignore
 	local openButton = toolbar:CreateButton(
 		"egomoose_photobooth_gallery_button",
 		"View photobooth images",
-		"", "Gallery"
+		"gallery-plugin-button", "Gallery"
 	)
-
-	ToolbarButton.listen(openButton, "gallery-plugin-button")
 
 	mountBlackoutMode(plugin)
 
@@ -63,7 +57,7 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 	dock.Title = "Photobooth"
 	dock.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-	local function GalleryApp(): React.ReactNode
+	local function App(): React.ReactNode
 		local isEnabled, setIsEnabled = React.useState(dock.Enabled)
 
 		local isCapturing = StateManager.temporary:useSpecific()(function(state)
@@ -145,7 +139,7 @@ function GalleryApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 	dockRoot:render(React.createElement(StudioComponents.PluginProvider, {
 		Plugin = plugin,
 	}, {
-		App = React.createElement(GalleryApp),
+		App = React.createElement(App),
 	}))
 
 	plugin.Unloading:Connect(function()
