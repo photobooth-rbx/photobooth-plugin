@@ -19,7 +19,7 @@ local function reverseBlend(
 	backgroundOnBlack: EditableImage?,
 
 	colorCorrection: ColorCorrectionEffect,
-	partialCorrection: boolean?
+	sceneCorrected: boolean?
 )
 	scheduler:waitForReady()
 
@@ -36,7 +36,7 @@ local function reverseBlend(
 			subjectOnBlack,
 			backgroundOnBlack,
 			colorCorrection,
-			partialCorrection
+			sceneCorrected
 		)
 	end
 

@@ -14,7 +14,7 @@ local function worker(
 	backgroundOnBlack: EditableImage?,
 
 	colorCorrection: ColorCorrectionEffect,
-	partialCorrection: boolean?
+	sceneCorrected: boolean?
 )
 	local rectSize = rect.Max - rect.Min
 	local width, height = rectSize.X, rectSize.Y
@@ -76,6 +76,11 @@ local function worker(
 			pixelAlpha = maxAlpha
 		end
 
+		if pixelAlpha <= 0 then
+			buffer.writeu32(whiteRetroBuffer, j + 0, 0)
+			continue
+		end
+
 		local rgba = { 0, 0, 0, pixelAlpha }
 		for k = 0, 2 do
 			local bo = buffer.readu8(subjectBuffer, j + k) / 255
@@ -84,16 +89,16 @@ local function worker(
 		end
 
 		-- color correction
-		local gray = 0.345 * rgba[1] + 0.553 * rgba[2] + 0.114 * rgba[3]
-		for k = 1, 3 do
-			local component = rgba[k]
-			if not partialCorrection then
+		if not sceneCorrected then
+			local gray = 0.345 * rgba[1] + 0.553 * rgba[2] + 0.114 * rgba[3]
+			for k = 1, 3 do
+				local component = rgba[k]
 				component = component * saturation + (1 - saturation) * gray -- saturation
 				component = ((component - 0.5) * math.max(0, contrast)) + 0.5 -- contrast
+				component = component + brightness -- brightness
+				component = component * tint[k] -- tint
+				rgba[k] = math.clamp(component, 0, 1)
 			end
-			component = component + brightness -- brightness
-			component = component * tint[k] -- tint
-			rgba[k] = math.clamp(component, 0, 1)
 		end
 
 		buffer.writeu8(whiteRetroBuffer, j + 0, rgba[1] * 255)
