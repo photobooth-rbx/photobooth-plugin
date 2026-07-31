@@ -19,7 +19,7 @@ local bindingRoot = pluginRoot.Main.Bindings.Interface
 local RenderRect = require(bindingRoot.Helpers.RenderRect)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local ToolbarButton = require(uiRoot.Helpers.ToolbarButton)
+local Toolbar = require(uiRoot.Helpers.Toolbar)
 
 local CroppedViewport = require(script.Components.CroppedViewport)
 local FullViewport = require(script.Components.FullViewport)
@@ -85,7 +85,7 @@ local function useCaptureRect()
 	return captureRectRef, desiredCropRef, update
 end
 
-local function appComponent(props: { Button: PluginToolbarButton })
+local function appComponent(props: { Button: Toolbar.Button })
 	local isEnabled, setIsEnabled = React.useState(false)
 	local rectRequest, removeRectRequest = useRectRequest()
 	local captureRectRef, desiredCropRef, updateCaptureRectRef = useCaptureRect()
@@ -275,15 +275,13 @@ function ViewportApp.clearAllRectRequests()
 	end
 end
 
-function ViewportApp.mount(plugin: Plugin, toolbar: PluginToolbar)
+function ViewportApp.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 	-- stylua: ignore
 	local openButton = toolbar:CreateButton(
 		"egomoose_photobooth_viewport_button",
 		"Capture viewport images",
-		"", "Viewport"
+		"camera-plugin-button", "Viewport"
 	)
-
-	ToolbarButton.listen(openButton, "camera-plugin-button")
 
 	local folder = Instance.new("Folder")
 	folder.Name = "EgoMoosePhotobooth"

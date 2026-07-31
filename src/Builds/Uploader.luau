@@ -12,7 +12,9 @@ function Uploader.build(plugin: Plugin)
 	end
 
 	local UploaderApp = require(pluginRoot.Main.UserInterface.Apps.Upload)
-	local toolbar = plugin:CreateToolbar("Photobooth_uploader")
+	local Toolbar = require(pluginRoot.Main.UserInterface.Helpers.Toolbar)
+
+	local toolbar = Toolbar.new(plugin, plugin:CreateToolbar("Photobooth_uploader"), false)
 	UploaderApp.mount(plugin, toolbar)
 end
 

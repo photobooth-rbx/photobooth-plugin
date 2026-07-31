@@ -7,19 +7,17 @@ local Captures = require(pluginRoot.Main.Photo.Captures)
 local Photo = require(pluginRoot.Main.Photo)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local ToolbarButton = require(uiRoot.Helpers.ToolbarButton)
+local Toolbar = require(uiRoot.Helpers.Toolbar)
 
 local CaptureUIApp = {}
 
-function CaptureUIApp.mount(plugin: Plugin, toolbar: PluginToolbar)
+function CaptureUIApp.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 	-- stylua: ignore
 	local captureButton = toolbar:CreateButton(
 		"egomoose_photobooth_capture_ui_button",
 		"Capture UI images",
-		"", "UI"
+		"ui-plugin-button", "UI"
 	)
-
-	ToolbarButton.listen(captureButton, "ui-plugin-button")
 
 	local function getSelectedGuiObject()
 		local selection = SelectionService:Get()
@@ -30,7 +28,7 @@ function CaptureUIApp.mount(plugin: Plugin, toolbar: PluginToolbar)
 	local selection: GuiObject?
 	local function refreshSelection()
 		selection = getSelectedGuiObject()
-		captureButton.Enabled = not not selection
+		captureButton:SetEnabled(not not selection)
 	end
 
 	refreshSelection()

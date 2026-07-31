@@ -5,21 +5,19 @@ local ReactRoblox = require(pluginRoot.Packages.ReactRoblox)
 local React = require(pluginRoot.Packages.React)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local ToolbarButton = require(uiRoot.Helpers.ToolbarButton)
+local Toolbar = require(uiRoot.Helpers.Toolbar)
 local Hooks = require(uiRoot.Hooks)
 
 local Widget = require(script.Components.Widget)
 
 local PostProcessing = {}
 
-function PostProcessing.mount(plugin: Plugin, toolbar: PluginToolbar)
+function PostProcessing.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 	-- stylua: ignore
 	local button = toolbar:CreateButton(
-		"egomoose_photobooth_addon_post_processing", 
-		"Photobooth Post Processing", "", "Effects"
+		"egomoose_photobooth_addon_post_processing",
+		"Photobooth Post Processing", "sparkles-button", "Effects"
 	)
-
-	ToolbarButton.listen(button, "sparkles-button")
 
 	local info = DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, false, true, 750, 450, 750, 450)
 	local dock = plugin:CreateDockWidgetPluginGuiAsync("egomoose_photobooth_addon_post_processing", info)

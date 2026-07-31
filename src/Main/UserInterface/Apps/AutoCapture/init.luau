@@ -12,7 +12,7 @@ local SceneControl = require(pluginRoot.Main.Photo.SceneControl)
 local StateManager = require(pluginRoot.Main.StateManager)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local ToolbarButton = require(uiRoot.Helpers.ToolbarButton)
+local Toolbar = require(uiRoot.Helpers.Toolbar)
 local Hooks = require(uiRoot.Hooks)
 
 local FitterWindow = require(script.Components.FitterWindow)
@@ -274,14 +274,12 @@ local function appComponent(props: { ScaleOS: Vector2 })
 	})
 end
 
-function AutoCapture.mount(plugin: Plugin, toolbar: PluginToolbar)
+function AutoCapture.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 	-- stylua: ignore
 	local button = toolbar:CreateButton(
 		"egomoose_photobooth_addon_auto_capture",
-		"Photobooth Auto Capture", "", "Auto"
+		"Photobooth Auto Capture", "switch-camera-button", "Auto"
 	)
-
-	ToolbarButton.listen(button, "switch-camera-button")
 
 	local info = DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, false, true, 300, 600, 300, 600)
 	local dock = plugin:CreateDockWidgetPluginGuiAsync("egomoose_photobooth_addon_auto_capture", info)

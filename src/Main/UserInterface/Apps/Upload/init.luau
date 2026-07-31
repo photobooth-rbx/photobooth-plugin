@@ -10,7 +10,7 @@ local React = require(pluginRoot.Packages.React)
 local Wally = require(pluginRoot.Wally)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
-local ToolbarButton = require(uiRoot.Helpers.ToolbarButton)
+local Toolbar = require(uiRoot.Helpers.Toolbar)
 local Hooks = require(uiRoot.Hooks)
 
 local Widget = require(script.Components.Widget)
@@ -51,14 +51,12 @@ local function testCreator(creator: Widget.Creator): boolean
 	return creator.Id > 0
 end
 
-function Upload.mount(plugin: Plugin, toolbar: PluginToolbar)
+function Upload.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 	-- stylua: ignore
 	local button = toolbar:CreateButton(
 		"egomoose_photobooth_addon_upload",
-		"Photobooth Upload", "", "Upload"
+		"Photobooth Upload", "upload-button", "Upload"
 	)
-
-	ToolbarButton.listen(button, "upload-button")
 
 	local info = DockWidgetPluginGuiInfo.new(Enum.InitialDockState.Float, false, true, 360, 420, 360, 420)
 	local dock = plugin:CreateDockWidgetPluginGuiAsync("egomoose_photobooth_addon_upload", info)

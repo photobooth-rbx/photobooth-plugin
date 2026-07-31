@@ -1,7 +1,10 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local React = require(pluginRoot.Packages.React)
 
-local function useDockButton(dock: DockWidgetPluginGui, button: PluginToolbarButton)
+local uiRoot = script:FindFirstAncestor("UserInterface")
+local Toolbar = require(uiRoot.Helpers.Toolbar)
+
+local function useDockButton(dock: DockWidgetPluginGui, button: Toolbar.Button)
 	local isEnabled, setIsEnabled = React.useState(dock.Enabled)
 
 	React.useEffect(function()
