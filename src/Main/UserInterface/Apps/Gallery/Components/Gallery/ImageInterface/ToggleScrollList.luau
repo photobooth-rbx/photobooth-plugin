@@ -4,6 +4,8 @@ local StudioProperties = require(pluginRoot.Packages.StudioProperties)
 local Lucide = require(pluginRoot.Packages.Lucide)
 local React = require(pluginRoot.Packages.React)
 
+local StateManager = require(pluginRoot.Main.StateManager)
+
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local LucideIconButton = require(uiRoot.Components.LucideIconButton)
 local Hooks = require(uiRoot.Hooks)
@@ -42,7 +44,9 @@ local function ToggleScrollList(props: Props)
 	local hasCreateAssetPermission = Hooks.useHasCreateAssetPermission()
 	local isStory = Hooks.useIsStory()
 
-	local isGrid, setIsGrid = React.useState(false)
+	local isGridView = StateManager.settings:useSpecific()(function(state)
+		return state.galleryListGridView
+	end)
 
 	local scrollRef = React.useRef(nil :: ScrollingFrame?)
 	local scrollAbsSize = Hooks.useRefProperty(scrollRef, "AbsoluteSize", Vector2.zero)
@@ -55,7 +59,7 @@ local function ToggleScrollList(props: Props)
 
 	local lines: { [string]: React.Node } = {}
 	for i, info in props.EditableImageInfos do
-		if not isGrid then
+		if not isGridView then
 			lines[`Line{i}`] = React.createElement("TextButton", {
 				Size = UDim2.new(1, 0, 0, props.ElementHeight),
 				AutoButtonColor = false,
@@ -303,10 +307,13 @@ local function ToggleScrollList(props: Props)
 					AnchorPoint = Vector2.new(1, 0.5),
 					Position = UDim2.new(1, 0, 0.5, 1),
 					Size = UDim2.fromOffset(16, 16),
-					Icon = if isGrid then LIST_ICON else GRID_ICON,
+					Icon = if isGridView then LIST_ICON else GRID_ICON,
 					Disabled = props.Disabled,
 					OnActivated = function()
-						setIsGrid(not isGrid)
+						StateManager.settings:update()(function(state)
+							state.galleryListGridView = not state.galleryListGridView
+							return state
+						end)
 					end,
 				}),
 			}),
@@ -326,18 +333,18 @@ local function ToggleScrollList(props: Props)
 
 				Disabled = props.Disabled or props.SinkInput,
 			}, {
-				ListLayout = not isGrid and React.createElement("UIListLayout", {
+				ListLayout = not isGridView and React.createElement("UIListLayout", {
 					FillDirection = Enum.FillDirection.Vertical,
 					SortOrder = Enum.SortOrder.LayoutOrder,
 					Padding = UDim.new(0, 0),
 				}),
-				Padding = isGrid and React.createElement("UIPadding", {
+				Padding = isGridView and React.createElement("UIPadding", {
 					PaddingLeft = UDim.new(0, cellPadding),
 					PaddingRight = UDim.new(0, cellPadding),
 					PaddingTop = UDim.new(0, cellPadding),
 					PaddingBottom = UDim.new(0, cellPadding),
 				}),
-				GridLayout = isGrid and React.createElement("UIGridLayout", {
+				GridLayout = isGridView and React.createElement("UIGridLayout", {
 					CellPadding = UDim2.fromOffset(cellPadding, cellPadding),
 					CellSize = UDim2.fromOffset(cellSize, cellSize),
 					FillDirection = Enum.FillDirection.Horizontal,
