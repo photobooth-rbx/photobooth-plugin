@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Add scroll wheel support for controlling the distance scale during orbital and point cloud auto capture modes
+
 ### [2.7.0] - 2026/08/02
 - Fixes the cropped viewport rect getting reset whenever the viewport app was closed and reopened
 - Fixes the cropped viewport rect jumping when the viewport was resized while in fullscreen

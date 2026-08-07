@@ -24,6 +24,10 @@ local PITCH_LIMIT = math.rad(89)
 
 local ORBIT_SENSITIVITY = 0.005
 
+local DISTANCE_SCALE_STEP = 1.05
+local DISTANCE_SCALE_MIN = 0.01
+local DISTANCE_SCALE_MAX = 100
+
 local FREE_LOOK_SENSITIVITY = 0.005
 local FREE_MOVE_SPEED_MAX = 1000
 
@@ -263,6 +267,13 @@ function AutoCaptureControllerClass._listenOrbitInput(self: AutoCaptureControlle
 				focus.yaw = focus.yaw - input.Delta.X * ORBIT_SENSITIVITY
 				focus.pitch = math.clamp(focus.pitch - input.Delta.Y * ORBIT_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT)
 			end
+		elseif input.UserInputType == Enum.UserInputType.MouseWheel then
+			local factor = DISTANCE_SCALE_STEP ^ -input.Position.Z
+			self.dynamicObservableState:update()(function(state)
+				local scaled = math.round(state.distanceScale * factor * 1000) / 1000
+				state.distanceScale = math.clamp(scaled, DISTANCE_SCALE_MIN, DISTANCE_SCALE_MAX)
+				return state
+			end)
 		end
 	end))
 
