@@ -3,6 +3,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Unreleased
 - Add scroll wheel support for controlling the distance scale during orbital and point cloud auto capture modes
+- Fix UI captures by reverting to starter gui capture again - roblox enabled the `FFlagRenderCapturePlayerGuiMode2`
 
 ### [2.7.0] - 2026/08/02
 - Fixes the cropped viewport rect getting reset whenever the viewport app was closed and reopened
