@@ -74,7 +74,7 @@ function AABBHelper.getPVBoundingBox(pvInstance: PVInstance, filter: ((PVInstanc
 		while #stack > 0 do
 			local popped = table.remove(stack)
 			if popped and popped:IsA("PVInstance") then
-				local filterResult = if filter then filter(popped) else true
+				local filterResult = filter(popped)
 				if filterResult == true and popped:IsA("BasePart") then
 					table.insert(parts, popped)
 				elseif filterResult == nil then
