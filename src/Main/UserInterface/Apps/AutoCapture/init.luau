@@ -18,6 +18,7 @@ local Hooks = require(uiRoot.Hooks)
 local FitterWindow = require(script.Components.FitterWindow)
 local Widget = require(script.Components.Widget)
 
+local AABBHelper = require(script.Controller.AABBHelper)
 local Controller = require(script.Controller)
 
 local AutoCapture = {}
@@ -212,7 +213,7 @@ local function appComponent(props: { ScaleOS: Vector2 })
 					focusPV.Archivable = false
 					pvInstanceCopy.Parent = focusPV
 
-					local bboxCF, _bboxSize = Controller.getPVBoundingBox(focusPV)
+					local bboxCF, _bboxSize = AABBHelper.getPVBoundingBox(focusPV)
 					local worldPivot = CFrame.new(bboxCF.Position)
 
 					local pivotOffset = CFrame.identity

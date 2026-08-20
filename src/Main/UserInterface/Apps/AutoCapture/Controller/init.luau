@@ -14,6 +14,7 @@ local appRoot = script:FindFirstAncestor("AutoCapture")
 local RenderPriorities = require(appRoot.RenderPriorities)
 
 local AnimationManager = require(script.AnimationManager)
+local AABBHelper = require(script.AABBHelper)
 local PointCloud = require(script.PointCloud)
 
 local CAMERA_TYPE = Enum.CameraType.Scriptable
@@ -153,8 +154,6 @@ function AutoCaptureControllerStatic.new()
 
 	return self
 end
-
-AutoCaptureControllerStatic.getPVBoundingBox = PointCloud.getPVBoundingBox
 
 -- Private
 
@@ -344,7 +343,7 @@ function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 		local scaledFov2 = math.atan(math.tan(math.rad(camera.FieldOfView / 2)) * scaleY)
 		local sinFov2 = math.sin(scaledFov2 * math.min(1, aspect))
 
-		local _bboxCenter, bboxSize = PointCloud.getPVBoundingBox(pvInstance)
+		local _bboxCenter, bboxSize = AABBHelper.getPVBoundingBox(pvInstance)
 		local radius = bboxSize.Magnitude / 2
 
 		local distance = (radius / sinFov2) * dynamic.distanceScale
