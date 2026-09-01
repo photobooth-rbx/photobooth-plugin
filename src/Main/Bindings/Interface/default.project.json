@@ -9,7 +9,7 @@
 	"tree": {
 		"$path": "src",
 		"$properties": {
-			"Tags": [ "Photobooth_Bindings" ]
+			"Tags": [ "photobooth:bindings" ]
 		},
 
 		"Wally": {

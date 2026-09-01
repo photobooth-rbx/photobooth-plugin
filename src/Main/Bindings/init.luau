@@ -127,7 +127,7 @@ function Bindings.setup(plugin: Plugin)
 	connectBinding.Archivable = false
 	connectBinding.Name = "ConnectBinding"
 	connectBinding.OnInvoke = function(instance: Instance)
-		if instance:HasTag("Photobooth_Bindings") then
+		if instance:HasTag("photobooth:bindings") or instance:HasTag("Photobooth_Bindings") then
 			connectBindings(plugin, instance)
 		end
 	end

@@ -1,6 +1,10 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Adds support for the `photobooth:ignore` tag which can be used in auto-capture orbital and point-cloud mode to ignore instances and their descendants in bound calculations.
+- Changed the bindings module tag to `photobooth:bindings`. The old tag is still supported and will connect.
+
 ### [2.8.0] - 2026/08/08
 - Add scroll wheel support for controlling the distance scale during orbital and point cloud auto capture modes
 - Fix UI captures by reverting to starter gui capture again - roblox enabled the `FFlagRenderCapturePlayerGuiMode2`
