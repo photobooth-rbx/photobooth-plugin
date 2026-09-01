@@ -96,6 +96,12 @@ function AABBHelper.getFilteredParts(instance: Instance, filter: ((PVInstance) -
 	return parts
 end
 
+AABBHelper.filters = {
+	ignoreTag = function(pvInstance)
+		return if pvInstance:HasTag("photobooth:ignore") then nil else true
+	end,
+} :: { [string]: (PVInstance) -> boolean? }
+
 --
 
 return AABBHelper
