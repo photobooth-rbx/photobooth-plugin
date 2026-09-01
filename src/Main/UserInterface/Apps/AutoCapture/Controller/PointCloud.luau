@@ -1,4 +1,5 @@
 local AssetService = game:GetService("AssetService")
+local CollectionService = game:GetService("CollectionService")
 
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Future = require(pluginRoot.Packages.Future)
@@ -177,18 +178,38 @@ function PointCloudClass._watchPart(self: PointCloud, part: BasePart): Watcher
 	}
 end
 
+function PointCloudClass._refreshWatchers(self: PointCloud)
+	local wanted: { [BasePart]: true } = {}
+	for _, part in AABBHelper.getFilteredParts(self.subject, AABBHelper.ignoreTagFilter) do
+		wanted[part] = true
+	end
+
+	local changed = false
+
+	for part, watcher in self.watchers do
+		if not wanted[part] then
+			watcher.cleanup()
+			self.watchers[part] = nil
+			changed = true
+		end
+	end
+
+	for part, _ in wanted do
+		if not self.watchers[part] then
+			self.watchers[part] = self:_watchPart(part)
+			changed = true
+		end
+	end
+
+	return changed
+end
+
 function PointCloudClass._initWatchers(self: PointCloud)
-	if self.subject:IsA("BasePart") then
-		self.watchers[self.subject] = self:_watchPart(self.subject)
-	end
+	self:_refreshWatchers()
 
-	for _, part in self.subject:QueryDescendants("BasePart") do
-		self.watchers[part] = self:_watchPart(part)
-	end
-
-	self.trove:Add(self.subject.DescendantAdded:Connect(function(descendant)
-		if descendant:IsA("BasePart") then
-			self.watchers[descendant] = self:_watchPart(descendant)
+	self.trove:Add(self.subject.DescendantAdded:Connect(function(_descendant)
+		local isChanged = self:_refreshWatchers()
+		if isChanged then
 			self:recalculateVertices()
 		end
 	end))
@@ -200,6 +221,18 @@ function PointCloudClass._initWatchers(self: PointCloud)
 			self:recalculateVertices()
 		end
 	end))
+
+	local function onIgnoreTagChanged(instance: Instance)
+		if instance == self.subject or instance:IsDescendantOf(self.subject) then
+			local isChanged = self:_refreshWatchers()
+			if isChanged then
+				self:recalculateVertices()
+			end
+		end
+	end
+
+	self.trove:Add(CollectionService:GetInstanceAddedSignal(AABBHelper.IGNORE_TAG):Connect(onIgnoreTagChanged))
+	self.trove:Add(CollectionService:GetInstanceRemovedSignal(AABBHelper.IGNORE_TAG):Connect(onIgnoreTagChanged))
 
 	self.trove:Add(function()
 		for part, _ in self.watchers do

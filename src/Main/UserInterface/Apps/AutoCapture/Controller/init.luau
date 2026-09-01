@@ -343,7 +343,8 @@ function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 		local scaledFov2 = math.atan(math.tan(math.rad(camera.FieldOfView / 2)) * scaleY)
 		local sinFov2 = math.sin(scaledFov2 * math.min(1, aspect))
 
-		local _bboxCF, bboxSize = AABBHelper.getFilteredPVBoundingBox(pvInstance)
+		local filteredParts = AABBHelper.getFilteredParts(pvInstance, AABBHelper.ignoreTagFilter)
+		local _bboxCF, bboxSize = AABBHelper.getBoundingBox(pvInstance:GetPivot(), filteredParts)
 		local radius = bboxSize.Magnitude / 2
 
 		local distance = (radius / sinFov2) * dynamic.distanceScale
@@ -411,6 +412,10 @@ function AutoCaptureControllerClass._hookPointCloud(self: AutoCaptureController)
 		local tanXFov2Scaled = tanYFov2 * (viewportSize.X / viewportSize.Y) * (paddedRect.Width / viewportSize.X)
 
 		local worldPointCloud = pointCloud:getVertices()
+		if #worldPointCloud == 0 then
+			return
+		end
+
 		local cloud = { rotationInv * worldPointCloud[1] }
 		local furthest = cloud[1].Z
 		for i = 2, #worldPointCloud do

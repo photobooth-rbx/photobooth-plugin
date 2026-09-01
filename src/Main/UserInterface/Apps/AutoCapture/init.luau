@@ -213,7 +213,8 @@ local function appComponent(props: { ScaleOS: Vector2 })
 					focusPV.Archivable = false
 					pvInstanceCopy.Parent = focusPV
 
-					local bboxCF, _bboxSize = AABBHelper.getFilteredPVBoundingBox(focusPV)
+					local filteredParts = AABBHelper.getFilteredParts(focusPV, AABBHelper.ignoreTagFilter)
+					local bboxCF, _bboxSize = AABBHelper.getBoundingBox(focusPV:GetPivot(), filteredParts)
 					local worldPivot = CFrame.new(bboxCF.Position)
 
 					local pivotOffset = CFrame.identity

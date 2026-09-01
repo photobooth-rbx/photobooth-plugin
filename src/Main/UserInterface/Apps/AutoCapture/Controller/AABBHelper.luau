@@ -1,5 +1,7 @@
 local AABBHelper = {}
 
+AABBHelper.IGNORE_TAG = "photobooth:ignore"
+
 -- Private
 
 local function getPartBounds(part: BasePart)
@@ -67,23 +69,21 @@ The predicate of this function can return `true`, `false`, or `nil` with differe
 	* `false`: The Instance does not match the criteria of the search, but will continue to look through its descendants.
 	* `nil`: The Instance does not match the criteria of the search and will **not** continue to look through its descendants.
 --]]
-function AABBHelper.getFilteredParts(instance: Instance, filter: ((PVInstance) -> boolean?)?)
+function AABBHelper.getFilteredParts(instance: Instance, filter: ((Instance) -> boolean?)?)
 	local parts = {}
 	if filter then
 		local stack: { Instance } = { instance }
 		while #stack > 0 do
-			local popped = table.remove(stack)
-			if popped and popped:IsA("PVInstance") then
-				local filterResult = filter(popped)
-				if filterResult == true and popped:IsA("BasePart") then
-					table.insert(parts, popped)
-				elseif filterResult == nil then
-					continue
-				end
+			local popped = table.remove(stack) :: Instance
+			local filterResult = filter(popped)
+			if filterResult == nil then
+				continue
+			elseif filterResult == true and popped:IsA("BasePart") then
+				table.insert(parts, popped)
+			end
 
-				for _, child in popped:GetChildren() do
-					table.insert(stack, child)
-				end
+			for _, child in popped:GetChildren() do
+				table.insert(stack, child)
 			end
 		end
 	else
@@ -96,13 +96,8 @@ function AABBHelper.getFilteredParts(instance: Instance, filter: ((PVInstance) -
 	return parts
 end
 
-function AABBHelper.getFilteredPVBoundingBox(pvInstance: PVInstance)
-	local filteredParts = AABBHelper.getFilteredParts(pvInstance, function(candidate)
-		return if candidate:HasTag("photobooth:ignore") then nil else true
-	end)
-
-	local bboxCF, bboxSize = AABBHelper.getBoundingBox(pvInstance:GetPivot(), filteredParts)
-	return bboxCF, bboxSize
+function AABBHelper.ignoreTagFilter(candidate: Instance): boolean?
+	return if candidate:HasTag(AABBHelper.IGNORE_TAG) then nil else true
 end
 
 --
