@@ -4,7 +4,8 @@ local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Parallel = require(pluginRoot.Packages.Parallel)
 local RectSlicer = require(pluginRoot.Utilities.RectSlicer)
 
-local AlphaBleed = require(script.AlphaBleed)
+local AlphaBleed = require(pluginRoot.Main.Photo.Captures.Composers.AlphaBleed)
+
 local Types = require(script.Types)
 
 local LayerComposer = {}

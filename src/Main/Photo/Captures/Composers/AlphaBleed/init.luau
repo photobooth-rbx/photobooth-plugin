@@ -1,38 +1,37 @@
 local AssetService = game:GetService("AssetService")
+
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local RectSlicer = require(pluginRoot.Utilities.RectSlicer)
+local SignedVectorField = require(pluginRoot.Main.Photo.Tools.SignedVectorField)
 
 local ACTOR_COUNT = 32
 
-script:SetAttribute("ActorCount", ACTOR_COUNT)
-script:SetAttribute("JFAPlusOne", true)
+local FIELD_OPTIONS: SignedVectorField.Options = {
+	insideThreshold = 0,
+	boundToOutside = true,
+}
 
-local PlantSeeds = require(script.PlantSeeds)
-local JFAPasses = require(script.JFAPasses)
+script:SetAttribute("ActorCount", ACTOR_COUNT)
+
 local ApplyBleed = require(script.ApplyBleed)
 
 local function alphaBleedJFA(img: EditableImage)
 	local bled = AssetService:CreateEditableImageAsync(Content.fromObject(img))
-	local voronoi = AssetService:CreateEditableImageAsync(Content.fromObject(img))
 
+	local voronoi: EditableImage? = nil
 	local success, err: string? = pcall(function()
-		local imgSize = bled.Size
-		local sourceRect = Rect.new(0, 0, imgSize.X, imgSize.Y)
-		local plantRegions = RectSlicer.rows(sourceRect, ACTOR_COUNT)
+		local field, region = SignedVectorField.generateAsync(bled, FIELD_OPTIONS)
+		voronoi = field
 
-		local workingBbox = PlantSeeds(bled, voronoi, plantRegions)
-
-		if workingBbox then
-			local jfaRegions = RectSlicer.rows(workingBbox, ACTOR_COUNT)
-			local nPasses = JFAPasses(bled, voronoi, jfaRegions, workingBbox)
-
-			if nPasses > 0 then
-				ApplyBleed(bled, voronoi, jfaRegions, workingBbox)
-			end
+		if field and region then
+			local applyRegions = RectSlicer.rows(region, ACTOR_COUNT)
+			ApplyBleed(bled, field, applyRegions, region)
 		end
 	end)
 
-	voronoi:Destroy()
+	if voronoi then
+		voronoi:Destroy()
+	end
 
 	if not success and err then
 		bled:Destroy()
