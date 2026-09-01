@@ -27,8 +27,8 @@ local function worker(img: EditableImage, voronoi: EditableImage, crop: Rect)
 			local ci = (x - minX) + (y - minY - 1) * cropWidth
 			local cj = (ci - 1) * 4
 
-			local seed = buffer.readu32(voronoiRead, cj)
-			if seed == 0 then
+			local seed = buffer.readi32(voronoiRead, cj)
+			if seed <= 0 then
 				continue
 			end
 

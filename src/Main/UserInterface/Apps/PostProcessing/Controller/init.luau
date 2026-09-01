@@ -6,13 +6,13 @@ local Future = require(pluginRoot.Packages.Future)
 local Trove = require(pluginRoot.Packages.Trove)
 
 local StateManager = require(pluginRoot.Main.StateManager)
+local SignedVectorField = require(pluginRoot.Main.Photo.Tools.SignedVectorField)
 
 local postProcessingRoot = script:FindFirstAncestor("PostProcessing")
 local Effects = require(postProcessingRoot.Effects)
 
 local Presets = require(script.Presets)
 local LayerComposer = require(script.LayerComposer)
-local SignedVectorField = require(script.SignedVectorField)
 
 -- Types
 
@@ -663,6 +663,10 @@ function PostProcessingControllerClass.loadImageAsync(self: PostProcessingContro
 		end
 
 		local svfEdit = unpackSvfEdit()
+		if not svfEdit then
+			return
+		end
+
 		if not alive then
 			svfEdit:Destroy()
 			return
