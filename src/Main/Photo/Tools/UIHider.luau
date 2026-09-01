@@ -43,7 +43,12 @@ function UIHiderStatic.new(hiddenClasses: { string })
 	self.watchTroves = {}
 	self.hiddenClasses = table.clone(hiddenClasses)
 
-	for _, uiSource in { CoreGui, StarterGui, PLAYER_GUI } do
+	local uiSources: { Instance } = { CoreGui, StarterGui }
+	if PLAYER_GUI then
+		table.insert(uiSources, PLAYER_GUI)
+	end
+
+	for _, uiSource in uiSources do
 		self.trove:Add(uiSource.DescendantAdded:Connect(function(child)
 			self:_attemptWatch(child)
 		end))
