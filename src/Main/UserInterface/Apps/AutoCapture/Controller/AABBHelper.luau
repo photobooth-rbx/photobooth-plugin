@@ -96,11 +96,14 @@ function AABBHelper.getFilteredParts(instance: Instance, filter: ((PVInstance) -
 	return parts
 end
 
-AABBHelper.filters = {
-	ignoreTag = function(pvInstance)
-		return if pvInstance:HasTag("photobooth:ignore") then nil else true
-	end,
-} :: { [string]: (PVInstance) -> boolean? }
+function AABBHelper.getFilteredPVBoundingBox(pvInstance: PVInstance)
+	local filteredParts = AABBHelper.getFilteredParts(pvInstance, function(candidate)
+		return if candidate:HasTag("photobooth:ignore") then nil else true
+	end)
+
+	local bboxCF, bboxSize = AABBHelper.getBoundingBox(pvInstance:GetPivot(), filteredParts)
+	return bboxCF, bboxSize
+end
 
 --
 
