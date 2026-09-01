@@ -67,10 +67,10 @@ The predicate of this function can return `true`, `false`, or `nil` with differe
 	* `false`: The Instance does not match the criteria of the search, but will continue to look through its descendants.
 	* `nil`: The Instance does not match the criteria of the search and will **not** continue to look through its descendants.
 --]]
-function AABBHelper.getPVBoundingBox(pvInstance: PVInstance, filter: ((PVInstance) -> boolean?)?)
+function AABBHelper.getFilteredParts(instance: Instance, filter: ((PVInstance) -> boolean?)?)
 	local parts = {}
 	if filter then
-		local stack: { Instance } = { pvInstance }
+		local stack: { Instance } = { instance }
 		while #stack > 0 do
 			local popped = table.remove(stack)
 			if popped and popped:IsA("PVInstance") then
@@ -87,14 +87,13 @@ function AABBHelper.getPVBoundingBox(pvInstance: PVInstance, filter: ((PVInstanc
 			end
 		end
 	else
-		parts = pvInstance:QueryDescendants("BasePart")
-		if pvInstance:IsA("BasePart") then
-			table.insert(parts, pvInstance)
+		parts = instance:QueryDescendants("BasePart")
+		if instance:IsA("BasePart") then
+			table.insert(parts, instance)
 		end
 	end
 
-	local boundCF, boundSize = AABBHelper.getBoundingBox(pvInstance:GetPivot(), parts)
-	return boundCF, boundSize
+	return parts
 end
 
 --

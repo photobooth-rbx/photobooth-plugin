@@ -343,7 +343,8 @@ function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 		local scaledFov2 = math.atan(math.tan(math.rad(camera.FieldOfView / 2)) * scaleY)
 		local sinFov2 = math.sin(scaledFov2 * math.min(1, aspect))
 
-		local _bboxCenter, bboxSize = AABBHelper.getPVBoundingBox(pvInstance)
+		local filteredParts = AABBHelper.getFilteredParts(pvInstance)
+		local _bboxCF, bboxSize = AABBHelper.getBoundingBox(pvInstance:GetPivot(), filteredParts)
 		local radius = bboxSize.Magnitude / 2
 
 		local distance = (radius / sinFov2) * dynamic.distanceScale
