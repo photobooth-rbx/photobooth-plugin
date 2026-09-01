@@ -47,11 +47,15 @@ function AABBHelper.getMinMax(orientation: CFrame, parts: { BasePart }): (Vector
 		end
 	end
 
-	local max = corners[1]
-	local min = corners[1]
-	for i = 2, #corners do
-		max = max:Max(corners[i])
-		min = min:Min(corners[i])
+	local max = Vector3.zero
+	local min = Vector3.zero
+	if #corners > 0 then
+		max = corners[1]
+		min = corners[1]
+		for i = 2, #corners do
+			max = max:Max(corners[i])
+			min = min:Min(corners[i])
+		end
 	end
 
 	return min, max
