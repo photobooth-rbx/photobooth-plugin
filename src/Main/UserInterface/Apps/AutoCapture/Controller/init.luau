@@ -31,6 +31,7 @@ local DISTANCE_SCALE_MAX = 100
 
 local FREE_LOOK_SENSITIVITY = 0.005
 local FREE_MOVE_SPEED_MAX = 1000
+local FREE_EXTERNAL_CF_EPSILON = 1e-4
 
 local FREE_MOVE_KEYS = {
 	[Enum.KeyCode.D] = Vector3.xAxis,
@@ -472,6 +473,7 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 	local pitch, yaw = startCF:ToEulerAnglesYXZ()
 	local rotating = false
 	local moveSpeed = 0
+	local appliedCF: CFrame? = nil
 
 	local function isShiftDown()
 		return UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
@@ -511,6 +513,20 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		local dynamic = self.dynamicObservableState:get()
 
 		local camera = workspace.CurrentCamera
+		local currentCF = camera.CFrame
+
+		if
+			appliedCF
+			and moveSpeed == 0
+			and not currentCF.Position:FuzzyEq(appliedCF.Position, FREE_EXTERNAL_CF_EPSILON)
+		then
+			position = currentCF.Position
+
+			local rx, ry, _rz = currentCF:ToEulerAnglesYXZ()
+			pitch = math.clamp(rx, -PITCH_LIMIT, PITCH_LIMIT)
+			yaw = ry
+		end
+
 		camera.CameraType = CAMERA_TYPE
 		camera.FieldOfView = dynamic.fov
 
@@ -546,6 +562,7 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		local cameraCF = CFrame.new(position) * rotation
 		camera.CFrame = cameraCF
 		camera.Focus = cameraCF
+		appliedCF = cameraCF
 
 		focus.pitch = pitch
 		focus.yaw = yaw
