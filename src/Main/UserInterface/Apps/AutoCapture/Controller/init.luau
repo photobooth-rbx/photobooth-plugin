@@ -123,6 +123,7 @@ export type AutoCaptureController = typeof(setmetatable(
 	{} :: {
 		captureRect: Rect,
 		isCapturing: boolean,
+		origin: Vector3,
 
 		staticObservableState: StaticObservableState,
 		dynamicObservableState: DynamicObservableState,
@@ -145,6 +146,7 @@ function AutoCaptureControllerStatic.new()
 
 	self.captureRect = Rect.new(0, 0, 0, 0)
 	self.isCapturing = false
+	self.origin = Vector3.zero
 
 	self.staticObservableState = createStaticObservableState()
 	self.dynamicObservableState = createDynamicObservableState()
@@ -355,7 +357,7 @@ function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 		local radius = bboxSize.Magnitude / 2
 
 		local distance = (radius / sinFov2) * dynamic.distanceScale
-		local cameraCF = rotation * CFrame.new(0, 0, distance)
+		local cameraCF = CFrame.new(self.origin) * rotation * CFrame.new(0, 0, distance)
 
 		local distortedCF = cameraCF
 			* distort(camera, {
@@ -663,6 +665,18 @@ end
 
 function AutoCaptureControllerClass.setCaptureRect(self: AutoCaptureController, rect: Rect)
 	self.captureRect = rect
+end
+
+function AutoCaptureControllerClass.setOrigin(self: AutoCaptureController, origin: Vector3)
+	local delta = origin - self.origin
+	if delta == Vector3.zero then
+		return
+	end
+
+	self.origin = origin
+	for pvInstance, _pvState in self.stateByPV do
+		pvInstance:PivotTo(pvInstance:GetPivot() + delta)
+	end
 end
 
 function AutoCaptureControllerClass.getFocusedPVInstance(self: AutoCaptureController)

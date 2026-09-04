@@ -88,7 +88,7 @@ local function useController()
 	return controller
 end
 
-local function appComponent(props: { ScaleOS: Vector2 })
+local function appComponent(props: { ScaleOS: Vector2, Origin: Vector3 })
 	local plugin = StudioComponents.usePlugin() :: Plugin
 	local pvsRef = React.useRef({} :: { [Widget.ListElement]: PVInstance })
 
@@ -98,6 +98,10 @@ local function appComponent(props: { ScaleOS: Vector2 })
 
 	local captureRect, setCaptureRect = React.useState(Rect.new(0, 0, 0, 0))
 	local cancelledRef = React.useRef(false)
+
+	React.useEffect(function()
+		controller:setOrigin(props.Origin)
+	end, { controller :: any, props.Origin :: any })
 
 	React.useEffect(function()
 		return function()
@@ -225,7 +229,7 @@ local function appComponent(props: { ScaleOS: Vector2 })
 
 					focusPV.Name = "AutoCaptureModel"
 					focusPV.WorldPivot = worldPivot
-					focusPV:PivotTo(pivotOffset)
+					focusPV:PivotTo(CFrame.new(controller.origin) * pivotOffset)
 
 					focusPV:SetAttribute("CaptureName", pvInstanceCopy.Name)
 
@@ -294,10 +298,15 @@ function AutoCapture.mount(plugin: Plugin, toolbar: Toolbar.Toolbar)
 		local scaleOS = StateManager.temporary:useSpecific()(function(state)
 			return state.scaleOS
 		end)
+		local autoCaptureOrigin = StateManager.settings:useSpecific()(function(state)
+			return state.autoCaptureOrigin
+		end)
 
-		return isEnabled and React.createElement(appComponent, {
-			ScaleOS = scaleOS,
-		})
+		return isEnabled
+			and React.createElement(appComponent, {
+				ScaleOS = scaleOS,
+				Origin = autoCaptureOrigin,
+			})
 	end
 
 	local dockRoot = ReactRoblox.createRoot(dock)
