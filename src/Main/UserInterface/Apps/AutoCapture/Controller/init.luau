@@ -36,10 +36,16 @@ local FREE_EXTERNAL_CF_EPSILON = 1e-4
 local FREE_MOVE_KEYS = {
 	[Enum.KeyCode.D] = Vector3.xAxis,
 	[Enum.KeyCode.A] = -Vector3.xAxis,
-	[Enum.KeyCode.E] = Vector3.yAxis,
-	[Enum.KeyCode.Q] = -Vector3.yAxis,
 	[Enum.KeyCode.S] = Vector3.zAxis,
 	[Enum.KeyCode.W] = -Vector3.zAxis,
+
+	[Enum.KeyCode.E] = Vector3.yAxis,
+	[Enum.KeyCode.Q] = -Vector3.yAxis,
+
+	[Enum.KeyCode.Right] = Vector3.xAxis,
+	[Enum.KeyCode.Left] = -Vector3.xAxis,
+	[Enum.KeyCode.Up] = -Vector3.zAxis,
+	[Enum.KeyCode.Down] = Vector3.zAxis,
 }
 
 local AutoCaptureControllerStatic = {}
