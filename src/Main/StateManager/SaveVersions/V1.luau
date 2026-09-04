@@ -10,6 +10,8 @@ export type Serialized = {
 		galleryListExpanded: boolean,
 		galleryListGridView: boolean,
 		experimentalModeEnabled: boolean,
+
+		autoCaptureOrigin: Vector3,
 	},
 
 	postProcessingPresets: { any },
@@ -22,6 +24,8 @@ export type Deserialized = {
 		galleryListExpanded: boolean,
 		galleryListGridView: boolean,
 		experimentalModeEnabled: boolean,
+
+		autoCaptureOrigin: Vector3,
 	},
 
 	postProcessingPresets: { any },
@@ -37,6 +41,8 @@ function SaveFormatV1.default(): Deserialized
 			galleryListExpanded = true,
 			galleryListGridView = false,
 			experimentalModeEnabled = false,
+
+			autoCaptureOrigin = Vector3.zero,
 		},
 
 		postProcessingPresets = {},
@@ -56,7 +62,11 @@ function SaveFormatV1.serialize(deserialized: Deserialized): Serialized
 end
 
 function SaveFormatV1.deserialize(serialized: Serialized): Deserialized
-	return Sift.Dictionary.merge(SaveFormatV1.default(), serialized)
+	local default = SaveFormatV1.default()
+	return {
+		settings = Sift.Dictionary.merge(default.settings, serialized.settings),
+		postProcessingPresets = serialized.postProcessingPresets or {},
+	}
 end
 
 return SaveFormatV1

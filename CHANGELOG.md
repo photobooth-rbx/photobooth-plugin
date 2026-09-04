@@ -4,6 +4,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Unreleased
 - Fix the ability to manually set the camera CFrame when using free-cam in auto capture.
 - Add the ability to use the up / down / left / right arrows on keyboard when in free-cam in auto capture.
+- Add a configurable auto capture origin so subjects can be centered at a point other than the world origin.
 
 ### [2.9.0] - 2026/09/01
 - Adds support for the `photobooth:ignore` tag which can be used in auto-capture orbital and point-cloud mode to ignore instances and their descendants in bound calculations.

@@ -3,6 +3,7 @@ local StudioProperties = require(pluginRoot.Packages.StudioProperties)
 local React = require(pluginRoot.Packages.React)
 
 local Captures = require(pluginRoot.Main.Photo.Captures)
+local StateManager = require(pluginRoot.Main.StateManager)
 
 local AutoCaptureRoot = script:FindFirstAncestor("AutoCapture")
 local Controller = require(AutoCaptureRoot.Controller)
@@ -21,6 +22,10 @@ export type Props = {
 local function Properties(props: Props, ref: any)
 	local static = props.Controller.staticObservableState:use()
 	local dynamic = props.Controller.dynamicObservableState:use()
+
+	local origin = StateManager.settings:useSpecific()(function(state)
+		return state.autoCaptureOrigin
+	end)
 
 	return React.createElement("Frame", {
 		BackgroundTransparency = 1,
@@ -167,6 +172,21 @@ local function Properties(props: Props, ref: any)
 				FillDirection = Enum.FillDirection.Vertical,
 				SortOrder = Enum.SortOrder.LayoutOrder,
 				Padding = UDim.new(0, 0),
+			}),
+
+			Origin = React.createElement(StudioProperties.Vector3, {
+				FieldName = "Origin",
+
+				Value = origin,
+				OnValueSubmitted = function(newValue)
+					StateManager.settings:update()(function(state)
+						state.autoCaptureOrigin = newValue
+						return state
+					end)
+				end,
+
+				Disabled = props.Disabled,
+				LayoutOrder = 1,
 			}),
 
 			FOV = React.createElement(StudioProperties.Number, {
