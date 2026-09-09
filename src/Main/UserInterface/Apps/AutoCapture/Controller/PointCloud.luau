@@ -87,7 +87,7 @@ local function getPartPointCloud(part: BasePart)
 		indices = CORNER_WEDGE
 	end
 
-	local partCF, partSize = part.CFrame, part.Size
+	local partCF, partSize = AABBHelper.getPartBounds(part)
 	return getPointCloud(partCF, partSize / 2, indices)
 end
 
