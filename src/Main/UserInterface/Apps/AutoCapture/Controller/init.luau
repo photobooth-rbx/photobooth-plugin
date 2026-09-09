@@ -8,6 +8,7 @@ local Trove = require(pluginRoot.Packages.Trove)
 
 local Photo = require(pluginRoot.Main.Photo)
 local Captures = require(pluginRoot.Main.Photo.Captures)
+local SceneControl = require(pluginRoot.Main.Photo.SceneControl)
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
 
 local appRoot = script:FindFirstAncestor("AutoCapture")
@@ -137,6 +138,7 @@ export type AutoCaptureController = typeof(setmetatable(
 
 		isInputFrozen: boolean,
 		meshDataCache: PointCloud.MeshDataCache,
+		activePointCloud: PointCloud.PointCloud?,
 	},
 	AutoCaptureControllerClass
 ))
@@ -160,6 +162,7 @@ function AutoCaptureControllerStatic.new()
 
 	self.isInputFrozen = true
 	self.meshDataCache = {}
+	self.activePointCloud = nil
 
 	return self
 end
@@ -390,7 +393,9 @@ function AutoCaptureControllerClass._hookPointCloud(self: AutoCaptureController)
 	local cleanupTrove = Trove.new()
 	local pointCloud = self:_createPointCloud(pvInstance)
 
+	self.activePointCloud = pointCloud
 	cleanupTrove:Add(function()
+		self.activePointCloud = nil
 		pointCloud:Destroy()
 	end)
 
@@ -789,6 +794,11 @@ function AutoCaptureControllerClass.getPVInstances(self: AutoCaptureController)
 end
 
 function AutoCaptureControllerClass.capture(self: AutoCaptureController, scaleOS: Vector2)
+	local pointCloud = self.activePointCloud
+	if pointCloud and pointCloud:awaitVerticesAsync() then
+		SceneControl.yieldUntilNextFrame()
+	end
+
 	self.isCapturing = true
 
 	local camera = workspace.CurrentCamera

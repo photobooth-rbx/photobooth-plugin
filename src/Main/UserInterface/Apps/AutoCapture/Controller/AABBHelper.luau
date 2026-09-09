@@ -2,9 +2,9 @@ local AABBHelper = {}
 
 AABBHelper.IGNORE_TAG = "photobooth:ignore"
 
--- Private
+-- Public
 
-local function getPartBounds(part: BasePart)
+function AABBHelper.getPartBounds(part: BasePart)
 	if part:IsA("MeshPart") then
 		-- bug on Roblox's end means we need this hacky solution to read a mesh part's accurate CFrame / Size
 		-- https://devforum.roblox.com/t/avatar-body-parts-dont-match-the-size-listed-in-the-explorer/3101124
@@ -23,14 +23,12 @@ local function getPartBounds(part: BasePart)
 	return part.CFrame, part.Size
 end
 
--- Public
-
 function AABBHelper.getMinMax(orientation: CFrame, parts: { BasePart }): (Vector3, Vector3)
 	local corners = {}
 	local rotation = orientation.Rotation
 	for _, part in parts do
 		local partCorners = {}
-		local partCF, partSize = getPartBounds(part)
+		local partCF, partSize = AABBHelper.getPartBounds(part)
 		local partSize2 = partSize / 2
 
 		for i = 0, 7 do
