@@ -122,15 +122,23 @@ function PointCloudClass._tryGetMeshData(self: PointCloud, meshPart: MeshPart)
 end
 
 function PointCloudClass._tryGetMeshDataFuture(self: PointCloud, meshPart: MeshPart)
-	local request = Future.new()
+	local didYield = false
+	local request: Future.Future<MeshData?> = Future.new()
 
 	local thread = task.spawn(function()
 		local data = self:_tryGetMeshData(meshPart)
 		request:complete(data)
+		if didYield then
+			self:recalculateVertices()
+		end
 	end)
 
+	didYield = not request:isCompleted()
+
 	self.trove:Add(function()
-		task.cancel(thread)
+		if coroutine.status(thread) ~= "dead" then
+			task.cancel(thread)
+		end
 	end)
 
 	return request
@@ -152,8 +160,9 @@ function PointCloudClass._watchPart(self: PointCloud, part: BasePart): Watcher
 		if self.tryUseMeshVertices and part:IsA("MeshPart") then
 			if not meshDataFuture then
 				meshDataFuture = self:_tryGetMeshDataFuture(part)
-				self:recalculateVertices()
-			else
+			end
+
+			if meshDataFuture and meshDataFuture:isCompleted() then
 				local meshData = meshDataFuture:expect()
 				if meshData then
 					local partCF = part.CFrame
