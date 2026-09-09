@@ -11,10 +11,10 @@ local Controller = require(AutoCaptureRoot.Controller)
 
 local Properties = require(script.Properties)
 local InstanceList = require(script.InstanceList)
+local PresetsList = require(script.PresetsList)
 
 local BUTTONS_HEIGHT = 38
 
-local SAVE_ICON = assert(Lucide.GetAsset("save", 16))
 local CAPTURE_ICON = assert(Lucide.GetAsset("camera", 16))
 local CAPTURE_ALL_ICON = assert(Lucide.GetAsset("switch-camera", 16))
 
@@ -255,48 +255,10 @@ local function Widget(props: Props)
 			},
 			["Presets"] = {
 				LayoutOrder = 2,
-				Content = React.createElement("Frame", {
-					BackgroundTransparency = 1,
+				Content = React.createElement(PresetsList, {
 					Size = UDim2.fromScale(1, 1),
-				}, {
-					Body = React.createElement("Frame", {
-						BackgroundTransparency = 1,
-						Size = UDim2.new(1, 0, 1, -BUTTONS_HEIGHT),
-					}, {}),
-
-					Buttons = React.createElement("Frame", {
-						BackgroundTransparency = 1,
-						AnchorPoint = Vector2.new(0, 1),
-						Position = UDim2.fromScale(0, 1),
-						Size = UDim2.new(1, 0, 0, BUTTONS_HEIGHT),
-						ClipsDescendants = true,
-						ZIndex = 3,
-					}, {
-						Padding = React.createElement("UIPadding", {
-							PaddingLeft = UDim.new(0, 3),
-							PaddingRight = UDim.new(0, 3),
-							PaddingTop = UDim.new(0, 3),
-							PaddingBottom = UDim.new(0, 4),
-						}),
-
-						AddPreset = React.createElement(StudioComponents.Button, {
-							Size = UDim2.fromScale(1, 1),
-							TextXAlignment = Enum.TextXAlignment.Center,
-							Text = "Add Preset",
-							Disabled = props.Disabled,
-							LayoutOrder = 1,
-
-							Icon = {
-								Image = SAVE_ICON.Url,
-								RectSize = SAVE_ICON.ImageRectSize,
-								RectOffset = SAVE_ICON.ImageRectOffset,
-								Size = Vector2.new(SAVE_ICON.ImageRectSize.X, SAVE_ICON.ImageRectSize.Y),
-								UseThemeColor = true,
-							},
-
-							OnActivated = function() end,
-						}),
-					}),
+					Controller = props.Controller,
+					Disabled = disabled,
 				}),
 			},
 		}),

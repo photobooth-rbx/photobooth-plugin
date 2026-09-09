@@ -15,6 +15,7 @@ export type Serialized = {
 	},
 
 	postProcessingPresets: { any },
+	autoCapturePresets: { any },
 }
 
 export type Deserialized = {
@@ -29,6 +30,7 @@ export type Deserialized = {
 	},
 
 	postProcessingPresets: { any },
+	autoCapturePresets: { any },
 }
 
 SaveFormatV1.version = 1
@@ -46,6 +48,7 @@ function SaveFormatV1.default(): Deserialized
 		},
 
 		postProcessingPresets = {},
+		autoCapturePresets = {},
 	}
 end
 
@@ -58,6 +61,7 @@ function SaveFormatV1.serialize(deserialized: Deserialized): Serialized
 	return {
 		settings = Sift.Dictionary.merge(default.settings, deserialized.settings),
 		postProcessingPresets = deserialized.postProcessingPresets or {},
+		autoCapturePresets = deserialized.autoCapturePresets or {},
 	}
 end
 
@@ -66,6 +70,7 @@ function SaveFormatV1.deserialize(serialized: Serialized): Deserialized
 	return {
 		settings = Sift.Dictionary.merge(default.settings, serialized.settings),
 		postProcessingPresets = serialized.postProcessingPresets or {},
+		autoCapturePresets = serialized.autoCapturePresets or {},
 	}
 end
 

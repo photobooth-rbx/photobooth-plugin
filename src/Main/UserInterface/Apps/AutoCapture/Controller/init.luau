@@ -7,6 +7,7 @@ local Signal = require(pluginRoot.Packages.Signal)
 local Trove = require(pluginRoot.Packages.Trove)
 
 local Photo = require(pluginRoot.Main.Photo)
+local StateManager = require(pluginRoot.Main.StateManager)
 local Captures = require(pluginRoot.Main.Photo.Captures)
 local SceneControl = require(pluginRoot.Main.Photo.SceneControl)
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
@@ -17,6 +18,7 @@ local RenderPriorities = require(appRoot.RenderPriorities)
 local AnimationManager = require(script.AnimationManager)
 local AABBHelper = require(script.AABBHelper)
 local PointCloud = require(script.PointCloud)
+local Presets = require(script.Presets)
 
 local CAMERA_TYPE = Enum.CameraType.Scriptable
 
@@ -87,16 +89,30 @@ local function createDynamicObservableState()
 	})
 end
 
-local function createNewFocus()
+local function createDynamicState(overrides: { [string]: any }?)
 	local dynamicObservable = createDynamicObservableState()
 	local dynamicState = dynamicObservable:get()
 	dynamicObservable:Destroy()
 
+	if overrides then
+		local castedDynamicState = dynamicState :: { [string]: any }
+		for key, value in castedDynamicState do
+			local override = overrides[key]
+			if override ~= nil and typeof(override) == typeof(value) then
+				castedDynamicState[key] = override
+			end
+		end
+	end
+
+	return dynamicState
+end
+
+local function createNewFocus()
 	return {
 		yaw = YAW_INIT,
 		pitch = PITCH_INIT,
 		renderCF = CFrame.fromEulerAnglesYXZ(PITCH_INIT, YAW_INIT, 0),
-		dynamicState = dynamicState,
+		dynamicState = createDynamicState(),
 	}
 end
 
@@ -105,6 +121,13 @@ export type StaticObservableState = ObservableValue.ObservableValue<StaticState>
 
 export type DynamicState = typeof(createDynamicObservableState():get())
 export type DynamicObservableState = ObservableValue.ObservableValue<DynamicState>
+
+export type Preset = {
+	id: string,
+	name: string,
+	isDefault: boolean,
+	dynamicState: DynamicState,
+}
 
 type Focus = {
 	yaw: number,
@@ -128,6 +151,7 @@ export type AutoCaptureController = typeof(setmetatable(
 
 		staticObservableState: StaticObservableState,
 		dynamicObservableState: DynamicObservableState,
+		observablePresets: ObservableValue.ObservableValue<{ Preset }>,
 
 		focusedPV: PVInstance?,
 		focusedPVChanged: Signal.Signal<()>,
@@ -143,6 +167,49 @@ export type AutoCaptureController = typeof(setmetatable(
 	AutoCaptureControllerClass
 ))
 
+local presetIdCounter = 0
+local function nextPresetId(): string
+	presetIdCounter += 1
+	return tostring(presetIdCounter)
+end
+
+local function indexOf<T>(list: { T }, predicate: (T) -> boolean): number?
+	for i, value in list do
+		if predicate(value) then
+			return i
+		end
+	end
+	return nil
+end
+
+local function buildPresets()
+	local presets: { Preset } = {}
+
+	for _, presetEntry in Presets.get() do
+		table.insert(presets, {
+			id = nextPresetId(),
+			name = presetEntry.spec.name,
+			isDefault = true,
+			dynamicState = createDynamicState(presetEntry.spec.state),
+		})
+	end
+
+	for _, saved in StateManager.autoCapturePresets:get() do
+		if typeof(saved) ~= "table" or typeof(saved.name) ~= "string" then
+			continue
+		end
+
+		table.insert(presets, {
+			id = nextPresetId(),
+			name = saved.name,
+			isDefault = false,
+			dynamicState = createDynamicState(saved.dynamicState),
+		})
+	end
+
+	return presets
+end
+
 function AutoCaptureControllerStatic.new()
 	local self = setmetatable({}, AutoCaptureControllerClass) :: AutoCaptureController
 
@@ -152,6 +219,7 @@ function AutoCaptureControllerStatic.new()
 
 	self.staticObservableState = createStaticObservableState()
 	self.dynamicObservableState = createDynamicObservableState()
+	self.observablePresets = ObservableValue.new(buildPresets())
 
 	self.focusedPV = nil
 	self.focusedPVChanged = Signal.new()
@@ -212,7 +280,7 @@ local function viewProjectionEdgeHits(cloud: { Vector3 }, axis: "X" | "Y", depth
 	return max, min
 end
 
-local function getStudioSetting<T>(keys: { string }, default: T): T
+local function _getStudioSetting<T>(keys: { string }, default: T): T
 	for _, key in keys do
 		local success, value = pcall(function()
 			return (settings().Studio :: any)[key] :: T
@@ -827,8 +895,73 @@ function AutoCaptureControllerClass.capture(self: AutoCaptureController, scaleOS
 	return exported[1]
 end
 
+-- Presets
+
+function AutoCaptureControllerClass.usePresets(self: AutoCaptureController)
+	return self.observablePresets:use()
+end
+
+function AutoCaptureControllerClass.persistUserPresets(self: AutoCaptureController)
+	local filtered = {}
+	for _, preset in self.observablePresets:get() do
+		if not preset.isDefault then
+			table.insert(filtered, {
+				name = preset.name,
+				dynamicState = table.clone(preset.dynamicState),
+			})
+		end
+	end
+
+	StateManager.autoCapturePresets:set(filtered)
+end
+
+function AutoCaptureControllerClass.addPreset(self: AutoCaptureController, name: string?): string
+	local preset: Preset = {
+		id = nextPresetId(),
+		name = name or `Preset {#self.observablePresets:get() + 1}`,
+		isDefault = false,
+		dynamicState = table.clone(self.dynamicObservableState:get()),
+	}
+
+	self.observablePresets:update()(function(presets)
+		local out = table.clone(presets)
+		table.insert(out, preset)
+		return out
+	end)
+
+	self:persistUserPresets()
+
+	return preset.id
+end
+
+function AutoCaptureControllerClass.removePreset(self: AutoCaptureController, presetId: string)
+	self.observablePresets:update()(function(presets)
+		local out = table.clone(presets)
+		local i = indexOf(out, function(preset)
+			return preset.id == presetId
+		end)
+		if i and not out[i].isDefault then
+			table.remove(out, i)
+		end
+		return out
+	end)
+
+	self:persistUserPresets()
+end
+
+function AutoCaptureControllerClass.applyPreset(self: AutoCaptureController, presetId: string)
+	local presets = self.observablePresets:get()
+	local i = indexOf(presets, function(preset)
+		return preset.id == presetId
+	end)
+	if i then
+		self.dynamicObservableState:set(table.clone(presets[i].dynamicState))
+	end
+end
+
 function AutoCaptureControllerClass.Destroy(self: AutoCaptureController)
 	self:unfocus()
+	self.observablePresets:Destroy()
 end
 
 --

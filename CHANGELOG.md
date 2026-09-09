@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Fix waiting for all mesh vertices on capture all.
 - Fix auto capture mesh vertices toggle not working when switching models with the setting enabled.
 - Fix auto capture point cloud mesh edge case bounding box calculation.
+- Add auto capture presets so capture configurations can be saved and reloaded.
 
 ### [2.10.0] - 2026/09/04
 - Fix the ability to manually set the camera CFrame when using free-cam in auto capture.
