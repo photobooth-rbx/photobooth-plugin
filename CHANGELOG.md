@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Fix auto capture mesh vertices toggle not working when switching models with the setting enabled 
+
 ### [2.10.0] - 2026/09/04
 - Fix the ability to manually set the camera CFrame when using free-cam in auto capture.
 - Add the ability to use the up / down / left / right arrows on keyboard when in free-cam in auto capture.
