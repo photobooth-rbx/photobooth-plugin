@@ -40,6 +40,7 @@ export type PointCloud = typeof(setmetatable(
 		meshDataCache: MeshDataCache,
 		watchers: { [BasePart]: Watcher },
 		vertices: { Vector3 },
+		isRecalculateQueued: boolean,
 	},
 	PointCloudClass
 ))
@@ -53,6 +54,7 @@ function PointCloudStatic.new(subject: Instance, tryUseMeshVertices: boolean?, m
 	self.meshDataCache = meshDataCache
 	self.watchers = {}
 	self.vertices = {}
+	self.isRecalculateQueued = false
 
 	self:_initWatchers()
 	self:recalculateVertices()
@@ -129,7 +131,7 @@ function PointCloudClass._tryGetMeshDataFuture(self: PointCloud, meshPart: MeshP
 		local data = self:_tryGetMeshData(meshPart)
 		request:complete(data)
 		if didYield then
-			self:recalculateVertices()
+			self:queueRecalculateVertices()
 		end
 	end)
 
@@ -148,11 +150,11 @@ function PointCloudClass._watchPart(self: PointCloud, part: BasePart): Watcher
 	local trove = Trove.new()
 
 	trove:Add(part:GetPropertyChangedSignal("CFrame"):Connect(function()
-		self:recalculateVertices()
+		self:queueRecalculateVertices()
 	end))
 
 	trove:Add(part:GetPropertyChangedSignal("Size"):Connect(function()
-		self:recalculateVertices()
+		self:queueRecalculateVertices()
 	end))
 
 	local meshDataFuture
@@ -219,7 +221,7 @@ function PointCloudClass._initWatchers(self: PointCloud)
 	self.trove:Add(self.subject.DescendantAdded:Connect(function(_descendant)
 		local isChanged = self:_refreshWatchers()
 		if isChanged then
-			self:recalculateVertices()
+			self:queueRecalculateVertices()
 		end
 	end))
 
@@ -227,7 +229,7 @@ function PointCloudClass._initWatchers(self: PointCloud)
 		if descendant:IsA("BasePart") and self.watchers[descendant] then
 			self.watchers[descendant].cleanup()
 			self.watchers[descendant] = nil
-			self:recalculateVertices()
+			self:queueRecalculateVertices()
 		end
 	end))
 
@@ -235,7 +237,7 @@ function PointCloudClass._initWatchers(self: PointCloud)
 		if instance == self.subject or instance:IsDescendantOf(self.subject) then
 			local isChanged = self:_refreshWatchers()
 			if isChanged then
-				self:recalculateVertices()
+				self:queueRecalculateVertices()
 			end
 		end
 	end
@@ -251,7 +253,22 @@ function PointCloudClass._initWatchers(self: PointCloud)
 	end)
 end
 
+function PointCloudClass.queueRecalculateVertices(self: PointCloud)
+	if self.isRecalculateQueued then
+		return
+	end
+
+	self.isRecalculateQueued = true
+	task.defer(function()
+		if self.isRecalculateQueued then
+			self:recalculateVertices()
+		end
+	end)
+end
+
 function PointCloudClass.recalculateVertices(self: PointCloud)
+	self.isRecalculateQueued = false
+
 	local vertices = {}
 	for _part, watcher in self.watchers do
 		local pointCloud = watcher.getPointCloud()
@@ -267,6 +284,7 @@ function PointCloudClass.getVertices(self: PointCloud)
 end
 
 function PointCloudClass.Destroy(self: PointCloud)
+	self.isRecalculateQueued = false
 	self.trove:Destroy()
 end
 
