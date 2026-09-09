@@ -41,6 +41,7 @@ export type PointCloud = typeof(setmetatable(
 		watchers: { [BasePart]: Watcher },
 		vertices: { Vector3 },
 		isRecalculateQueued: boolean,
+		pendingRequests: { [Future.Future<MeshData?>]: true },
 	},
 	PointCloudClass
 ))
@@ -55,6 +56,7 @@ function PointCloudStatic.new(subject: Instance, tryUseMeshVertices: boolean?, m
 	self.watchers = {}
 	self.vertices = {}
 	self.isRecalculateQueued = false
+	self.pendingRequests = {}
 
 	self:_initWatchers()
 	self:recalculateVertices()
@@ -131,11 +133,15 @@ function PointCloudClass._tryGetMeshDataFuture(self: PointCloud, meshPart: MeshP
 		local data = self:_tryGetMeshData(meshPart)
 		request:complete(data)
 		if didYield then
+			self.pendingRequests[request] = nil
 			self:queueRecalculateVertices()
 		end
 	end)
 
 	didYield = not request:isCompleted()
+	if didYield then
+		self.pendingRequests[request] = true
+	end
 
 	self.trove:Add(function()
 		if coroutine.status(thread) ~= "dead" then
@@ -253,6 +259,33 @@ function PointCloudClass._initWatchers(self: PointCloud)
 	end)
 end
 
+function PointCloudClass.awaitVerticesAsync(self: PointCloud)
+	local hasRecalculated = false
+
+	while true do
+		if self.isRecalculateQueued then
+			self:recalculateVertices()
+			hasRecalculated = true
+		end
+
+		local request = next(self.pendingRequests)
+		if not request then
+			break
+		end
+
+		while request do
+			request:expect()
+			self.pendingRequests[request] = nil
+			request = next(self.pendingRequests)
+		end
+
+		self:recalculateVertices()
+		hasRecalculated = true
+	end
+
+	return hasRecalculated
+end
+
 function PointCloudClass.queueRecalculateVertices(self: PointCloud)
 	if self.isRecalculateQueued then
 		return
@@ -285,6 +318,7 @@ end
 
 function PointCloudClass.Destroy(self: PointCloud)
 	self.isRecalculateQueued = false
+	table.clear(self.pendingRequests)
 	self.trove:Destroy()
 end
 
