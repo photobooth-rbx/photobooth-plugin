@@ -3,5 +3,5 @@ local PresetRegistry = require(presetsRoot.PresetRegistry)
 
 return PresetRegistry.register("default", {
 	name = "Default",
-	state = {},
+	dynamicState = {},
 })

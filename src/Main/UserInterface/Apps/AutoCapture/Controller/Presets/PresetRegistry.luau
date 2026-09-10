@@ -24,7 +24,10 @@ export type StateSpec = {
 
 export type PresetSpec = {
 	name: string,
-	state: StateSpec?,
+	yaw: number?,
+	pitch: number?,
+	renderCF: CFrame?,
+	dynamicState: StateSpec?,
 }
 
 local presetByIndex = {}
