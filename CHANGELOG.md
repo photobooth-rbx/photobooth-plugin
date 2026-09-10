@@ -1,7 +1,7 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.10.1] - 2026/09/10
 - Fix waiting for all mesh vertices on capture all.
 - Fix auto capture mesh vertices toggle not working when switching models with the setting enabled.
 - Fix auto capture point cloud mesh edge case bounding box calculation.
