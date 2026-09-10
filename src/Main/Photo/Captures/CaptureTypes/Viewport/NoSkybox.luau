@@ -131,7 +131,17 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	end
 
 	if options.alphaBleed then
-		capture = errorWatch(Composers.alphaBleed(capture))
+
+		--- I dont think  we need the original image after we take a photo because Alpha bleed seems to
+		--- ^^^ return a new image for us anyway. I don't think you even use it for anything from waht I can see, its just
+		--- taking up memory. 
+		local og = capture
+		capture = errorWatch(Composers.alphaBleed(og)) 
+
+		trove:Add(function()
+			og:Destroy() 
+		end)
+
 	end
 
 	markComplete()
