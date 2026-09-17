@@ -69,7 +69,11 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 		camera.CFrame = renderCF
 		fogBackground:setMaterial(Enum.Material.SmoothPlastic)
-	elseif SceneControl.isGradedLightingRequired() or Lighting.ExposureCompensation ~= 0 then
+	elseif
+		SceneControl.isGradedLightingRequired()
+		or Lighting.ExposureCompensation ~= 0
+		or SceneControl.hasSpatialEffects()
+	then
 		SceneControl.yieldUntilNextFrame()
 		gradedOnBlack = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 		trove:Add(function()
@@ -78,6 +82,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	end
 
 	-- prepare for retro scene capturing
+	trove:Add(SceneControl.hideSpatialEffects())
 	trove:Add(SceneControl.applyRetroLighting())
 
 	if setAtmosphereHidden then
