@@ -9,7 +9,7 @@ local Trove = require(pluginRoot.Packages.Trove)
 local photoRoot = script:FindFirstAncestor("Photo")
 local UIHider = require(photoRoot.Tools.UIHider)
 
-local SPATIAL_EFFECT_CLASSES = { "BloomEffect", "SunRaysEffect", "BlurEffect", "DepthOfFieldEffect" }
+local SPATIAL_EFFECT_CLASSES = { "BloomEffect" } --"SunRaysEffect", "BlurEffect", "DepthOfFieldEffect" }
 
 local SceneControl = {}
 
