@@ -5,10 +5,43 @@ local WHITE = 0xFFFFFFFF
 local BLACK = 0xFF000000
 
 @native
+local function extractAlpha(whiteBuffer: buffer, blackBuffer: buffer, j: number)
+	if buffer.readu32(whiteBuffer, j + 0) == WHITE and buffer.readu32(blackBuffer, j + 0) == BLACK then
+		-- in both samples the pixels match their backgrounds perfectly
+		-- this means that this pixel is guaranteed to be a background pixel
+		return 0
+	end
+
+	local isNearMargin = true
+	for k = 0, 2 do
+		if math.abs(buffer.readu8(whiteBuffer, j + k) - buffer.readu8(blackBuffer, j + k)) > COMPARE_MARGIN then
+			isNearMargin = false
+			break
+		end
+	end
+
+	if isNearMargin then
+		return 1
+	end
+
+	-- the pixels differ between the two versions of the image
+	-- this means their must be some alpha we have to calculate
+	local maxAlpha = 0
+	for k = 0, 2 do
+		local alpha = (buffer.readu8(whiteBuffer, j + k) - buffer.readu8(blackBuffer, j + k) - 255) / -255
+		maxAlpha = math.max(maxAlpha, math.clamp(alpha, 0, 1))
+	end
+	return maxAlpha
+end
+
+@native
 local function worker(
 	rect: Rect,
 	onWhiteRetro: EditableImage,
 	onBlackRetro: EditableImage,
+
+	onWhiteSpatial: EditableImage?,
+	onBlackSpatial: EditableImage?,
 
 	subjectOnBlack: EditableImage?,
 	backgroundOnBlack: EditableImage?,
@@ -20,6 +53,9 @@ local function worker(
 
 	local whiteRetroBuffer = onWhiteRetro:ReadPixelsBuffer(rect.Min, rectSize)
 	local blackRetroBuffer = onBlackRetro:ReadPixelsBuffer(rect.Min, rectSize)
+
+	local whiteSpatialBuffer = if onWhiteSpatial then onWhiteSpatial:ReadPixelsBuffer(rect.Min, rectSize) else nil
+	local blackSpatialBuffer = if onBlackSpatial then onBlackSpatial:ReadPixelsBuffer(rect.Min, rectSize) else nil
 
 	local subjectBuffer = if subjectOnBlack
 		then subjectOnBlack:ReadPixelsBuffer(rect.Min, rectSize)
@@ -36,50 +72,26 @@ local function worker(
 	for i = 1, width * height do
 		local j = (i - 1) * 4
 
-		if buffer.readu32(whiteRetroBuffer, j + 0) == WHITE and buffer.readu32(blackRetroBuffer, j + 0) == BLACK then
-			-- in both samples the pixels match their backgrounds perfectly
-			-- this means that this pixel is guaranteed to be a background pixel
+		local pixelAlpha = extractAlpha(whiteRetroBuffer, blackRetroBuffer, j)
+
+		local outputAlpha = pixelAlpha
+		if whiteSpatialBuffer and blackSpatialBuffer and pixelAlpha < 1 then
+			local spatialAlpha = extractAlpha(whiteSpatialBuffer, blackSpatialBuffer, j)
+			if spatialAlpha > outputAlpha then
+				outputAlpha = spatialAlpha
+			end
+		end
+
+		if outputAlpha <= 0 then
 			buffer.writeu32(whiteRetroBuffer, j + 0, 0)
 			continue
 		end
 
-		local white = {
-			buffer.readu8(whiteRetroBuffer, j + 0),
-			buffer.readu8(whiteRetroBuffer, j + 1),
-			buffer.readu8(whiteRetroBuffer, j + 2),
-			buffer.readu8(whiteRetroBuffer, j + 3),
-		}
-
-		local black = {
-			buffer.readu8(blackRetroBuffer, j + 0),
-			buffer.readu8(blackRetroBuffer, j + 1),
-			buffer.readu8(blackRetroBuffer, j + 2),
-			buffer.readu8(blackRetroBuffer, j + 3),
-		}
-
-		local isNearMargin = (
-			math.abs(white[1] - black[1]) <= COMPARE_MARGIN
-			and math.abs(white[2] - black[2]) <= COMPARE_MARGIN
-			and math.abs(white[3] - black[3]) <= COMPARE_MARGIN
-		)
-
-		local pixelAlpha = 1
-		if not isNearMargin then
-			-- the pixels differ between the two versions of the image
-			-- this means their must be some alpha we have to calculate
-			local maxAlpha = 0
-			for k = 1, 3 do
-				local alpha = (white[k] - black[k] - 255) / -255
-				maxAlpha = math.max(maxAlpha, math.clamp(alpha, 0, 1))
-			end
-			pixelAlpha = maxAlpha
-		end
-
-		local rgba = { 0, 0, 0, pixelAlpha }
+		local rgba = { 0, 0, 0, outputAlpha }
 		for k = 0, 2 do
 			local bo = buffer.readu8(subjectBuffer, j + k) / 255
 			local bb = if backgroundBuffer then buffer.readu8(backgroundBuffer, j + k) / 255 else 0
-			rgba[k + 1] = math.clamp((bo - (1 - pixelAlpha) * bb) / pixelAlpha, 0, 1)
+			rgba[k + 1] = math.clamp((bo - (1 - pixelAlpha) * bb) / outputAlpha, 0, 1)
 		end
 
 		-- color correction

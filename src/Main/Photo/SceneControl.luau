@@ -220,17 +220,15 @@ function SceneControl.hasSpatialEffects()
 	return false
 end
 
-function SceneControl.hideSpatialEffects()
+function SceneControl.getSpatialEffectHider()
 	local effects = getSpatialEffects()
-	for _, effect in effects do
-		effect.Parent = nil
-	end
 
-	return SceneControl.once(function()
+	return function(hidden: boolean)
+		local parent = if hidden then nil else Lighting
 		for _, effect in effects do
-			effect.Parent = Lighting
+			effect.Parent = parent
 		end
-	end)
+	end
 end
 
 function SceneControl.getAppliedColorCorrectionCopy()

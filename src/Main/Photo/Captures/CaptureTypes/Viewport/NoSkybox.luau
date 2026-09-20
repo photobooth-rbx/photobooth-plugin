@@ -30,6 +30,12 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 		fogBackground:Destroy()
 	end))
 
+	local hasSpatialEffects = SceneControl.hasSpatialEffects()
+	local setSpatialEffectsHidden = SceneControl.getSpatialEffectHider()
+	trove:Add(function()
+		setSpatialEffectsHidden(false)
+	end)
+
 	local gradedOnBlack
 	local atmoOnBlackSubject
 	local atmoOnBlackBackground
@@ -69,11 +75,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 		camera.CFrame = renderCF
 		fogBackground:setMaterial(Enum.Material.SmoothPlastic)
-	elseif
-		SceneControl.isGradedLightingRequired()
-		or Lighting.ExposureCompensation ~= 0
-		or SceneControl.hasSpatialEffects()
-	then
+	elseif SceneControl.isGradedLightingRequired() or Lighting.ExposureCompensation ~= 0 or hasSpatialEffects then
 		SceneControl.yieldUntilNextFrame()
 		gradedOnBlack = Screenshot.rect(options.rect, isFullscreen, isEmulator)
 		trove:Add(function()
@@ -82,13 +84,24 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	end
 
 	-- prepare for retro scene capturing
-	trove:Add(SceneControl.hideSpatialEffects())
 	trove:Add(SceneControl.applyRetroLighting())
 
 	if setAtmosphereHidden then
 		setAtmosphereHidden(true)
 		task.wait(0.5)
 	end
+
+	-- capture on retro black w/ the spatial effects still applied
+	local onBlackRetroSpatial
+	if hasSpatialEffects then
+		SceneControl.yieldUntilNextFrame()
+		onBlackRetroSpatial = Screenshot.rect(options.rect, isFullscreen, isEmulator)
+		trove:Add(function()
+			onBlackRetroSpatial:Destroy()
+		end)
+	end
+
+	setSpatialEffectsHidden(true)
 
 	-- capture on retro black
 	SceneControl.yieldUntilNextFrame()
@@ -110,6 +123,20 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 		onWhiteRetro:Destroy()
 	end)
 
+	-- capture on retro white w/ the spatial effects re-applied
+	local onWhiteRetroSpatial
+	if hasSpatialEffects then
+		setSpatialEffectsHidden(false)
+
+		SceneControl.yieldUntilNextFrame()
+		onWhiteRetroSpatial = Screenshot.rect(options.rect, isFullscreen, isEmulator)
+		trove:Add(function()
+			onWhiteRetroSpatial:Destroy()
+		end)
+
+		setSpatialEffectsHidden(true)
+	end
+
 	undoEmulator()
 	unhideClouds()
 	undoColorCorrection()
@@ -122,12 +149,24 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	local capture
 	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
 	if not setAtmosphereHidden then
-		capture = errorWatch(Composers.reverseBlend(onWhiteRetro, onBlackRetro, gradedOnBlack, nil, colorCorrection))
+		capture = errorWatch(
+			Composers.reverseBlend(
+				onWhiteRetro,
+				onBlackRetro,
+				onWhiteRetroSpatial,
+				onBlackRetroSpatial,
+				gradedOnBlack,
+				nil,
+				colorCorrection
+			)
+		)
 	else
 		capture = errorWatch(
 			Composers.reverseBlend(
 				onWhiteRetro,
 				onBlackRetro,
+				onWhiteRetroSpatial,
+				onBlackRetroSpatial,
 				atmoOnBlackSubject,
 				atmoOnBlackBackground,
 				colorCorrection
