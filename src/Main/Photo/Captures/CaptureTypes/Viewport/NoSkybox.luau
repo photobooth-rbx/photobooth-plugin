@@ -12,6 +12,8 @@ local SceneControl = require(photoRoot.SceneControl)
 local capturesRoot = script:FindFirstAncestor("Captures")
 local Composers = require(capturesRoot.Composers)
 
+local ATMOSPHERE_WAIT = 0.5
+
 local function operation(options: Types.CaptureViewportOptions, isFullscreen: boolean?, trove: Trove.Trove)
 	local isEmulator, undoEmulator = SceneControl.emulatorEnforcement()
 	trove:Add(undoEmulator)
@@ -88,7 +90,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 	if setAtmosphereHidden then
 		setAtmosphereHidden(true)
-		task.wait(0.5)
+		task.wait(ATMOSPHERE_WAIT)
 	end
 
 	-- capture on retro black w/ the spatial effects still applied
@@ -114,7 +116,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	fogBackground:setColor(Color3.new(1, 1, 1))
 
 	if setAtmosphereHidden then
-		task.wait(0.5)
+		task.wait(ATMOSPHERE_WAIT)
 	end
 
 	SceneControl.yieldUntilNextFrame()
@@ -143,7 +145,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 
 	if setAtmosphereHidden then
 		setAtmosphereHidden(false)
-		task.wait(0.5)
+		task.wait(ATMOSPHERE_WAIT)
 	end
 
 	local capture
