@@ -1,7 +1,7 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.10.2] - 2026/09/21
 - Fix inwards bloom causing unintended transparency on capture subjects.
 
 ### [2.10.1] - 2026/09/10
