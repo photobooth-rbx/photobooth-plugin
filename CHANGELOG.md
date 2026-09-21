@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Fix inwards bloom causing unintended transparency on capture subjects.
+
 ### [2.10.1] - 2026/09/10
 - Fix waiting for all mesh vertices on capture all.
 - Fix auto capture mesh vertices toggle not working when switching models with the setting enabled.

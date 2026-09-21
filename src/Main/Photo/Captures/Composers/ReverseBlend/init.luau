@@ -15,6 +15,9 @@ local function reverseBlend(
 	onWhiteRetro: EditableImage,
 	onBlackRetro: EditableImage,
 
+	onWhiteSpatial: EditableImage?,
+	onBlackSpatial: EditableImage?,
+
 	subjectOnBlack: EditableImage?,
 	backgroundOnBlack: EditableImage?,
 
@@ -28,7 +31,16 @@ local function reverseBlend(
 	local sourceRect = Rect.new(0, 0, width, height)
 	local rows = RectSlicer.rows(sourceRect, scheduler:getActorCount())
 	for _, rowRect in rows do
-		scheduler:schedule(rowRect, onWhiteRetro, onBlackRetro, subjectOnBlack, backgroundOnBlack, colorCorrection)
+		scheduler:schedule(
+			rowRect,
+			onWhiteRetro,
+			onBlackRetro,
+			onWhiteSpatial,
+			onBlackSpatial,
+			subjectOnBlack,
+			backgroundOnBlack,
+			colorCorrection
+		)
 	end
 
 	local results = scheduler:workAsync()

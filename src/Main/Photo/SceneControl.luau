@@ -9,9 +9,24 @@ local Trove = require(pluginRoot.Packages.Trove)
 local photoRoot = script:FindFirstAncestor("Photo")
 local UIHider = require(photoRoot.Tools.UIHider)
 
+local SPATIAL_EFFECT_CLASSES = { "BloomEffect" } --"SunRaysEffect", "BlurEffect", "DepthOfFieldEffect" }
+
 local SceneControl = {}
 
 -- Private
+
+local function getSpatialEffects()
+	local effects: { PostEffect } = {}
+	for _, child in Lighting:GetChildren() do
+		for _, className in SPATIAL_EFFECT_CLASSES do
+			if child:IsA(className) then
+				table.insert(effects, child :: PostEffect)
+				break
+			end
+		end
+	end
+	return effects
+end
 
 local function hideMouse()
 	local trove = Trove.new()
@@ -194,6 +209,26 @@ function SceneControl.hideColorCorrections()
 			effect.Parent = Lighting
 		end
 	end)
+end
+
+function SceneControl.hasSpatialEffects()
+	for _, effect in getSpatialEffects() do
+		if effect.Enabled then
+			return true
+		end
+	end
+	return false
+end
+
+function SceneControl.getSpatialEffectHider()
+	local effects = getSpatialEffects()
+
+	return function(hidden: boolean)
+		local parent = if hidden then nil else Lighting
+		for _, effect in effects do
+			effect.Parent = parent
+		end
+	end
 end
 
 function SceneControl.getAppliedColorCorrectionCopy()
