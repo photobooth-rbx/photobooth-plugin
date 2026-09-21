@@ -72,14 +72,10 @@ local function worker(
 	for i = 1, width * height do
 		local j = (i - 1) * 4
 
-		local pixelAlpha = extractAlpha(whiteRetroBuffer, blackRetroBuffer, j)
-
-		local outputAlpha = pixelAlpha
-		if whiteSpatialBuffer and blackSpatialBuffer and pixelAlpha < 1 then
+		local outputAlpha = extractAlpha(whiteRetroBuffer, blackRetroBuffer, j)
+		if whiteSpatialBuffer and blackSpatialBuffer and outputAlpha < 1 then
 			local spatialAlpha = extractAlpha(whiteSpatialBuffer, blackSpatialBuffer, j)
-			if spatialAlpha > outputAlpha then
-				outputAlpha = spatialAlpha
-			end
+			outputAlpha = math.max(outputAlpha, spatialAlpha)
 		end
 
 		if outputAlpha <= 0 then
@@ -91,7 +87,7 @@ local function worker(
 		for k = 0, 2 do
 			local bo = buffer.readu8(subjectBuffer, j + k) / 255
 			local bb = if backgroundBuffer then buffer.readu8(backgroundBuffer, j + k) / 255 else 0
-			rgba[k + 1] = math.clamp((bo - (1 - pixelAlpha) * bb) / outputAlpha, 0, 1)
+			rgba[k + 1] = math.clamp((bo - (1 - outputAlpha) * bb) / outputAlpha, 0, 1)
 		end
 
 		-- color correction
