@@ -26,6 +26,7 @@ local State = {}
 local defaultSave = SaveVersions.default()
 State.settings = ObservableValue.new(defaultSave.settings)
 State.postProcessingPresets = ObservableValue.new(defaultSave.postProcessingPresets)
+State.autoCapturePresets = ObservableValue.new(defaultSave.autoCapturePresets)
 
 State.temporary = ObservableValue.new(table.clone(DEFAULT_TEMPORARY))
 
@@ -41,6 +42,9 @@ function State.initPluginSaving(plugin: Plugin)
 
 			assert(pluginLoaded.postProcessingPresets, "Failed to load post-processing presets.")
 			State.postProcessingPresets:set(pluginLoaded.postProcessingPresets)
+
+			assert(pluginLoaded.autoCapturePresets, "Failed to load auto capture presets.")
+			State.autoCapturePresets:set(pluginLoaded.autoCapturePresets)
 		end
 	end)
 
@@ -53,6 +57,7 @@ function State.initPluginSaving(plugin: Plugin)
 		local pluginSave = SaveVersions.save({
 			settings = State.settings:get(),
 			postProcessingPresets = State.postProcessingPresets:get(),
+			autoCapturePresets = State.autoCapturePresets:get(),
 		})
 
 		local encoded = EncodingService:Base64Encode(Bufferize.encode(pluginSave))

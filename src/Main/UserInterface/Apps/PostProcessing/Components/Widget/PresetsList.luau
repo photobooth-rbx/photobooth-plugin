@@ -9,9 +9,8 @@ local Controller = require(postProcessingRoot.Controller)
 
 local uiRoot = script:FindFirstAncestor("UserInterface")
 local LucideIconButton = require(uiRoot.Components.LucideIconButton)
-
-local PresetDialog = require(script.PresetDialog)
-local ConfirmDialog = require(script.ConfirmDialog)
+local PresetDialog = require(uiRoot.Components.PresetDialog)
+local ConfirmDialog = require(uiRoot.Components.ConfirmDialog)
 
 local SCROLL_GRADIENT_INSET_HEIGHT = 22
 local ADD_EFFECT_BUTTON_HEIGHT = 32
