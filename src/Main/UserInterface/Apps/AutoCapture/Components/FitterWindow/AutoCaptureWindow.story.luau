@@ -68,6 +68,8 @@ local function Component(props: { Size: UDim2, Disabled: boolean? })
 			PaddingRight = padding,
 			PaddingVisible = true,
 
+			Offset = Vector2.new(20, 20),
+
 			AnimationTrack = animationTrack,
 
 			OnCaptureRectChanged = function(_rect) end,

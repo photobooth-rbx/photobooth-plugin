@@ -6,6 +6,7 @@ local uiRoot = script:FindFirstAncestor("UserInterface")
 local Hooks = require(uiRoot.Hooks)
 
 local PlaybackBar = require(script.PlaybackBar)
+local DashedStroke = require(script.DashedStroke)
 
 export type Props = {
 	ScaleOS: Vector2,
@@ -18,6 +19,8 @@ export type Props = {
 	PaddingRight: number,
 	PaddingTop: number,
 	PaddingBottom: number,
+
+	Offset: Vector2?,
 
 	AnimationTrack: AnimationTrack?,
 
@@ -39,6 +42,7 @@ local function Fitter(props: Props)
 	local scaledResolutionRect =
 		Rect.new(viewportAbsCenter - (scaledResolution / 2), viewportAbsCenter + (scaledResolution / 2))
 
+	local offset = not props.IsFullScreen and props.Offset or Vector2.zero
 	local captureRect = if props.IsFullScreen then viewportRect else scaledResolutionRect
 
 	React.useEffect(function()
@@ -61,23 +65,14 @@ local function Fitter(props: Props)
 					math.round(scaledResolutionRect.Height)
 				),
 		}, {
-			UIStroke = React.createElement("UIStroke", {
+			Stroke = React.createElement(DashedStroke, {
 				Thickness = 2,
-				Transparency = 0,
-				Color = theme:GetColor(
-					Enum.StudioStyleGuideColor.InputFieldBorder,
-					Enum.StudioStyleGuideModifier.Selected
-				),
-				BorderStrokePosition = if props.IsFullScreen
-					then Enum.BorderStrokePosition.Inner
-					else Enum.BorderStrokePosition.Outer,
+				Transparency = if offset:Dot(offset) == 0 then 1 else 0.3,
+				DashLength = 8,
+				GapLength = 6,
+				Color = theme:GetColor(Enum.StudioStyleGuideColor.WarningText),
+				BorderStrokePosition = Enum.BorderStrokePosition.Outer,
 				ZIndex = 2,
-			}),
-
-			UIStrokeBlinder = React.createElement("UIStroke", {
-				Thickness = 100_000,
-				Transparency = 0.7,
-				Color = Color3.new(0, 0, 0),
 			}),
 
 			Padding = React.createElement("CanvasGroup", {
@@ -115,6 +110,38 @@ local function Fitter(props: Props)
 					BackgroundTransparency = 0,
 					BorderSizePixel = 0,
 				}),
+			}),
+		}),
+
+		TrueFocus = React.createElement("Frame", {
+			ZIndex = 2,
+			BackgroundTransparency = 1,
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, offset.X, 0.5, offset.Y),
+			Size = if props.IsFullScreen
+				then UDim2.fromScale(1, 1)
+				else UDim2.fromOffset(
+					math.round(scaledResolutionRect.Width),
+					math.round(scaledResolutionRect.Height)
+				),
+		}, {
+			UIStroke = React.createElement("UIStroke", {
+				Thickness = 2,
+				Transparency = 0.3,
+				Color = theme:GetColor(
+					Enum.StudioStyleGuideColor.InputFieldBorder,
+					Enum.StudioStyleGuideModifier.Selected
+				),
+				BorderStrokePosition = if props.IsFullScreen
+					then Enum.BorderStrokePosition.Inner
+					else Enum.BorderStrokePosition.Outer,
+				ZIndex = 2,
+			}),
+
+			UIStrokeBlinder = React.createElement("UIStroke", {
+				Thickness = 100_000,
+				Transparency = 0.7,
+				Color = Color3.new(0, 0, 0),
 			}),
 
 			AnimationBar = React.createElement(PlaybackBar, {

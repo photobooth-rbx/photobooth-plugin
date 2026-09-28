@@ -263,6 +263,8 @@ local function appComponent(props: { ScaleOS: Vector2, Origin: Vector3 })
 					Resolution = Vector2.new(math.max(1, dynamic.captureSize.X), math.max(1, dynamic.captureSize.Y)),
 					AnimationTrack = static.animationTrack,
 
+					Offset = Vector2.zero,
+
 					PaddingVisible = dynamic.fitType ~= "Free" and dynamic.paddingVisible,
 					PaddingTop = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingTop,
 					PaddingBottom = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingBottom,
