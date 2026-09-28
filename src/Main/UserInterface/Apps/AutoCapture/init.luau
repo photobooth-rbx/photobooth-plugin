@@ -96,7 +96,7 @@ local function appComponent(props: { ScaleOS: Vector2, Origin: Vector3 })
 	local static = controller.staticObservableState:use()
 	local dynamic = controller.dynamicObservableState:use()
 
-	local captureRect, setCaptureRect = React.useState(Rect.new(0, 0, 0, 0))
+	local focusRect, setFocusRect = React.useState(Rect.new(0, 0, 0, 0))
 	local cancelledRef = React.useRef(false)
 
 	React.useEffect(function()
@@ -246,7 +246,7 @@ local function appComponent(props: { ScaleOS: Vector2, Origin: Vector3 })
 			end,
 
 			Controller = controller,
-			CaptureRect = captureRect,
+			FocusRect = focusRect,
 		}),
 
 		FitterWindow = ReactRoblox.createPortal(
@@ -263,7 +263,7 @@ local function appComponent(props: { ScaleOS: Vector2, Origin: Vector3 })
 					Resolution = Vector2.new(math.max(1, dynamic.captureSize.X), math.max(1, dynamic.captureSize.Y)),
 					AnimationTrack = static.animationTrack,
 
-					Offset = Vector2.zero,
+					FocusOffset = if dynamic.isFullScreen then Vector2.zero else dynamic.focusOffset,
 
 					PaddingVisible = dynamic.fitType ~= "Free" and dynamic.paddingVisible,
 					PaddingTop = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingTop,
@@ -271,9 +271,9 @@ local function appComponent(props: { ScaleOS: Vector2, Origin: Vector3 })
 					PaddingLeft = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingLeft,
 					PaddingRight = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingRight,
 
-					OnCaptureRectChanged = function(newRect)
-						controller:setCaptureRect(newRect)
-						setCaptureRect(newRect)
+					OnFocusRectChanged = function(newRect)
+						controller:setFocusRect(newRect)
+						setFocusRect(newRect)
 					end,
 				}),
 			}),

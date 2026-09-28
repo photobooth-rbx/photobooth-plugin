@@ -13,7 +13,7 @@ export type Props = {
 	Position: UDim2?,
 
 	Controller: Controller.AutoCaptureController,
-	CaptureRect: Rect,
+	FocusRect: Rect,
 
 	LayoutOrder: number?,
 	Disabled: boolean?,
@@ -147,7 +147,7 @@ local function Properties(props: Props, ref: any)
 				FieldName = "Capture Size",
 
 				Value = if dynamic.isFullScreen
-					then Vector2.new(props.CaptureRect.Width, props.CaptureRect.Height)
+					then Vector2.new(props.FocusRect.Width, props.FocusRect.Height)
 					else dynamic.captureSize,
 				OnValueSubmitted = function(newValue)
 					if not dynamic.isFullScreen then
@@ -160,6 +160,23 @@ local function Properties(props: Props, ref: any)
 
 				Disabled = if dynamic.isFullScreen then true else props.Disabled,
 				LayoutOrder = 4,
+			}),
+
+			FocusOffset = React.createElement(StudioProperties.Vector2, {
+				FieldName = "Capture Offset",
+
+				Value = if dynamic.isFullScreen then Vector2.zero else dynamic.focusOffset,
+				OnValueSubmitted = function(newValue)
+					if not dynamic.isFullScreen then
+						props.Controller.dynamicObservableState:update()(function(state)
+							state.focusOffset = newValue
+							return state
+						end)
+					end
+				end,
+
+				Disabled = if dynamic.isFullScreen then true else props.Disabled,
+				LayoutOrder = 5,
 			}),
 		}),
 

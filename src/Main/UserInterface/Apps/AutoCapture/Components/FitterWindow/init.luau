@@ -20,11 +20,11 @@ export type Props = {
 	PaddingTop: number,
 	PaddingBottom: number,
 
-	Offset: Vector2?,
+	FocusOffset: Vector2?,
 
 	AnimationTrack: AnimationTrack?,
 
-	OnCaptureRectChanged: (Rect) -> (),
+	OnFocusRectChanged: (Rect) -> (),
 
 	Disabled: boolean?,
 }
@@ -42,12 +42,12 @@ local function Fitter(props: Props)
 	local scaledResolutionRect =
 		Rect.new(viewportAbsCenter - (scaledResolution / 2), viewportAbsCenter + (scaledResolution / 2))
 
-	local offset = not props.IsFullScreen and props.Offset or Vector2.zero
-	local captureRect = if props.IsFullScreen then viewportRect else scaledResolutionRect
+	local focusOffset = not props.IsFullScreen and props.FocusOffset or Vector2.zero
+	local focusRect = if props.IsFullScreen then viewportRect else scaledResolutionRect
 
 	React.useEffect(function()
-		props.OnCaptureRectChanged(captureRect)
-	end, { captureRect })
+		props.OnFocusRectChanged(focusRect)
+	end, { focusRect })
 
 	return React.createElement("Frame", {
 		BackgroundTransparency = 1,
@@ -65,9 +65,9 @@ local function Fitter(props: Props)
 					math.round(scaledResolutionRect.Height)
 				),
 		}, {
-			Stroke = React.createElement(DashedStroke, {
+			DashedStroke = React.createElement(DashedStroke, {
 				Thickness = 2,
-				Transparency = if offset:Dot(offset) == 0 then 1 else 0.3,
+				Transparency = if focusOffset:Dot(focusOffset) == 0 then 1 else 0.3,
 				DashLength = 8,
 				GapLength = 6,
 				Color = theme:GetColor(Enum.StudioStyleGuideColor.WarningText),
@@ -113,11 +113,11 @@ local function Fitter(props: Props)
 			}),
 		}),
 
-		TrueFocus = React.createElement("Frame", {
+		CaptureBox = React.createElement("Frame", {
 			ZIndex = 2,
 			BackgroundTransparency = 1,
 			AnchorPoint = Vector2.new(0.5, 0.5),
-			Position = UDim2.new(0.5, offset.X, 0.5, offset.Y),
+			Position = UDim2.new(0.5, focusOffset.X, 0.5, focusOffset.Y),
 			Size = if props.IsFullScreen
 				then UDim2.fromScale(1, 1)
 				else UDim2.fromOffset(

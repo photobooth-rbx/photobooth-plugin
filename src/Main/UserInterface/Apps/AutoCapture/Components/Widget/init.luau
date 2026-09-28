@@ -27,7 +27,7 @@ export type Props = {
 	OnListElementSelected: (ListElement?) -> (),
 	OnListElementRemoved: (ListElement) -> (),
 	Controller: Controller.AutoCaptureController,
-	CaptureRect: Rect,
+	FocusRect: Rect,
 	Disabled: boolean?,
 }
 
@@ -78,7 +78,7 @@ local function Widget(props: Props)
 
 			Properties = React.createElement(Properties, {
 				Controller = props.Controller,
-				CaptureRect = props.CaptureRect,
+				FocusRect = props.FocusRect,
 				Disabled = disabled,
 				LayoutOrder = 1,
 				ref = propertiesRef,

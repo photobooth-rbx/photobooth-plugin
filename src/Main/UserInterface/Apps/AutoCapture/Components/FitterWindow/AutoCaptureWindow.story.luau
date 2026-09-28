@@ -68,11 +68,11 @@ local function Component(props: { Size: UDim2, Disabled: boolean? })
 			PaddingRight = padding,
 			PaddingVisible = true,
 
-			Offset = Vector2.new(20, 20),
+			FocusOffset = Vector2.new(0, 0),
 
 			AnimationTrack = animationTrack,
 
-			OnCaptureRectChanged = function(_rect) end,
+			OnFocusRectChanged = function(_rect) end,
 
 			Disabled = props.Disabled,
 		}),

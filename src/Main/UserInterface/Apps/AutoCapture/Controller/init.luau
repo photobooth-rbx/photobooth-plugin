@@ -77,6 +77,8 @@ local function createDynamicObservableState()
 		tryUseMeshVertices = false,
 		distanceScale = 1,
 
+		focusOffset = Vector2.zero,
+
 		paddingVisible = true,
 		paddingUniform = true,
 		padding = 0,
@@ -122,7 +124,7 @@ type PVState = {
 
 export type AutoCaptureController = typeof(setmetatable(
 	{} :: {
-		captureRect: Rect,
+		focusRect: Rect,
 		isCapturing: boolean,
 		origin: Vector3,
 
@@ -146,7 +148,7 @@ export type AutoCaptureController = typeof(setmetatable(
 function AutoCaptureControllerStatic.new()
 	local self = setmetatable({}, AutoCaptureControllerClass) :: AutoCaptureController
 
-	self.captureRect = Rect.new(0, 0, 0, 0)
+	self.focusRect = Rect.new(0, 0, 0, 0)
 	self.isCapturing = false
 	self.origin = Vector3.zero
 
@@ -243,8 +245,17 @@ function AutoCaptureControllerClass._getPaddedRect(self: AutoCaptureController)
 	local left = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingLeft
 	local right = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingRight
 
-	local min = self.captureRect.Min + Vector2.new(left, top)
-	local max = self.captureRect.Max - Vector2.new(right, bottom)
+	local min = self.focusRect.Min + Vector2.new(left, top)
+	local max = self.focusRect.Max - Vector2.new(right, bottom)
+
+	return Rect.new(min, max)
+end
+
+function AutoCaptureControllerClass._getOffsetRect(self: AutoCaptureController)
+	local dynamic = self.dynamicObservableState:get()
+
+	local min = self.focusRect.Min + dynamic.focusOffset
+	local max = self.focusRect.Max + dynamic.focusOffset
 
 	return Rect.new(min, max)
 end
@@ -668,8 +679,8 @@ function AutoCaptureControllerClass._watchIsSynced(self: AutoCaptureController)
 	end
 end
 
-function AutoCaptureControllerClass.setCaptureRect(self: AutoCaptureController, rect: Rect)
-	self.captureRect = rect
+function AutoCaptureControllerClass.setFocusRect(self: AutoCaptureController, rect: Rect)
+	self.focusRect = rect
 end
 
 function AutoCaptureControllerClass.setOrigin(self: AutoCaptureController, origin: Vector3)
@@ -804,9 +815,10 @@ function AutoCaptureControllerClass.capture(self: AutoCaptureController, scaleOS
 	local camera = workspace.CurrentCamera
 	local viewportSize = camera.ViewportSize
 
+	local offsetRect = self:_getOffsetRect()
 	local viewportDelta = (viewportSize * scaleOS) - viewportSize
-	local absPosition = self.captureRect.Min + viewportDelta / 2
-	local absSize = self.captureRect.Max - self.captureRect.Min
+	local absPosition = offsetRect.Min + viewportDelta / 2
+	local absSize = offsetRect.Max - offsetRect.Min
 
 	local center = absPosition + absSize / 2
 	local offset = (absSize / 2) * scaleOS
