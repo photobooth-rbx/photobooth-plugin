@@ -1,7 +1,7 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.11.0] - 2026/09/29
 - Add capture offset to auto-capture. This allows shifting the lens without adjusting the focus bounds.
 
 ### [2.10.2] - 2026/09/21
