@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Fix fallback auto-capture orbital CFrame if no parts present.
+
 ### [2.11.1] - 2026/09/30
 - Fix auto-capture issue where orbital camera type was not properly centering when `photobooth:ignore` tag was used.
 
