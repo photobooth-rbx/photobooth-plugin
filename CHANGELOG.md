@@ -1,6 +1,9 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Unreleased
+- Fix auto-capture issue where orbital camera type was not properly centering when `photobooth:ignore` tag was used.
+
 ### [2.11.0] - 2026/09/29
 - Add capture offset to auto-capture. This allows shifting the lens without adjusting the focus bounds.
 
