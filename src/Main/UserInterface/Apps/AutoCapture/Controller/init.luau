@@ -367,11 +367,12 @@ function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 		local sinFov2 = math.sin(scaledFov2 * math.min(1, aspect))
 
 		local filteredParts = AABBHelper.getFilteredParts(pvInstance, AABBHelper.ignoreTagFilter)
-		local _bboxCF, bboxSize = AABBHelper.getBoundingBox(pvInstance:GetPivot(), filteredParts)
+		local bboxCF, bboxSize = AABBHelper.getBoundingBox(pvInstance:GetPivot(), filteredParts)
 		local radius = bboxSize.Magnitude / 2
 
+		local centerCF = if #filteredParts > 0 then CFrame.new(bboxCF.Position) else self.origin
 		local distance = (radius / sinFov2) * dynamic.distanceScale
-		local cameraCF = CFrame.new(self.origin) * rotation * CFrame.new(0, 0, distance)
+		local cameraCF = centerCF * rotation * CFrame.new(0, 0, distance)
 
 		local distortedCF = cameraCF
 			* distort(camera, {
