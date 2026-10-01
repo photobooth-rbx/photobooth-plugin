@@ -104,6 +104,10 @@ local function appComponent(props: { ScaleOS: Vector2, Origin: Vector3 })
 	end, { controller :: any, props.Origin :: any })
 
 	React.useEffect(function()
+		controller:setScaleOS(props.ScaleOS)
+	end, { controller :: any, props.ScaleOS :: any })
+
+	React.useEffect(function()
 		return function()
 			controller:unfocus()
 
