@@ -125,6 +125,7 @@ type PVState = {
 export type AutoCaptureController = typeof(setmetatable(
 	{} :: {
 		focusRect: Rect,
+		scaleOS: Vector2,
 		isCapturing: boolean,
 		origin: Vector3,
 
@@ -149,6 +150,7 @@ function AutoCaptureControllerStatic.new()
 	local self = setmetatable({}, AutoCaptureControllerClass) :: AutoCaptureController
 
 	self.focusRect = Rect.new(0, 0, 0, 0)
+	self.scaleOS = Vector2.one
 	self.isCapturing = false
 	self.origin = Vector3.zero
 
@@ -245,8 +247,9 @@ function AutoCaptureControllerClass._getPaddedRect(self: AutoCaptureController)
 	local left = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingLeft
 	local right = if dynamic.paddingUniform then dynamic.padding else dynamic.paddingRight
 
-	local min = self.focusRect.Min + Vector2.new(left, top)
-	local max = self.focusRect.Max - Vector2.new(right, bottom)
+	-- focusRect is in viewport space while padding is in real (OS scaled) space
+	local min = self.focusRect.Min + Vector2.new(left, top) / self.scaleOS
+	local max = self.focusRect.Max - Vector2.new(right, bottom) / self.scaleOS
 
 	return Rect.new(min, max)
 end
@@ -684,6 +687,10 @@ end
 
 function AutoCaptureControllerClass.setFocusRect(self: AutoCaptureController, rect: Rect)
 	self.focusRect = rect
+end
+
+function AutoCaptureControllerClass.setScaleOS(self: AutoCaptureController, scaleOS: Vector2)
+	self.scaleOS = scaleOS
 end
 
 function AutoCaptureControllerClass.setOrigin(self: AutoCaptureController, origin: Vector3)
