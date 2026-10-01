@@ -251,13 +251,15 @@ function AutoCaptureControllerClass._getPaddedRect(self: AutoCaptureController)
 	return Rect.new(min, max)
 end
 
-function AutoCaptureControllerClass._getOffsetRect(self: AutoCaptureController)
+function AutoCaptureControllerClass._getScaledOffsetRect(self: AutoCaptureController, scaleOS: Vector2)
 	local dynamic = self.dynamicObservableState:get()
 
-	local min = self.focusRect.Min + dynamic.focusOffset
-	local max = self.focusRect.Max + dynamic.focusOffset
+	-- focusRect is in viewport space while focusOffset is in real (OS scaled) space
+	local focusOffset = if dynamic.isFullScreen then Vector2.zero else dynamic.focusOffset
+	local center = (self.focusRect.Min + self.focusRect.Max) / 2 * scaleOS + focusOffset
+	local offset = (self.focusRect.Max - self.focusRect.Min) / 2 * scaleOS
 
-	return Rect.new(min, max)
+	return Rect.new(center - offset, center + offset)
 end
 
 function AutoCaptureControllerClass._listenOrbitInput(self: AutoCaptureController)
@@ -813,17 +815,7 @@ function AutoCaptureControllerClass.capture(self: AutoCaptureController, scaleOS
 
 	self.isCapturing = true
 
-	local camera = workspace.CurrentCamera
-	local viewportSize = camera.ViewportSize
-
-	local offsetRect = self:_getOffsetRect()
-	local viewportDelta = (viewportSize * scaleOS) - viewportSize
-	local absPosition = offsetRect.Min + viewportDelta / 2
-	local absSize = offsetRect.Max - offsetRect.Min
-
-	local center = absPosition + absSize / 2
-	local offset = (absSize / 2) * scaleOS
-	local scaledRect = RenderRect.fromRect(Rect.new(center - offset, center + offset))
+	local scaledRect = RenderRect.fromRect(self:_getScaledOffsetRect(scaleOS))
 
 	local dynamic = self.dynamicObservableState:get()
 	local result = Photo.captureViewport({

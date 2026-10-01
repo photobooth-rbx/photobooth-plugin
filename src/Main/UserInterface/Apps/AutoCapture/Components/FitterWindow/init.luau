@@ -43,6 +43,7 @@ local function Fitter(props: Props)
 		Rect.new(viewportAbsCenter - (scaledResolution / 2), viewportAbsCenter + (scaledResolution / 2))
 
 	local focusOffset = not props.IsFullScreen and props.FocusOffset or Vector2.zero
+	local scaledFocusOffset = focusOffset / props.ScaleOS
 	local focusRect = if props.IsFullScreen then viewportRect else scaledResolutionRect
 
 	React.useEffect(function()
@@ -117,7 +118,7 @@ local function Fitter(props: Props)
 			ZIndex = 2,
 			BackgroundTransparency = 1,
 			AnchorPoint = Vector2.new(0.5, 0.5),
-			Position = UDim2.new(0.5, focusOffset.X, 0.5, focusOffset.Y),
+			Position = UDim2.new(0.5, scaledFocusOffset.X, 0.5, scaledFocusOffset.Y),
 			Size = if props.IsFullScreen
 				then UDim2.fromScale(1, 1)
 				else UDim2.fromOffset(
