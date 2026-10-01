@@ -123,6 +123,8 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 		alphaBleed = StateManager.settings:get().alphaBleedingEnabled,
 	}, options)
 
+	-- create capture trove before the delay to lock out racing capture attempts
+	local trove = createIsCapturingTrove()
 	local processor = Captures.Viewport.Processors[options.type]
 
 	if options.delay and options.delay > 0 then
@@ -130,16 +132,17 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 	end
 
 	Blackout.setDisabled("capturing", true)
+	trove:Add(function()
+		Blackout.setDisabled("capturing", false)
+	end)
 
 	local results: { EditableImage }
-	local trove = createIsCapturingTrove()
 	local isFullscreen = Screenshot.isFullscreenRect(options.rect)
 	local success, err = SceneControl.freeze(true, function()
 		results = processor(options, isFullscreen, trove)
 	end)
 
 	trove:Destroy()
-	Blackout.setDisabled("capturing", false)
 
 	if not success then
 		if err then
