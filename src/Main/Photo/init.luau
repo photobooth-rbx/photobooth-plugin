@@ -123,11 +123,9 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 		alphaBleed = StateManager.settings:get().alphaBleedingEnabled,
 	}, options)
 
-	local processor = Captures.Viewport.Processors[options.type]
-	---/ I moved this before the delay because a delayed capture could yeild
-	---/ before acquiring the capture lock, if another capture started while this was happening
-	---/ the blackout state would get corrupted.
+	-- create capture trove before the delay to lock out racing capture attempts
 	local trove = createIsCapturingTrove()
+	local processor = Captures.Viewport.Processors[options.type]
 
 	if options.delay and options.delay > 0 then
 		task.wait(options.delay)
