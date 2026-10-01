@@ -4,6 +4,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Unreleased
 - Fix auto capture padding to account for OS scale.
 - Fix auto capture offset to account for OS scale.
+- Fix potential race condition when capture delay is greater than zero (thanks @\akoibot8-max).
 
 ### [2.11.2] - 2026/09/30
 - Fix fallback auto-capture orbital CFrame if no parts present.
