@@ -1,7 +1,7 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.11.3] - 2026/10/01
 - Fix auto capture padding to account for OS scale.
 - Fix auto capture offset to account for OS scale.
 - Fix potential race condition when capture delay is greater than zero (thanks @\akoibot8-max).
