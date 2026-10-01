@@ -135,8 +135,6 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 
 	Blackout.setDisabled("capturing", true)
 	trove:Add(function()
-		---/ We also now register with the same trove
-		---/ so we can reliably restore them together
 		Blackout.setDisabled("capturing", false)
 	end)
 
