@@ -124,22 +124,29 @@ function Photo.captureViewport(options: Types.CaptureViewportOptions)
 	}, options)
 
 	local processor = Captures.Viewport.Processors[options.type]
+	---/ I moved this before the delay because a delayed capture could yeild
+	---/ before acquiring the capture lock, if another capture started while this was happening
+	---/ the blackout state would get corrupted.
+	local trove = createIsCapturingTrove()
 
 	if options.delay and options.delay > 0 then
 		task.wait(options.delay)
 	end
 
 	Blackout.setDisabled("capturing", true)
+	trove:Add(function()
+		---/ We also now register with the same trove
+		---/ so we can reliably restore them together
+		Blackout.setDisabled("capturing", false)
+	end)
 
 	local results: { EditableImage }
-	local trove = createIsCapturingTrove()
 	local isFullscreen = Screenshot.isFullscreenRect(options.rect)
 	local success, err = SceneControl.freeze(true, function()
 		results = processor(options, isFullscreen, trove)
 	end)
 
 	trove:Destroy()
-	Blackout.setDisabled("capturing", false)
 
 	if not success then
 		if err then
