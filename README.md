@@ -6,7 +6,6 @@
 [links/devforum]: https://devforum.roblox.com/t/3401720
 [links/community]: https://www.roblox.com/communities/944974637
 [links/gltf-site]: https://photobooth-rbx.github.io/photobooth-plugin-site/
-[links/gltf-beta]: https://devforum.roblox.com/t/gltf-export-beta-available-now/3905928
 
 <!-- Badges -->
 
@@ -35,7 +34,7 @@ Results are output as editable images stored on a mesh part’s texture.
 
 [![Get it on Roblox][badges/roblox]][links/roblox] [![Get it on Itch.io][badges/itch]][links/itch] [![Join us on Discord][badges/discord]][links/discord]
 
-[Devforum post][links/devforum] · [Community][links/community]
+[Devforum post][links/devforum] · [Community][links/community] · [glTF site][links/gltf-site]
 
 https://github.com/user-attachments/assets/8ba14795-c398-4e1d-b660-f64eec1f0795
 
