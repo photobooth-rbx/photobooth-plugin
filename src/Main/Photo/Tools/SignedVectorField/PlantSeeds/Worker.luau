@@ -2,11 +2,10 @@
 
 @native
 local function worker(img: EditableImage, crop: Rect, insideThreshold: number)
-	local imgSize = img.Size
-	local imgWidth, _imgHeight = imgSize.X, imgSize.Y
-	local imgBuffer = img:ReadPixelsBuffer(Vector2.zero, imgSize)
+	local imgWidth = img.Size.X
 
 	local cropSize = crop.Max - crop.Min
+	local cropBuffer = img:ReadPixelsBuffer(crop.Min, cropSize)
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
 	local minX, maxX = crop.Min.X, crop.Max.X
 	local minY, maxY = crop.Min.Y, crop.Max.Y
@@ -20,14 +19,13 @@ local function worker(img: EditableImage, crop: Rect, insideThreshold: number)
 	for y = minY + 1, maxY do
 		for x = minX + 1, maxX do
 			local i = x + (y - 1) * imgWidth
-			local j = (i - 1) * 4
 
 			local cx = x - minX
 			local cy = y - minY
 			local ci = cx + (cy - 1) * cropWidth
 			local cj = (ci - 1) * 4
 
-			local alpha = buffer.readu8(imgBuffer, j + 3)
+			local alpha = buffer.readu8(cropBuffer, cj + 3)
 			if alpha > insideThreshold then
 				hasInside = true
 				buffer.writei32(seedBuffer, cj, i)

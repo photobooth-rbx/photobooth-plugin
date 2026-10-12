@@ -25,7 +25,7 @@ local function alphaBleedJFA(img: EditableImage)
 
 		if field and region then
 			local applyRegions = RectSlicer.rows(region, ACTOR_COUNT)
-			ApplyBleed(bled, field, applyRegions, region)
+			ApplyBleed(bled, field, applyRegions)
 		end
 	end)
 
@@ -41,4 +41,11 @@ local function alphaBleedJFA(img: EditableImage)
 	return bled
 end
 
-return alphaBleedJFA
+local function timedAlphaBleedJFA(img: EditableImage)
+	local t = os.clock()
+	local bled = alphaBleedJFA(img)
+	print(os.clock() - t)
+	return bled
+end
+
+return timedAlphaBleedJFA

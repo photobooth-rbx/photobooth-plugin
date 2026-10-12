@@ -1,5 +1,18 @@
 --!optimize 2
 
+-- Reads the full-width rows (top, bottom] clamped to the image, returning the buffer and its 0-based top row.
+-- Neighbour lookups only ever land on rows y - step, y, and y + step, so each worker only needs three
+-- crop-height bands instead of the entire image.
+local function readBand(img: EditableImage, width: number, height: number, top: number, bottom: number)
+	local clampedTop = math.max(0, top)
+	local clampedBottom = math.min(height, bottom)
+	if clampedBottom <= clampedTop then
+		return buffer.create(0), clampedTop
+	end
+
+	return img:ReadPixelsBuffer(Vector2.new(0, clampedTop), Vector2.new(width, clampedBottom - clampedTop)), clampedTop
+end
+
 @native
 local function worker(seedbed: EditableImage, voronoi: EditableImage, crop: Rect, step: number)
 	local seedbedSize = voronoi.Size
@@ -10,15 +23,27 @@ local function worker(seedbed: EditableImage, voronoi: EditableImage, crop: Rect
 	local minX, maxX = crop.Min.X, crop.Max.X
 	local minY, maxY = crop.Min.Y, crop.Max.Y
 
-	local seedbedRead = seedbed:ReadPixelsBuffer(Vector2.zero, seedbedSize)
-	local seedRead = voronoi:ReadPixelsBuffer(Vector2.zero, seedbedSize)
+	-- indexed by oy + 2
+	local seedbedBands: { buffer } = table.create(3)
+	local seedBands: { buffer } = table.create(3)
+	local bandTops: { number } = table.create(3)
+	for oy = -1, 1 do
+		local top, bottom = minY + oy * step, maxY + oy * step
+		local seedbedBand, bandTop = readBand(seedbed, seedbedWidth, seedbedHeight, top, bottom)
+		local seedBand = readBand(voronoi, seedbedWidth, seedbedHeight, top, bottom)
+		seedbedBands[oy + 2] = seedbedBand
+		seedBands[oy + 2] = seedBand
+		bandTops[oy + 2] = bandTop
+	end
+
+	local seedbedRead = seedbedBands[2]
+	local seedRead = seedBands[2]
 
 	local seedWrite = buffer.create(cropWidth * cropHeight * 4)
 
 	for y = minY + 1, maxY do
 		for x = minX + 1, maxX do
-			local i = x + (y - 1) * seedbedWidth
-			local j = (i - 1) * 4
+			local j = ((y - 1 - minY) * seedbedWidth + x - 1) * 4
 
 			local signedSeedbedSeed = buffer.readi32(seedbedRead, j)
 			local signedSeed = buffer.readi32(seedRead, j)
@@ -42,6 +67,10 @@ local function worker(seedbed: EditableImage, voronoi: EditableImage, crop: Rect
 					continue
 				end
 
+				local nSeedbedRead = seedbedBands[oy + 2]
+				local nSeedRead = seedBands[oy + 2]
+				local rowOffset = (ny - 1 - bandTops[oy + 2]) * seedbedWidth
+
 				for ox = -1, 1 do
 					if ox == 0 and oy == 0 then
 						continue
@@ -52,9 +81,9 @@ local function worker(seedbed: EditableImage, voronoi: EditableImage, crop: Rect
 						continue
 					end
 
-					local k = ((ny - 1) * seedbedWidth + nx - 1) * 4
-					local nSignedSeedbed = buffer.readi32(seedbedRead, k)
-					local nSignedSeed = buffer.readi32(seedRead, k)
+					local k = (rowOffset + nx - 1) * 4
+					local nSignedSeedbed = buffer.readi32(nSeedbedRead, k)
+					local nSignedSeed = buffer.readi32(nSeedRead, k)
 
 					local nSeed = 0
 					local snx: number, sny: number

@@ -55,7 +55,6 @@ local function jfaPasses(
 		else nil
 
 	local nPasses = 0
-	local stitched = buffer.create(regionWidth * regionHeight * 4)
 
 	for _, step in passSteps do
 		for _, crop in regions do
@@ -67,14 +66,11 @@ local function jfaPasses(
 			break
 		end
 
-		local offset = 0
-		for _i, getCropBuffer in results do
-			local cropBuffer = getCropBuffer()
-			buffer.copy(stitched, offset, cropBuffer)
-			offset = offset + buffer.len(cropBuffer)
+		for i, getCropBuffer in results do
+			local crop = regions[i]
+			voronoi:WritePixelsBuffer(crop.Min, crop.Max - crop.Min, getCropBuffer())
 		end
 
-		voronoi:WritePixelsBuffer(region.Min, regionSize, stitched)
 		nPasses = nPasses + 1
 	end
 

@@ -21,9 +21,6 @@ local function plantSeeds(
 ): (boolean, Rect?)
 	local scheduler, release = acquireScheduler(token)
 
-	local imgSize = img.Size
-	local imgWidth, imgHeight = imgSize.X, imgSize.Y
-
 	for _, crop in regions do
 		scheduler:schedule(img, crop, insideThreshold)
 	end
@@ -34,17 +31,14 @@ local function plantSeeds(
 		return false, nil
 	end
 
-	local offset = 0
-	local stitched = buffer.create(imgWidth * imgHeight * 4)
-
 	local hasInside = false
 	local tXMin, tYMin = math.huge, math.huge
 	local tXMax, tYMax = -math.huge, -math.huge
 
-	for _i, getCropBuffer in results do
+	for i, getCropBuffer in results do
+		local crop = regions[i]
 		local cropBuffer, chunkHasInside, cXMin, cYMin, cXMax, cYMax = getCropBuffer()
-		buffer.copy(stitched, offset, cropBuffer)
-		offset = offset + buffer.len(cropBuffer)
+		voronoi:WritePixelsBuffer(crop.Min, crop.Max - crop.Min, cropBuffer)
 
 		hasInside = hasInside or chunkHasInside
 
@@ -53,8 +47,6 @@ local function plantSeeds(
 		tYMin = math.min(tYMin, cYMin)
 		tYMax = math.max(tYMax, cYMax)
 	end
-
-	voronoi:WritePixelsBuffer(Vector2.zero, imgSize, stitched)
 
 	release()
 
