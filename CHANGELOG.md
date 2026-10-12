@@ -3,6 +3,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Unreleased
 - Fix dark shadow around bright subjects when `Lighting` has an enabled `BloomEffect` with `Intensity = 0`.
+- Reduce memory consumption and improve general performance.
 
 ### [2.11.3] - 2026/10/01
 - Fix auto capture padding to account for OS scale.
