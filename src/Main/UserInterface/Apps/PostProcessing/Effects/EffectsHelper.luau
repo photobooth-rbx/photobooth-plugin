@@ -18,7 +18,15 @@ function EffectsHelper.smoothStep(edge0: number, edge1: number, x: number)
 	return t * t * (3.0 - 2.0 * t)
 end
 
-function EffectsHelper.sampleBilinearRGBA(img: buffer, width: number, height: number, fx: number, fy: number)
+function EffectsHelper.sampleBilinearRGBA(
+	img: buffer,
+	width: number,
+	height: number,
+	fx: number,
+	fy: number,
+	top: number?
+)
+	local rowOffset = top or 0
 	local x0 = math.floor(fx)
 	local y0 = math.floor(fy)
 	local tx = fx - x0
@@ -33,7 +41,7 @@ function EffectsHelper.sampleBilinearRGBA(img: buffer, width: number, height: nu
 			local sx = x0 + dx
 			local w = wx * wy
 			if w > 0 and sx >= 0 and sx < width and sy >= 0 and sy < height then
-				local j = (sx + sy * width) * 4
+				local j = (sx + (sy - rowOffset) * width) * 4
 				local a = buffer.readu8(img, j + 3) / 255
 				pr += buffer.readu8(img, j + 0) * a * w
 				pg += buffer.readu8(img, j + 1) * a * w
