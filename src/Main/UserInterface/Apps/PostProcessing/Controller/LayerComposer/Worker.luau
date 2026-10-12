@@ -60,16 +60,39 @@ local function worker(
 	adjust: Types.Adjustment?,
 	lut: Types.Lut?
 )
-	local bufferByLayer = {}
-	for _, layer in layers do
-		bufferByLayer[layer] = layer.editImage:ReadPixelsBuffer(Vector2.zero, fullSize)
-	end
-
 	local cropMin = crop.Min
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
 	local fullWidth, fullHeight = fullSize.X, fullSize.Y
 	local composed = buffer.create(cropWidth * cropHeight * 4)
+
+	local layerCount = #layers
+	local layerBuffers: { buffer } = table.create(layerCount)
+	local layerTops: { number } = table.create(layerCount)
+	local layerOffsetXs: { number } = table.create(layerCount)
+	local layerOffsetYs: { number } = table.create(layerCount)
+	local layerTintRs: { number } = table.create(layerCount)
+	local layerTintGs: { number } = table.create(layerCount)
+	local layerTintBs: { number } = table.create(layerCount)
+	local layerOpacities: { number } = table.create(layerCount)
+	for i, layer in layers do
+		local offsetX = math.floor(layer.offset.X)
+		local offsetY = math.floor(layer.offset.Y)
+
+		local top = math.clamp(cropMin.Y - offsetY, 0, fullHeight)
+		local bottom = math.clamp(cropMin.Y + cropHeight - offsetY, 0, fullHeight)
+
+		layerBuffers[i] = if bottom > top
+			then layer.editImage:ReadPixelsBuffer(Vector2.new(0, top), Vector2.new(fullWidth, bottom - top))
+			else buffer.create(0)
+		layerTops[i] = top
+		layerOffsetXs[i] = offsetX
+		layerOffsetYs[i] = offsetY
+		layerTintRs[i] = layer.tintColor.R
+		layerTintGs[i] = layer.tintColor.G
+		layerTintBs[i] = layer.tintColor.B
+		layerOpacities[i] = 1 - layer.transparency
+	end
 
 	-- Precompute the color-grade coefficients once per strip. The hue-rotation matrix is
 	-- the standard luma-preserving (YIQ-derived) form; at hue 0 it collapses to identity.
@@ -101,46 +124,39 @@ local function worker(
 		for x = 0, cropWidth - 1 do
 			local gx = cropMin.X + x
 
-			local blendRGBAs = {}
-			for i = #layers, 1, -1 do
-				local layer = layers[i]
-				local sx = gx - math.floor(layer.offset.X)
-				local sy = gy - math.floor(layer.offset.Y)
+			local br, bg, bb, ba = 0, 0, 0, 0
+			for i = layerCount, 1, -1 do
+				local sx = gx - layerOffsetXs[i]
+				local sy = gy - layerOffsetYs[i]
 
 				if sx >= 0 and sx < fullWidth and sy >= 0 and sy < fullHeight then
-					local sj = (sx + sy * fullWidth) * 4
+					local sj = (sx + (sy - layerTops[i]) * fullWidth) * 4
 
-					local layerBuffer = bufferByLayer[layer]
-					local r = buffer.readu8(layerBuffer, sj + 0) * layer.tintColor.R
-					local g = buffer.readu8(layerBuffer, sj + 1) * layer.tintColor.G
-					local b = buffer.readu8(layerBuffer, sj + 2) * layer.tintColor.B
-					local a = buffer.readu8(layerBuffer, sj + 3) * (1 - layer.transparency)
+					local layerBuffer = layerBuffers[i]
+					local r = buffer.readu8(layerBuffer, sj + 0) * layerTintRs[i]
+					local g = buffer.readu8(layerBuffer, sj + 1) * layerTintGs[i]
+					local b = buffer.readu8(layerBuffer, sj + 2) * layerTintBs[i]
+					local a = buffer.readu8(layerBuffer, sj + 3) * layerOpacities[i]
 
-					table.insert(blendRGBAs, { r, g, b, a })
-				end
-			end
+					local aAlpha = a / 255
+					local bAlpha = ba / 255
 
-			local blendedRGBA = { 0, 0, 0, 0 }
-			for _, rgba in blendRGBAs do
-				local aAlpha = rgba[4] / 255
-				local bAlpha = blendedRGBA[4] / 255
-
-				local outAlpha = aAlpha + bAlpha * (1 - aAlpha)
-				local newRGBA = { 0, 0, 0, outAlpha * 255 }
-
-				if outAlpha > 0 then
-					for j = 1, 3 do
-						newRGBA[j] = (rgba[j] * aAlpha + blendedRGBA[j] * bAlpha * (1 - aAlpha)) / outAlpha
+					local outAlpha = aAlpha + bAlpha * (1 - aAlpha)
+					if outAlpha > 0 then
+						br = (r * aAlpha + br * bAlpha * (1 - aAlpha)) / outAlpha
+						bg = (g * aAlpha + bg * bAlpha * (1 - aAlpha)) / outAlpha
+						bb = (b * aAlpha + bb * bAlpha * (1 - aAlpha)) / outAlpha
+					else
+						br, bg, bb = 0, 0, 0
 					end
+					ba = outAlpha * 255
 				end
-
-				blendedRGBA = newRGBA
 			end
 
 			if adjust then
-				local cr = blendedRGBA[1] / 255
-				local cg = blendedRGBA[2] / 255
-				local cb = blendedRGBA[3] / 255
+				local cr = br / 255
+				local cg = bg / 255
+				local cb = bb / 255
 
 				-- Contrast pivots around mid-grey, then brightness offsets.
 				cr = (cr - 0.5) * contrast + 0.5 + brightness
@@ -153,21 +169,21 @@ local function worker(
 				cg = luma + (cg - luma) * saturation
 				cb = luma + (cb - luma) * saturation
 
-				-- Hue rotation. Alpha (blendedRGBA[4]) is untouched.
-				blendedRGBA[1] = math.clamp(cr * m00 + cg * m01 + cb * m02, 0, 1) * 255
-				blendedRGBA[2] = math.clamp(cr * m10 + cg * m11 + cb * m12, 0, 1) * 255
-				blendedRGBA[3] = math.clamp(cr * m20 + cg * m21 + cb * m22, 0, 1) * 255
+				-- Hue rotation. Alpha (ba) is untouched.
+				br = math.clamp(cr * m00 + cg * m01 + cb * m02, 0, 1) * 255
+				bg = math.clamp(cr * m10 + cg * m11 + cb * m12, 0, 1) * 255
+				bb = math.clamp(cr * m20 + cg * m21 + cb * m22, 0, 1) * 255
 			end
 
 			-- LUT is applied last, mapping the graded color through the lookup. Alpha is
 			-- untouched; fully transparent pixels are skipped since their color is unused.
-			if lutData and blendedRGBA[4] > 0 then
+			if lutData and ba > 0 then
 				local nr, ng, nb = sampleLut(
 					lutData,
 					lutSize,
-					blendedRGBA[1] / 255,
-					blendedRGBA[2] / 255,
-					blendedRGBA[3] / 255,
+					br / 255,
+					bg / 255,
+					bb / 255,
 					ldMinR,
 					ldMinG,
 					ldMinB,
@@ -175,17 +191,17 @@ local function worker(
 					ldMaxG,
 					ldMaxB
 				)
-				blendedRGBA[1] = math.clamp(nr, 0, 1) * 255
-				blendedRGBA[2] = math.clamp(ng, 0, 1) * 255
-				blendedRGBA[3] = math.clamp(nb, 0, 1) * 255
+				br = math.clamp(nr, 0, 1) * 255
+				bg = math.clamp(ng, 0, 1) * 255
+				bb = math.clamp(nb, 0, 1) * 255
 			end
 
 			local oj = (x + y * cropWidth) * 4
 
-			buffer.writeu8(composed, oj + 0, blendedRGBA[1])
-			buffer.writeu8(composed, oj + 1, blendedRGBA[2])
-			buffer.writeu8(composed, oj + 2, blendedRGBA[3])
-			buffer.writeu8(composed, oj + 3, blendedRGBA[4])
+			buffer.writeu8(composed, oj + 0, br)
+			buffer.writeu8(composed, oj + 1, bg)
+			buffer.writeu8(composed, oj + 2, bb)
+			buffer.writeu8(composed, oj + 3, ba)
 		end
 	end
 
