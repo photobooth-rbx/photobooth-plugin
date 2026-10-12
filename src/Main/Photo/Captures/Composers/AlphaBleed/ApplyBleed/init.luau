@@ -5,12 +5,12 @@ local ACTOR_COUNT = assert(script.Parent:GetAttribute("ActorCount") :: number?)
 
 type WorkerAction = typeof(require(script.Worker))
 
-local function applyBleed(img: EditableImage, voronoi: EditableImage, regions: { Rect })
-	local scheduler = Parallel.new(ACTOR_COUNT, {
-		script = script.Worker,
-		typecast = (nil :: any) :: WorkerAction,
-	})
+local scheduler = Parallel.new(ACTOR_COUNT, {
+	script = script.Worker,
+	typecast = (nil :: any) :: WorkerAction,
+})
 
+local function applyBleed(img: EditableImage, voronoi: EditableImage, regions: { Rect })
 	scheduler:waitForReady()
 
 	for _, crop in regions do
@@ -18,7 +18,6 @@ local function applyBleed(img: EditableImage, voronoi: EditableImage, regions: {
 	end
 
 	local results = scheduler:workAsync()
-	scheduler:Destroy()
 
 	for i, getCropBuffer in results do
 		local crop = regions[i]
