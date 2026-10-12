@@ -34,10 +34,4 @@ local function alphaBleedJFA(img: EditableImage)
 	end
 end
 
-local function timedAlphaBleedJFA(img: EditableImage)
-	local t = os.clock()
-	alphaBleedJFA(img)
-	print(os.clock() - t)
-end
-
-return timedAlphaBleedJFA
+return alphaBleedJFA
