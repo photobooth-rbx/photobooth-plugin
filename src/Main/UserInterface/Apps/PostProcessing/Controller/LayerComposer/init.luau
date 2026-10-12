@@ -40,21 +40,15 @@ function LayerComposer.composeAsync(
 
 	local results = scheduler:workAsync()
 
-	local offset = 0
-	local stitched = buffer.create(imgWidth * imgHeight * 4)
-	for _, getBuffer in results do
-		local b = getBuffer()
-		buffer.copy(stitched, offset, b)
-		offset = offset + buffer.len(b)
+	local composedEdit = AssetService:CreateEditableImageAsync(Content.fromObject(editImage))
+	for i, getBuffer in results do
+		local rowRect = rows[i]
+		composedEdit:WritePixelsBuffer(rowRect.Min, rowRect.Max - rowRect.Min, getBuffer())
 	end
 
-	local composedEdit = AssetService:CreateEditableImageAsync(Content.fromObject(editImage))
-	composedEdit:WritePixelsBuffer(Vector2.zero, imgSize, stitched)
+	AlphaBleed(composedEdit)
 
-	local bledEdit = AlphaBleed(composedEdit)
-	composedEdit:Destroy()
-
-	return bledEdit
+	return composedEdit
 end
 
 return LayerComposer

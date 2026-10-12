@@ -20,12 +20,20 @@ local function worker(
 )
 	local imgSize = scratch.Size
 	local imgWidth, imgHeight = imgSize.X, imgSize.Y
-	local scratchBuffer = scratch:ReadPixelsBuffer(Vector2.zero, imgSize)
-	local svfBuffer = if clipped then svf:ReadPixelsBuffer(Vector2.zero, imgSize) else nil
 
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
 	local minX, maxX = crop.Min.X, crop.Max.X
+
+	local scratchLeft = math.clamp(minX - offX, 0, imgWidth)
+	local scratchRight = math.clamp(maxX - offX, 0, imgWidth)
+	local scratchWidth = scratchRight - scratchLeft
+	local scratchBuffer = if scratchWidth > 0
+		then scratch:ReadPixelsBuffer(Vector2.new(scratchLeft, 0), Vector2.new(scratchWidth, imgHeight))
+		else buffer.create(0)
+	local svfBuffer = if clipped
+		then svf:ReadPixelsBuffer(Vector2.new(minX, 0), Vector2.new(cropWidth, imgHeight))
+		else nil
 
 	local composed = buffer.create(cropWidth * cropHeight * 4)
 
@@ -46,7 +54,7 @@ local function worker(
 		local running = 0
 		buffer.writef32(prefix, 0, 0)
 		for y = 1, imgHeight do
-			local cov = buffer.readu8(scratchBuffer, ((sx - 1) + (y - 1) * imgWidth) * 4 + 3)
+			local cov = buffer.readu8(scratchBuffer, ((sx - 1 - scratchLeft) + (y - 1) * scratchWidth) * 4 + 3)
 			running += cov
 			buffer.writef32(prefix, y * 4, running)
 		end
@@ -60,8 +68,11 @@ local function worker(
 				cov = (buffer.readf32(prefix, hi * 4) - buffer.readf32(prefix, (lo - 1) * 4)) / ((hi - lo + 1) * 255)
 			end
 
-			if clipped and cov > 0 and EffectsHelper.readSignedDistance(svfBuffer :: buffer, imgWidth, x, y) < -1 then
-				cov = 0
+			if clipped and cov > 0 then
+				local signedPixelIndex = buffer.readi32(svfBuffer :: buffer, ((cx - 1) + (y - 1) * cropWidth) * 4)
+				if EffectsHelper.decodeSignedDistance(signedPixelIndex, imgWidth, x, y) < -1 then
+					cov = 0
+				end
 			end
 
 			local cj = ((cx - 1) + (y - 1) * cropWidth) * 4

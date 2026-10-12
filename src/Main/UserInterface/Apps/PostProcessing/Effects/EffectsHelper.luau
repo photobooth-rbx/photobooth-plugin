@@ -1,11 +1,34 @@
 local EffectsHelper = {}
 
+local CLEAR_CHUNKS = 32
+
+local function decodeSignedDistance(signedPixelIndex: number, width: number, x: number, y: number)
+	local pixelIndex = math.abs(signedPixelIndex)
+	local sign = math.sign(signedPixelIndex)
+
+	local ny = math.floor((pixelIndex - 1) / width) + 1
+	local nx = pixelIndex - (ny - 1) * width
+	local ox = math.max(0, math.abs(x - nx) - 0.5)
+	local oy = math.max(0, math.abs(y - ny) - 0.5)
+	local distance = math.sqrt(ox * ox + oy * oy)
+
+	return distance * sign
+end
+
 function EffectsHelper.smoothStep(edge0: number, edge1: number, x: number)
 	local t = math.clamp((x - edge0) / (edge1 - edge0), 0, 1)
 	return t * t * (3.0 - 2.0 * t)
 end
 
-function EffectsHelper.sampleBilinearRGBA(img: buffer, width: number, height: number, fx: number, fy: number)
+function EffectsHelper.sampleBilinearRGBA(
+	img: buffer,
+	width: number,
+	height: number,
+	fx: number,
+	fy: number,
+	top: number?
+)
+	local rowOffset = top or 0
 	local x0 = math.floor(fx)
 	local y0 = math.floor(fy)
 	local tx = fx - x0
@@ -20,7 +43,7 @@ function EffectsHelper.sampleBilinearRGBA(img: buffer, width: number, height: nu
 			local sx = x0 + dx
 			local w = wx * wy
 			if w > 0 and sx >= 0 and sx < width and sy >= 0 and sy < height then
-				local j = (sx + sy * width) * 4
+				local j = (sx + (sy - rowOffset) * width) * 4
 				local a = buffer.readu8(img, j + 3) / 255
 				pr += buffer.readu8(img, j + 0) * a * w
 				pg += buffer.readu8(img, j + 1) * a * w
@@ -38,22 +61,39 @@ function EffectsHelper.sampleBilinearRGBA(img: buffer, width: number, height: nu
 	return a, b, c, d
 end
 
-function EffectsHelper.readSignedDistance(svf: buffer, width: number, x: number, y: number)
-	local i = x + (y - 1) * width
+function EffectsHelper.readRows(img: EditableImage, top: number, bottom: number): (buffer, number)
+	local imgSize = img.Size
+	local clampedTop = math.max(0, top)
+	local clampedBottom = math.min(imgSize.Y, bottom)
+	if clampedBottom <= clampedTop then
+		return buffer.create(0), clampedTop
+	end
+
+	return img:ReadPixelsBuffer(Vector2.new(0, clampedTop), Vector2.new(imgSize.X, clampedBottom - clampedTop)),
+		clampedTop
+end
+
+function EffectsHelper.clear(img: EditableImage)
+	local imgSize = img.Size
+	local width, height = imgSize.X, imgSize.Y
+	local chunkHeight = math.max(1, math.ceil(height / CLEAR_CHUNKS))
+	local blank = buffer.create(width * chunkHeight * 4)
+
+	for top = 0, height - 1, chunkHeight do
+		local rows = math.min(chunkHeight, height - top)
+		local chunk = if rows == chunkHeight then blank else buffer.create(width * rows * 4)
+		img:WritePixelsBuffer(Vector2.new(0, top), Vector2.new(width, rows), chunk)
+	end
+end
+
+function EffectsHelper.readSignedDistance(svf: buffer, width: number, x: number, y: number, top: number?)
+	local i = x + (y - 1 - (top or 0)) * width
 	local j = (i - 1) * 4
 
-	local signedPixelIndex = buffer.readi32(svf, j)
-	local pixelIndex = math.abs(signedPixelIndex)
-	local sign = math.sign(signedPixelIndex)
-
-	local ny = math.floor((pixelIndex - 1) / width) + 1
-	local nx = pixelIndex - (ny - 1) * width
-	local ox = math.max(0, math.abs(x - nx) - 0.5)
-	local oy = math.max(0, math.abs(y - ny) - 0.5)
-	local distance = math.sqrt(ox * ox + oy * oy)
-
-	return distance * sign
+	return decodeSignedDistance(buffer.readi32(svf, j), width, x, y)
 end
+
+EffectsHelper.decodeSignedDistance = decodeSignedDistance
 
 function EffectsHelper.readIntegral(integral: buffer, width: number, height: number, x: number, y: number): number
 	local cx = math.min(x, width)

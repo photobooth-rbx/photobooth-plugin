@@ -19,7 +19,6 @@ export type Properties = {
 local function worker(inputs: EffectsRegistry.ImageInputs, properties: Properties, crop: Rect)
 	local imgSize = inputs.img.Size
 	local imgWidth, imgHeight = imgSize.X, imgSize.Y
-	local img = inputs.img:ReadPixelsBuffer(Vector2.zero, imgSize)
 
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
@@ -31,14 +30,17 @@ local function worker(inputs: EffectsRegistry.ImageInputs, properties: Propertie
 	local dx = math.cos(theta) * properties.strength
 	local dy = math.sin(theta) * properties.strength
 
+	local margin = math.ceil(math.abs(dy)) + 1
+	local img, imgTop = EffectsHelper.readRows(inputs.img, minY - margin, minY + cropHeight + margin)
+
 	for y = 0, cropHeight - 1 do
 		local gy = minY + y
 		for x = 0, cropWidth - 1 do
 			local gx = minX + x
 
-			local r, _, _, ar = EffectsHelper.sampleBilinearRGBA(img, imgWidth, imgHeight, gx - dx, gy - dy)
-			local _, g, _, ag = EffectsHelper.sampleBilinearRGBA(img, imgWidth, imgHeight, gx, gy)
-			local _, _, b, ab = EffectsHelper.sampleBilinearRGBA(img, imgWidth, imgHeight, gx + dx, gy + dy)
+			local r, _, _, ar = EffectsHelper.sampleBilinearRGBA(img, imgWidth, imgHeight, gx - dx, gy - dy, imgTop)
+			local _, g, _, ag = EffectsHelper.sampleBilinearRGBA(img, imgWidth, imgHeight, gx, gy, imgTop)
+			local _, _, b, ab = EffectsHelper.sampleBilinearRGBA(img, imgWidth, imgHeight, gx + dx, gy + dy, imgTop)
 
 			local cj = (x + y * cropWidth) * 4
 			buffer.writeu8(composed, cj + 0, r)

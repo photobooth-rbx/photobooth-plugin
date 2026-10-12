@@ -17,7 +17,6 @@ export type Properties = {
 local function worker(inputs: EffectsRegistry.ImageInputs, properties: Properties, crop: Rect)
 	local imgSize = inputs.svf.Size
 	local imgWidth, imgHeight = imgSize.X, imgSize.Y
-	local svf = inputs.svf:ReadPixelsBuffer(Vector2.zero, imgSize)
 
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
@@ -38,13 +37,16 @@ local function worker(inputs: EffectsRegistry.ImageInputs, properties: Propertie
 	local steps = math.max(1, math.ceil(size))
 	local stepLength = size / steps
 
+	local reach = math.ceil(size) + 1
+	local svf, svfTop = EffectsHelper.readRows(inputs.svf, minY - reach, maxY + reach)
+
 	for y = minY + 1, maxY do
 		for x = minX + 1, maxX do
 			local cx, cy = x - minX, y - minY
 			local ci = cx + (cy - 1) * cropWidth
 			local cj = (ci - 1) * 4
 
-			local signedDistance = EffectsHelper.readSignedDistance(svf, imgWidth, x, y)
+			local signedDistance = EffectsHelper.readSignedDistance(svf, imgWidth, x, y, svfTop)
 			local interiorMask = 1 - EffectsHelper.smoothStep(-1, 1, signedDistance)
 
 			local shadowAlpha = 0
@@ -59,7 +61,7 @@ local function worker(inputs: EffectsRegistry.ImageInputs, properties: Propertie
 						-- Stepped off the canvas: nothing there to block light, treat as edge.
 						outside = true
 					else
-						outside = EffectsHelper.readSignedDistance(svf, imgWidth, sx, sy) >= 0
+						outside = EffectsHelper.readSignedDistance(svf, imgWidth, sx, sy, svfTop) >= 0
 					end
 
 					if outside then
