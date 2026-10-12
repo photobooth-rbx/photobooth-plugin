@@ -1,5 +1,7 @@
 local EffectsHelper = {}
 
+local CLEAR_CHUNKS = 32
+
 local function decodeSignedDistance(signedPixelIndex: number, width: number, x: number, y: number)
 	local pixelIndex = math.abs(signedPixelIndex)
 	local sign = math.sign(signedPixelIndex)
@@ -69,6 +71,19 @@ function EffectsHelper.readRows(img: EditableImage, top: number, bottom: number)
 
 	return img:ReadPixelsBuffer(Vector2.new(0, clampedTop), Vector2.new(imgSize.X, clampedBottom - clampedTop)),
 		clampedTop
+end
+
+function EffectsHelper.clear(img: EditableImage)
+	local imgSize = img.Size
+	local width, height = imgSize.X, imgSize.Y
+	local chunkHeight = math.max(1, math.ceil(height / CLEAR_CHUNKS))
+	local blank = buffer.create(width * chunkHeight * 4)
+
+	for top = 0, height - 1, chunkHeight do
+		local rows = math.min(chunkHeight, height - top)
+		local chunk = if rows == chunkHeight then blank else buffer.create(width * rows * 4)
+		img:WritePixelsBuffer(Vector2.new(0, top), Vector2.new(width, rows), chunk)
+	end
 end
 
 function EffectsHelper.readSignedDistance(svf: buffer, width: number, x: number, y: number, top: number?)
