@@ -50,7 +50,7 @@ local function operation(options: Types.CaptureUIOptions, trove: Trove.Trove)
 	local errorWatch, markComplete = SceneControl.cleanupOnError(trove)
 	local capture = errorWatch(Composers.reverseBlend(onWhite, onBlack, nil, nil, nil, nil, colorCorrection))
 	if options.alphaBleed then
-		capture = errorWatch(Composers.alphaBleed(capture))
+		Composers.alphaBleed(capture)
 	end
 
 	markComplete()

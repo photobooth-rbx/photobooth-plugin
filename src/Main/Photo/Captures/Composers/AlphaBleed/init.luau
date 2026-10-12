@@ -1,5 +1,3 @@
-local AssetService = game:GetService("AssetService")
-
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local RectSlicer = require(pluginRoot.Utilities.RectSlicer)
 local SignedVectorField = require(pluginRoot.Main.Photo.Tools.SignedVectorField)
@@ -16,16 +14,14 @@ script:SetAttribute("ActorCount", ACTOR_COUNT)
 local ApplyBleed = require(script.ApplyBleed)
 
 local function alphaBleedJFA(img: EditableImage)
-	local bled = AssetService:CreateEditableImageAsync(Content.fromObject(img))
-
 	local voronoi: EditableImage? = nil
 	local success, err: string? = pcall(function()
-		local field, region = SignedVectorField.generateAsync(bled, FIELD_OPTIONS)
+		local field, region = SignedVectorField.generateAsync(img, FIELD_OPTIONS)
 		voronoi = field
 
 		if field and region then
 			local applyRegions = RectSlicer.rows(region, ACTOR_COUNT)
-			ApplyBleed(bled, field, applyRegions)
+			ApplyBleed(img, field, applyRegions)
 		end
 	end)
 
@@ -34,18 +30,14 @@ local function alphaBleedJFA(img: EditableImage)
 	end
 
 	if not success and err then
-		bled:Destroy()
 		error(err, 0)
 	end
-
-	return bled
 end
 
 local function timedAlphaBleedJFA(img: EditableImage)
 	local t = os.clock()
-	local bled = alphaBleedJFA(img)
+	alphaBleedJFA(img)
 	print(os.clock() - t)
-	return bled
 end
 
 return timedAlphaBleedJFA

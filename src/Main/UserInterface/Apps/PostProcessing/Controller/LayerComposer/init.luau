@@ -51,10 +51,9 @@ function LayerComposer.composeAsync(
 	local composedEdit = AssetService:CreateEditableImageAsync(Content.fromObject(editImage))
 	composedEdit:WritePixelsBuffer(Vector2.zero, imgSize, stitched)
 
-	local bledEdit = AlphaBleed(composedEdit)
-	composedEdit:Destroy()
+	AlphaBleed(composedEdit)
 
-	return bledEdit
+	return composedEdit
 end
 
 return LayerComposer
