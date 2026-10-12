@@ -9,14 +9,14 @@ local EffectsHelper = require(effectsRoot.EffectsHelper)
 -- Output coverage is written to the alpha channel; the vertical leg reads it back.
 @native
 local function worker(svf: EditableImage, spread: number, blur: number, crop: Rect)
-	local imgSize = svf.Size
-	local imgWidth = imgSize.X
-	local svfBuffer = svf:ReadPixelsBuffer(Vector2.zero, imgSize)
+	local imgWidth = svf.Size.X
 
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
 	local minX, maxX = crop.Min.X, crop.Max.X
 	local minY, maxY = crop.Min.Y, crop.Max.Y
+
+	local svfBuffer, svfTop = EffectsHelper.readRows(svf, minY, maxY)
 
 	local composed = buffer.create(cropWidth * cropHeight * 4)
 
@@ -30,7 +30,7 @@ local function worker(svf: EditableImage, spread: number, blur: number, crop: Re
 		local running = 0
 		buffer.writef32(prefix, 0, 0)
 		for x = 1, imgWidth do
-			local signedDistance = EffectsHelper.readSignedDistance(svfBuffer, imgWidth, x, y)
+			local signedDistance = EffectsHelper.readSignedDistance(svfBuffer, imgWidth, x, y, svfTop)
 			local mask = math.clamp(spread - signedDistance + 0.5, 0, 1)
 			running += mask
 			buffer.writef32(prefix, x * 4, running)

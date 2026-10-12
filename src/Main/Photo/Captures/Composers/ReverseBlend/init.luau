@@ -45,16 +45,11 @@ local function reverseBlend(
 
 	local results = scheduler:workAsync()
 
-	local offset = 0
-	local stitched = buffer.create(width * height * 4)
-	for _, unpackResult in results do
-		local slice = unpackResult()
-		buffer.copy(stitched, offset, slice)
-		offset = offset + buffer.len(slice)
-	end
-
 	local output = AssetService:CreateEditableImageAsync(Content.fromObject(onWhiteRetro))
-	output:WritePixelsBuffer(Vector2.zero, size, stitched)
+	for i, unpackResult in results do
+		local rowRect = rows[i]
+		output:WritePixelsBuffer(rowRect.Min, rowRect.Max - rowRect.Min, unpackResult())
+	end
 
 	return output
 end

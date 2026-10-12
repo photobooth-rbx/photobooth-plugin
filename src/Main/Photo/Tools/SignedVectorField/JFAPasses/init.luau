@@ -1,5 +1,3 @@
-local AssetService = game:GetService("AssetService")
-
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Cancellation = require(pluginRoot.Utilities.Cancellation)
 
@@ -47,19 +45,11 @@ local function jfaPasses(
 
 	local scheduler, release = acquireScheduler(token)
 
-	local seedbed = AssetService:CreateEditableImageAsync(Content.fromObject(voronoi))
-	local unhookSeedbed = if token
-		then token:onCancel(function()
-			seedbed:Destroy()
-		end)
-		else nil
-
 	local nPasses = 0
-	local stitched = buffer.create(regionWidth * regionHeight * 4)
 
 	for _, step in passSteps do
 		for _, crop in regions do
-			scheduler:schedule(seedbed, voronoi, crop, step)
+			scheduler:schedule(voronoi, crop, step)
 		end
 
 		local results, workCancelled = scheduler:workAsync()
@@ -67,23 +57,15 @@ local function jfaPasses(
 			break
 		end
 
-		local offset = 0
-		for _i, getCropBuffer in results do
-			local cropBuffer = getCropBuffer()
-			buffer.copy(stitched, offset, cropBuffer)
-			offset = offset + buffer.len(cropBuffer)
+		for i, getCropBuffer in results do
+			local crop = regions[i]
+			voronoi:WritePixelsBuffer(crop.Min, crop.Max - crop.Min, getCropBuffer())
 		end
 
-		voronoi:WritePixelsBuffer(region.Min, regionSize, stitched)
 		nPasses = nPasses + 1
 	end
 
 	release()
-
-	if unhookSeedbed then
-		unhookSeedbed()
-	end
-	seedbed:Destroy()
 
 	return nPasses
 end

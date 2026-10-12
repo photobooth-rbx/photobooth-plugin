@@ -52,20 +52,16 @@ return EffectsRegistry.register("Drop Shadow", {
 		local imgWidth, imgHeight = imgSize.X, imgSize.Y
 		local region = Rect.new(0, 0, imgWidth, imgHeight)
 
-		-- Pass 1: dilate + horizontal mean -> scratch (stitched from contiguous row strips).
+		-- Pass 1: dilate + horizontal mean -> scratch.
 		local rows = RectSlicer.rows(region, horizontalScheduler:getActorCount())
 		for _, rowRect in rows do
 			horizontalScheduler:schedule(inputs.svf, properties.spread, properties.blur, rowRect)
 		end
 
-		local stitched = buffer.create(imgWidth * imgHeight * 4)
-		local offset = 0
-		for _, getBuffer in horizontalScheduler:workAsync() do
-			local b = getBuffer()
-			buffer.copy(stitched, offset, b)
-			offset = offset + buffer.len(b)
+		for i, getBuffer in horizontalScheduler:workAsync() do
+			local rowRect = rows[i]
+			inputs.scratch:WritePixelsBuffer(rowRect.Min, rowRect.Max - rowRect.Min, getBuffer())
 		end
-		inputs.scratch:WritePixelsBuffer(Vector2.zero, imgSize, stitched)
 
 		-- Pass 2: vertical mean (+offset, clip) -> output. Column strips don't stitch
 		-- contiguously, so each result is blitted into the output at its own x-origin.

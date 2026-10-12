@@ -177,13 +177,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	end
 
 	if options.alphaBleed then
-		local nonBledCapture = capture
-		trove:Add(function()
-			-- we can safely mark the pre-alpha bleed image for deletion to avoid memory bloat
-			nonBledCapture:Destroy()
-		end)
-
-		capture = errorWatch(Composers.alphaBleed(nonBledCapture))
+		Composers.alphaBleed(capture)
 	end
 
 	markComplete()
