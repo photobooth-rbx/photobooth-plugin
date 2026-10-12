@@ -11,7 +11,6 @@ local function worker(img: EditableImage, voronoi: EditableImage, crop: Rect)
 	local cropWrite = img:ReadPixelsBuffer(crop.Min, cropSize)
 	local voronoiRead = voronoi:ReadPixelsBuffer(crop.Min, cropSize)
 
-	-- only read the part of the image that this crop's seeds actually point at
 	local sXMin, sYMin = math.huge, math.huge
 	local sXMax, sYMax = -math.huge, -math.huge
 	for ci = 1, cropPixels do

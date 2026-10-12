@@ -15,14 +15,14 @@ export type Properties = {
 
 @native
 local function worker(inputs: EffectsRegistry.ImageInputs, properties: Properties, crop: Rect)
-	local imgSize = inputs.svf.Size
-	local imgWidth, _imgHeight = imgSize.X, imgSize.Y
-	local svf = inputs.svf:ReadPixelsBuffer(Vector2.zero, imgSize)
+	local imgWidth = inputs.svf.Size.X
 
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
 	local minX, maxX = crop.Min.X, crop.Max.X
 	local minY, maxY = crop.Min.Y, crop.Max.Y
+
+	local svf, svfTop = EffectsHelper.readRows(inputs.svf, minY, maxY)
 
 	local composed = buffer.create(cropWidth * cropHeight * 4)
 
@@ -37,7 +37,7 @@ local function worker(inputs: EffectsRegistry.ImageInputs, properties: Propertie
 			local ci = cx + (cy - 1) * cropWidth
 			local cj = (ci - 1) * 4
 
-			local signedDistance = EffectsHelper.readSignedDistance(svf, imgWidth, x, y)
+			local signedDistance = EffectsHelper.readSignedDistance(svf, imgWidth, x, y, svfTop)
 			local outward = math.max(0, signedDistance)
 			local t = math.clamp(outward / size, 0, 1)
 			local glowAlpha = (1 - t) ^ falloff

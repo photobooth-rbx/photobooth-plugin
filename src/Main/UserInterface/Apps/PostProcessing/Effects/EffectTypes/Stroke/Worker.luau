@@ -15,14 +15,14 @@ export type Properties = {
 
 @native
 local function worker(inputs: EffectsRegistry.ImageInputs, properties: Properties, crop: Rect)
-	local imgSize = inputs.svf.Size
-	local imgWidth, _imgHeight = imgSize.X, imgSize.Y
-	local svf = inputs.svf:ReadPixelsBuffer(Vector2.zero, imgSize)
+	local imgWidth = inputs.svf.Size.X
 
 	local cropSize = crop.Max - crop.Min
 	local cropWidth, cropHeight = cropSize.X, cropSize.Y
 	local minX, maxX = crop.Min.X, crop.Max.X
 	local minY, maxY = crop.Min.Y, crop.Max.Y
+
+	local svf, svfTop = EffectsHelper.readRows(inputs.svf, minY, maxY)
 
 	local composed = buffer.create(cropWidth * cropHeight * 4)
 
@@ -36,7 +36,7 @@ local function worker(inputs: EffectsRegistry.ImageInputs, properties: Propertie
 			local cj = (ci - 1) * 4
 
 			local strokeAlpha = 0
-			local signedDistance = EffectsHelper.readSignedDistance(svf, imgWidth, x, y)
+			local signedDistance = EffectsHelper.readSignedDistance(svf, imgWidth, x, y, svfTop)
 			strokeAlpha = 1 - EffectsHelper.smoothStep(thickness - softness, thickness + softness, signedDistance)
 			if properties.clipped and signedDistance < -1 then
 				strokeAlpha = 0

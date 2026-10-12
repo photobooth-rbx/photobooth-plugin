@@ -78,7 +78,6 @@ local function worker(voronoi: EditableImage, crop: Rect, step: number)
 					local nSeed = 0
 					local snx: number, sny: number
 					if nSign == -sign then
-						-- the neighbour is on the opposite side, so it's a seed itself
 						nSeed = n
 						snx, sny = nx, ny
 					elseif nSeedSign == -sign then
