@@ -1,7 +1,7 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.11.4] - 2026/10/12
 - Fix dark shadow around bright subjects when `Lighting` has an enabled `BloomEffect` with `Intensity = 0`.
 - Reduce memory consumption and improve general performance.
 
