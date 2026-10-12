@@ -9,7 +9,9 @@ local Trove = require(pluginRoot.Packages.Trove)
 local photoRoot = script:FindFirstAncestor("Photo")
 local UIHider = require(photoRoot.Tools.UIHider)
 
-local SPATIAL_EFFECT_CLASSES = { "BloomEffect" } --"SunRaysEffect", "BlurEffect", "DepthOfFieldEffect" }
+local SPATIAL_EFFECT_HIDDEN_PROPERTIES: { [string]: { [string]: any } } = {
+	["BloomEffect"] = { Intensity = 0 },
+}
 
 local SceneControl = {}
 
@@ -18,7 +20,7 @@ local SceneControl = {}
 local function getSpatialEffects()
 	local effects: { PostEffect } = {}
 	for _, child in Lighting:GetChildren() do
-		for _, className in SPATIAL_EFFECT_CLASSES do
+		for className, _ in SPATIAL_EFFECT_HIDDEN_PROPERTIES do
 			if child:IsA(className) then
 				table.insert(effects, child :: PostEffect)
 				break
@@ -26,6 +28,29 @@ local function getSpatialEffects()
 		end
 	end
 	return effects
+end
+
+local function getSpatialEffectHiddenProperties(effect: PostEffect)
+	for className, properties in SPATIAL_EFFECT_HIDDEN_PROPERTIES do
+		if effect:IsA(className) then
+			return properties
+		end
+	end
+	return {}
+end
+
+local function isSpatialEffectVisible(effect: PostEffect)
+	if not effect.Enabled then
+		return false
+	end
+
+	local effectAny = effect :: any
+	for property, hiddenValue in getSpatialEffectHiddenProperties(effect) do
+		if effectAny[property] ~= hiddenValue then
+			return true
+		end
+	end
+	return false
 end
 
 local function hideMouse()
@@ -213,7 +238,7 @@ end
 
 function SceneControl.hasSpatialEffects()
 	for _, effect in getSpatialEffects() do
-		if effect.Enabled then
+		if isSpatialEffectVisible(effect) then
 			return true
 		end
 	end
@@ -222,11 +247,15 @@ end
 
 function SceneControl.getSpatialEffectHider()
 	local effects = getSpatialEffects()
+	local cleanupTrove = Trove.new()
 
 	return function(hidden: boolean)
-		local parent = if hidden then nil else Lighting
-		for _, effect in effects do
-			effect.Parent = parent
+		cleanupTrove:Clean()
+		if hidden then
+			for _, effect in effects do
+				local properties = getSpatialEffectHiddenProperties(effect)
+				cleanupTrove:Add(SceneControl.setProperties(effect, properties))
+			end
 		end
 	end
 end
