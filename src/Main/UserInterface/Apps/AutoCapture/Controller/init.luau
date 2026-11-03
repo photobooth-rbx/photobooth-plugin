@@ -30,9 +30,17 @@ local DISTANCE_SCALE_STEP = 1.05
 local DISTANCE_SCALE_MIN = 0.01
 local DISTANCE_SCALE_MAX = 100
 
+local ORTHOGRAPHIC_SIZE_DEFAULT = 35
+local ORTHOGRAPHIC_SIZE_MIN = 0.001
+local ORTHOGRAPHIC_SIZE_MAX = 100000
+local ORTHOGRAPHIC_NEAR_MARGIN = 1
+
 local FREE_LOOK_SENSITIVITY = 0.005
 local FREE_MOVE_SPEED_MAX = 1000
 local FREE_EXTERNAL_CF_EPSILON = 1e-4
+-- Orthographic size multiplier per second while holding forward/back in free cam
+local FREE_ORTHOGRAPHIC_ZOOM_RATE = 2.5
+local FREE_ORTHOGRAPHIC_ZOOM_RATE_SLOW = 1.25
 
 local FREE_MOVE_KEYS = {
 	[Enum.KeyCode.D] = Vector3.xAxis,
@@ -56,9 +64,22 @@ local AutoCaptureControllerClass = {}
 AutoCaptureControllerClass.__index = AutoCaptureControllerClass
 AutoCaptureControllerClass.ClassName = "AutoCaptureController"
 
+local function getCameraProperty<T>(camera: Camera, key: string, default: T): T
+	local success, value = pcall(function()
+		return (camera :: any)[key] :: T
+	end)
+	return if success then value else default
+end
+
+local function isOrthographic(camera: Camera)
+	local projectionType = getCameraProperty(camera, "ProjectionType", nil :: EnumItem?)
+	return projectionType ~= nil and projectionType.Name == "Orthographic"
+end
+
 local function createStaticObservableState()
 	return ObservableValue.new({
 		isSynced = true,
+		isOrthographic = isOrthographic(workspace.CurrentCamera),
 		animationTrack = nil :: AnimationTrack?,
 	})
 end
@@ -73,6 +94,7 @@ local function createDynamicObservableState()
 		captureSize = Vector2.new(256, 256),
 
 		fov = workspace.CurrentCamera.FieldOfView,
+		orthographicSize = getCameraProperty(workspace.CurrentCamera, "OrthographicSize", ORTHOGRAPHIC_SIZE_DEFAULT),
 		fitType = "Orbital",
 		tryUseMeshVertices = false,
 		distanceScale = 1,
@@ -128,6 +150,7 @@ export type AutoCaptureController = typeof(setmetatable(
 		scaleOS: Vector2,
 		isCapturing: boolean,
 		origin: Vector3,
+		trove: Trove.Trove,
 
 		staticObservableState: StaticObservableState,
 		dynamicObservableState: DynamicObservableState,
@@ -168,6 +191,9 @@ function AutoCaptureControllerStatic.new()
 	self.meshDataCache = {}
 	self.activePointCloud = nil
 
+	self.trove = Trove.new()
+	self.trove:Add(self:_watchProjectionType())
+
 	return self
 end
 
@@ -196,6 +222,18 @@ local function distort(camera: Camera, distortion: Distortion)
 	local m = math.max(math.abs(w), math.abs(h), math.abs(dx), math.abs(dy), math.abs(dz))
 
 	return CFrame.new(0, 0, 0, w / m, 0, 0, 0, h / m, 0, dx / m, dy / m, dz / m)
+end
+
+local function orthographicOffset(camera: Camera, orthographicSize: number, position: Vector2)
+	local viewportSize = camera.ViewportSize
+	local offset = (viewportSize / 2 - position) * (orthographicSize / viewportSize.Y)
+	return CFrame.new(offset.X, -offset.Y, 0)
+end
+
+local function applyOrthographic(camera: Camera, orthographicSize: number)
+	local orthographicCamera = camera :: any
+	orthographicCamera.OrthographicMode = (Enum :: any).OrthographicMode.Vertical
+	orthographicCamera.OrthographicSize = math.clamp(orthographicSize, ORTHOGRAPHIC_SIZE_MIN, ORTHOGRAPHIC_SIZE_MAX)
 end
 
 local function viewProjectionEdgeHits(cloud: { Vector3 }, axis: "X" | "Y", depth: number, tanFov2: number)
@@ -328,6 +366,38 @@ function AutoCaptureControllerClass._listenOrbitInput(self: AutoCaptureControlle
 	end
 end
 
+function AutoCaptureControllerClass._watchProjectionType(self: AutoCaptureController)
+	local cameraTrove = Trove.new()
+
+	local function refresh()
+		local newIsOrthographic = isOrthographic(workspace.CurrentCamera)
+		if self.staticObservableState:get().isOrthographic ~= newIsOrthographic then
+			self.staticObservableState:update()(function(state)
+				state.isOrthographic = newIsOrthographic
+				return state
+			end)
+		end
+	end
+
+	local function cameraAdded(camera: Camera)
+		cameraTrove:Clean()
+		pcall(function()
+			cameraTrove:Add(camera:GetPropertyChangedSignal("ProjectionType" :: any):Connect(refresh))
+		end)
+		refresh()
+	end
+
+	cameraAdded(workspace.CurrentCamera)
+	local currentCameraChanged = workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+		cameraAdded(workspace.CurrentCamera)
+	end)
+
+	return function()
+		currentCameraChanged:Disconnect()
+		cameraTrove:Destroy()
+	end
+end
+
 function AutoCaptureControllerClass._createPointCloud(self: AutoCaptureController, pvInstance: PVInstance)
 	local tryUseMeshVertices = self.dynamicObservableState:get().tryUseMeshVertices
 	local pointCloud = PointCloud.new(pvInstance, tryUseMeshVertices, self.meshDataCache)
@@ -366,25 +436,38 @@ function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 		local paddedRect = self:_getPaddedRect()
 		local rectCenter = paddedRect.Min + (paddedRect.Max - paddedRect.Min) / 2
 
-		local aspect = paddedRect.Width / paddedRect.Height
-		local scaleY = paddedRect.Height / viewportSize.Y
-		local scaledFov2 = math.atan(math.tan(math.rad(camera.FieldOfView / 2)) * scaleY)
-		local sinFov2 = math.sin(scaledFov2 * math.min(1, aspect))
-
 		local filteredParts = AABBHelper.getFilteredParts(pvInstance, AABBHelper.ignoreTagFilter)
 		local bboxCF, bboxSize = AABBHelper.getBoundingBox(pvInstance:GetPivot(), filteredParts)
 		local radius = bboxSize.Magnitude / 2
 
 		local centerCF = if #filteredParts > 0 then CFrame.new(bboxCF.Position) else CFrame.new(self.origin)
-		local distance = (radius / sinFov2) * dynamic.distanceScale
-		local cameraCF = centerCF * rotation * CFrame.new(0, 0, distance)
 
-		local distortedCF = cameraCF
-			* distort(camera, {
-				anchor = Vector2.new(0.5, 0.5),
-				position = rectCenter / viewportSize,
-				size = Vector2.new(1, 1),
-			})
+		local distortedCF
+		if self.staticObservableState:get().isOrthographic then
+			local fitSpan = math.min(paddedRect.Width, paddedRect.Height)
+			local orthographicSize = (2 * radius * viewportSize.Y / fitSpan) * dynamic.distanceScale
+			applyOrthographic(camera, orthographicSize)
+
+			distortedCF = centerCF
+				* rotation
+				* CFrame.new(0, 0, radius + ORTHOGRAPHIC_NEAR_MARGIN)
+				* orthographicOffset(camera, (camera :: any).OrthographicSize, rectCenter)
+		else
+			local aspect = paddedRect.Width / paddedRect.Height
+			local scaleY = paddedRect.Height / viewportSize.Y
+			local scaledFov2 = math.atan(math.tan(math.rad(camera.FieldOfView / 2)) * scaleY)
+			local sinFov2 = math.sin(scaledFov2 * math.min(1, aspect))
+
+			local distance = (radius / sinFov2) * dynamic.distanceScale
+			local cameraCF = centerCF * rotation * CFrame.new(0, 0, distance)
+
+			distortedCF = cameraCF
+				* distort(camera, {
+					anchor = Vector2.new(0.5, 0.5),
+					position = rectCenter / viewportSize,
+					size = Vector2.new(1, 1),
+				})
+		end
 
 		camera.CameraType = CAMERA_TYPE
 		camera.CFrame = distortedCF
@@ -438,10 +521,6 @@ function AutoCaptureControllerClass._hookPointCloud(self: AutoCaptureController)
 		local paddedRect = self:_getPaddedRect()
 		local rectCenter = paddedRect.Min + (paddedRect.Max - paddedRect.Min) / 2
 
-		local tanYFov2 = math.tan(math.rad(camera.FieldOfView / 2))
-		local tanYFov2Scaled = tanYFov2 * (paddedRect.Height / viewportSize.Y)
-		local tanXFov2Scaled = tanYFov2 * (viewportSize.X / viewportSize.Y) * (paddedRect.Width / viewportSize.X)
-
 		local worldPointCloud = pointCloud:getVertices()
 		if #worldPointCloud == 0 then
 			return
@@ -449,25 +528,46 @@ function AutoCaptureControllerClass._hookPointCloud(self: AutoCaptureController)
 
 		local cloud = { rotationInv * worldPointCloud[1] }
 		local furthest = cloud[1].Z
+		local nearest = cloud[1].Z
 		for i = 2, #worldPointCloud do
 			local lp = rotationInv * worldPointCloud[i]
 			furthest = math.min(furthest, lp.Z)
+			nearest = math.max(nearest, lp.Z)
 			cloud[i] = lp
 		end
 
-		local hMax, hMin = viewProjectionEdgeHits(cloud, "X", furthest, tanXFov2Scaled)
-		local vMax, vMin = viewProjectionEdgeHits(cloud, "Y", furthest, tanYFov2Scaled)
-		local distance = math.max(((hMax - hMin) / 2) / tanXFov2Scaled, ((vMax - vMin) / 2) / tanYFov2Scaled)
-			* dynamic.distanceScale
+		local distortedCF
+		if self.staticObservableState:get().isOrthographic then
+			local hMax, hMin = viewProjectionEdgeHits(cloud, "X", 0, 0)
+			local vMax, vMin = viewProjectionEdgeHits(cloud, "Y", 0, 0)
+			local orthographicSize = math.max(
+				(hMax - hMin) * viewportSize.Y / paddedRect.Width,
+				(vMax - vMin) * viewportSize.Y / paddedRect.Height
+			) * dynamic.distanceScale
+			applyOrthographic(camera, orthographicSize)
 
-		local cameraCF = rotation * CFrame.new((hMax + hMin) / 2, (vMax + vMin) / 2, furthest + distance)
+			distortedCF = rotation
+				* CFrame.new((hMax + hMin) / 2, (vMax + vMin) / 2, nearest + ORTHOGRAPHIC_NEAR_MARGIN)
+				* orthographicOffset(camera, (camera :: any).OrthographicSize, rectCenter)
+		else
+			local tanYFov2 = math.tan(math.rad(camera.FieldOfView / 2))
+			local tanYFov2Scaled = tanYFov2 * (paddedRect.Height / viewportSize.Y)
+			local tanXFov2Scaled = tanYFov2 * (viewportSize.X / viewportSize.Y) * (paddedRect.Width / viewportSize.X)
 
-		local distortedCF = cameraCF
-			* distort(camera, {
-				anchor = Vector2.new(0.5, 0.5),
-				position = rectCenter / viewportSize,
-				size = Vector2.new(1, 1),
-			})
+			local hMax, hMin = viewProjectionEdgeHits(cloud, "X", furthest, tanXFov2Scaled)
+			local vMax, vMin = viewProjectionEdgeHits(cloud, "Y", furthest, tanYFov2Scaled)
+			local distance = math.max(((hMax - hMin) / 2) / tanXFov2Scaled, ((vMax - vMin) / 2) / tanYFov2Scaled)
+				* dynamic.distanceScale
+
+			local cameraCF = rotation * CFrame.new((hMax + hMin) / 2, (vMax + vMin) / 2, furthest + distance)
+
+			distortedCF = cameraCF
+				* distort(camera, {
+					anchor = Vector2.new(0.5, 0.5),
+					position = rectCenter / viewportSize,
+					size = Vector2.new(1, 1),
+				})
+		end
 
 		camera.CameraType = CAMERA_TYPE
 		camera.CFrame = distortedCF
@@ -503,6 +603,7 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 	local pitch, yaw = startCF:ToEulerAnglesYXZ()
 	local rotating = false
 	local moveSpeed = 0
+	local zooming = false
 	local appliedCF: CFrame? = nil
 
 	local function isShiftDown()
@@ -531,6 +632,15 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		if rotating and input.UserInputType == Enum.UserInputType.MouseMovement then
 			yaw -= input.Delta.X * FREE_LOOK_SENSITIVITY
 			pitch = math.clamp(pitch - input.Delta.Y * FREE_LOOK_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT)
+		elseif
+			input.UserInputType == Enum.UserInputType.MouseWheel and self.staticObservableState:get().isOrthographic
+		then
+			local factor = DISTANCE_SCALE_STEP ^ -input.Position.Z
+			self.dynamicObservableState:update()(function(state)
+				state.orthographicSize =
+					math.clamp(state.orthographicSize * factor, ORTHOGRAPHIC_SIZE_MIN, ORTHOGRAPHIC_SIZE_MAX)
+				return state
+			end)
 		end
 	end))
 
@@ -548,6 +658,8 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		if
 			appliedCF
 			and moveSpeed == 0
+			-- Studio's editor camera also reacts to WASD, so don't adopt its movement while zooming
+			and not zooming
 			and not currentCF.Position:FuzzyEq(appliedCF.Position, FREE_EXTERNAL_CF_EPSILON)
 		then
 			position = currentCF.Position
@@ -559,6 +671,10 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 
 		camera.CameraType = CAMERA_TYPE
 		camera.FieldOfView = dynamic.fov
+
+		if self.staticObservableState:get().isOrthographic then
+			applyOrthographic(camera, dynamic.orthographicSize)
+		end
 
 		local rotation = CFrame.fromEulerAnglesYXZ(pitch, yaw, 0)
 
@@ -573,12 +689,38 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 				moveSpeed = math.clamp(newMoveSpeed, studioShiftSpeed, FREE_MOVE_SPEED_MAX)
 			end
 
-			local move = Vector3.zero
+			local localMove = Vector3.zero
 			for keyCode, vec in FREE_MOVE_KEYS do
 				if UserInputService:IsKeyDown(keyCode) then
-					move = move + rotation:VectorToWorldSpace(vec)
+					localMove = localMove + vec
 				end
 			end
+
+			-- In orthographic, moving along the view axis doesn't change the image (it only
+			-- moves the near plane into the subject), so forward/back zooms instead.
+			zooming = false
+			if self.staticObservableState:get().isOrthographic then
+				local zoomDirection = localMove.Z
+				localMove = Vector3.new(localMove.X, localMove.Y, 0)
+
+				if zoomDirection ~= 0 then
+					zooming = true
+					local zoomRate = if isShiftDown()
+						then FREE_ORTHOGRAPHIC_ZOOM_RATE_SLOW
+						else FREE_ORTHOGRAPHIC_ZOOM_RATE
+					local factor = zoomRate ^ (zoomDirection * dt)
+					local newSize =
+						math.clamp(dynamic.orthographicSize * factor, ORTHOGRAPHIC_SIZE_MIN, ORTHOGRAPHIC_SIZE_MAX)
+
+					self.dynamicObservableState:update()(function(state)
+						state.orthographicSize = newSize
+						return state
+					end)
+					applyOrthographic(camera, newSize)
+				end
+			end
+
+			local move = rotation:VectorToWorldSpace(localMove)
 
 			local moveMagnitude = move.Magnitude
 			if moveMagnitude > 0 then
@@ -767,6 +909,8 @@ function AutoCaptureControllerClass.focusAsync(
 	local camera = workspace.CurrentCamera
 	local prevCameraType = camera.CameraType
 	local prevCameraFov = camera.FieldOfView
+	local prevOrthographicSize = getCameraProperty(camera, "OrthographicSize", nil :: number?)
+	local prevOrthographicMode = getCameraProperty(camera, "OrthographicMode", nil :: EnumItem?)
 	pvInstance.Parent = camera
 
 	self.focusTrove:Add(function()
@@ -775,6 +919,11 @@ function AutoCaptureControllerClass.focusAsync(
 
 		workspace.CurrentCamera.CameraType = prevCameraType
 		workspace.CurrentCamera.FieldOfView = prevCameraFov
+		if prevOrthographicSize and prevOrthographicMode then
+			local orthographicCamera = workspace.CurrentCamera :: any
+			orthographicCamera.OrthographicSize = prevOrthographicSize
+			orthographicCamera.OrthographicMode = prevOrthographicMode
+		end
 		pvInstance.Parent = nil
 	end)
 
@@ -841,6 +990,7 @@ end
 
 function AutoCaptureControllerClass.Destroy(self: AutoCaptureController)
 	self:unfocus()
+	self.trove:Destroy()
 end
 
 --
