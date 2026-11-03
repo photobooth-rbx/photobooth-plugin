@@ -606,6 +606,26 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 	local zooming = false
 	local appliedCF: CFrame? = nil
 
+	local pullbackCloud: PointCloud.PointCloud? = nil
+	local function getPullbackCloud()
+		if not pullbackCloud then
+			local pointCloud = PointCloud.new(pvInstance, false, self.meshDataCache)
+			pointCloud.trove:Add(pvState.animationManager:onTransform(function()
+				pointCloud:recalculateVertices()
+			end))
+
+			pullbackCloud = pointCloud
+			self.activePointCloud = pointCloud
+			cleanupTrove:Add(function()
+				if self.activePointCloud == pointCloud then
+					self.activePointCloud = nil
+				end
+				pointCloud:Destroy()
+			end)
+		end
+		return pullbackCloud :: PointCloud.PointCloud
+	end
+
 	local function isShiftDown()
 		return UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
 	end
@@ -696,8 +716,6 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 				end
 			end
 
-			-- In orthographic, moving along the view axis doesn't change the image (it only
-			-- moves the near plane into the subject), so forward/back zooms instead.
 			zooming = false
 			if self.staticObservableState:get().isOrthographic then
 				local zoomDirection = localMove.Z
@@ -732,6 +750,20 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		end
 
 		local cameraCF = CFrame.new(position) * rotation
+
+		if self.staticObservableState:get().isOrthographic then
+			local aabb = getPullbackCloud():getAABB()
+			if aabb then
+				local lookVector = cameraCF.LookVector
+				local center = (aabb.min + aabb.max) / 2
+				local halfSize = (aabb.max - aabb.min) / 2
+				local nearestDepth = (center - position):Dot(lookVector) - halfSize:Dot(lookVector:Abs())
+
+				local pullback = math.max(0, ORTHOGRAPHIC_NEAR_MARGIN - nearestDepth)
+				cameraCF = cameraCF * CFrame.new(0, 0, pullback)
+			end
+		end
+
 		camera.CFrame = cameraCF
 		camera.Focus = cameraCF
 		appliedCF = cameraCF
