@@ -3,4 +3,5 @@ return {
 	ANIMATOR = 2,
 	TRACK = 3,
 	CAMERA = 4,
+	BACKDROP = 5,
 }

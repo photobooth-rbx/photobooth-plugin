@@ -9,6 +9,7 @@ local Trove = require(pluginRoot.Packages.Trove)
 local Photo = require(pluginRoot.Main.Photo)
 local Captures = require(pluginRoot.Main.Photo.Captures)
 local SceneControl = require(pluginRoot.Main.Photo.SceneControl)
+local Blackout = require(pluginRoot.Main.Photo.Tools.Blackout)
 local RenderRect = require(pluginRoot.Main.Bindings.Interface.Helpers.RenderRect)
 
 local appRoot = script:FindFirstAncestor("AutoCapture")
@@ -17,6 +18,7 @@ local RenderPriorities = require(appRoot.RenderPriorities)
 local AnimationManager = require(script.AnimationManager)
 local AABBHelper = require(script.AABBHelper)
 local PointCloud = require(script.PointCloud)
+local OrthographicBackdrop = require(script.OrthographicBackdrop)
 
 local CAMERA_TYPE = Enum.CameraType.Scriptable
 
@@ -174,6 +176,8 @@ export type AutoCaptureController = typeof(setmetatable(
 		isInputFrozen: boolean,
 		meshDataCache: PointCloud.MeshDataCache,
 		activePointCloud: PointCloud.PointCloud?,
+		boundsCloud: PointCloud.PointCloud?,
+		backdrop: OrthographicBackdrop.OrthographicBackdrop?,
 	},
 	AutoCaptureControllerClass
 ))
@@ -199,6 +203,8 @@ function AutoCaptureControllerStatic.new()
 	self.isInputFrozen = true
 	self.meshDataCache = {}
 	self.activePointCloud = nil
+	self.boundsCloud = nil
+	self.backdrop = nil
 
 	self.trove = Trove.new()
 
@@ -431,6 +437,58 @@ function AutoCaptureControllerClass._createPointCloud(self: AutoCaptureControlle
 	return pointCloud
 end
 
+function AutoCaptureControllerClass._getBoundsCloud(self: AutoCaptureController)
+	local boundsCloud = self.boundsCloud
+	if boundsCloud then
+		return boundsCloud
+	end
+
+	local pvInstance = assert(self.focusedPV)
+	local pvState = assert(self.stateByPV[pvInstance])
+
+	local pointCloud = PointCloud.new(pvInstance, false, self.meshDataCache)
+	pointCloud.trove:Add(pvState.animationManager:onTransform(function()
+		pointCloud:recalculateVertices()
+	end))
+
+	self.boundsCloud = pointCloud
+	self.focusTrove:Add(function()
+		if self.boundsCloud == pointCloud then
+			self.boundsCloud = nil
+		end
+		pointCloud:Destroy()
+	end)
+
+	return pointCloud
+end
+
+function AutoCaptureControllerClass._hookOrthographicBackdrop(self: AutoCaptureController)
+	local backdrop = OrthographicBackdrop.new()
+	self.backdrop = backdrop
+
+	local function render()
+		local visible = self.dynamicObservableState:get().isOrthographic
+			and not Blackout.isEnabled()
+			and not self.isCapturing
+
+		backdrop:setVisible(visible)
+		if visible then
+			backdrop:render()
+		end
+	end
+
+	local connection = PriorityStepper.render:connect(RenderPriorities.BACKDROP, render)
+	render()
+
+	return function()
+		connection()
+		if self.backdrop == backdrop then
+			self.backdrop = nil
+		end
+		backdrop:Destroy()
+	end
+end
+
 function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 	local pvInstance = assert(self.focusedPV)
 	local pvState = assert(self.stateByPV[pvInstance])
@@ -624,26 +682,6 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 	local zooming = false
 	local appliedCF: CFrame? = nil
 
-	local pullbackCloud: PointCloud.PointCloud? = nil
-	local function getPullbackCloud()
-		if not pullbackCloud then
-			local pointCloud = PointCloud.new(pvInstance, false, self.meshDataCache)
-			pointCloud.trove:Add(pvState.animationManager:onTransform(function()
-				pointCloud:recalculateVertices()
-			end))
-
-			pullbackCloud = pointCloud
-			self.activePointCloud = pointCloud
-			cleanupTrove:Add(function()
-				if self.activePointCloud == pointCloud then
-					self.activePointCloud = nil
-				end
-				pointCloud:Destroy()
-			end)
-		end
-		return pullbackCloud :: PointCloud.PointCloud
-	end
-
 	local function isShiftDown()
 		return UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
 	end
@@ -696,7 +734,6 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		if
 			appliedCF
 			and moveSpeed == 0
-			-- Studio's editor camera also reacts to WASD, so don't adopt its movement while zooming
 			and not zooming
 			and not currentCF.Position:FuzzyEq(appliedCF.Position, FREE_EXTERNAL_CF_EPSILON)
 		then
@@ -770,7 +807,7 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		local cameraCF = CFrame.new(position) * rotation
 
 		if self.dynamicObservableState:get().isOrthographic then
-			local aabb = getPullbackCloud():getAABB()
+			local aabb = self:_getBoundsCloud():getAABB()
 			if aabb then
 				local lookVector = cameraCF.LookVector
 				local center = (aabb.min + aabb.max) / 2
@@ -989,6 +1026,7 @@ function AutoCaptureControllerClass.focusAsync(
 	self.focusTrove:Add(self:_watchIsSynced())
 	self.focusTrove:Add(self:_watchProjectionType())
 	self.focusTrove:Add(self:_watchFitType())
+	self.focusTrove:Add(self:_hookOrthographicBackdrop())
 end
 
 function AutoCaptureControllerClass.unfocus(self: AutoCaptureController)
@@ -1017,12 +1055,23 @@ function AutoCaptureControllerClass.getPVInstances(self: AutoCaptureController)
 end
 
 function AutoCaptureControllerClass.capture(self: AutoCaptureController, scaleOS: Vector2)
-	local pointCloud = self.activePointCloud
-	if pointCloud and pointCloud:awaitVerticesAsync() then
+	local recalculated = false
+	local activePointCloud = self.activePointCloud
+	if activePointCloud and activePointCloud:awaitVerticesAsync() then
+		recalculated = true
+	end
+	local boundsCloud = self.boundsCloud
+	if boundsCloud and boundsCloud:awaitVerticesAsync() then
+		recalculated = true
+	end
+	if recalculated then
 		SceneControl.yieldUntilNextFrame()
 	end
 
 	self.isCapturing = true
+	if self.backdrop then
+		self.backdrop:setVisible(false)
+	end
 
 	local scaledRect = RenderRect.fromRect(self:_getScaledOffsetRect(scaleOS))
 
