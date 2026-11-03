@@ -38,7 +38,7 @@ local ORTHOGRAPHIC_NEAR_MARGIN = 1
 local FREE_LOOK_SENSITIVITY = 0.005
 local FREE_MOVE_SPEED_MAX = 1000
 local FREE_EXTERNAL_CF_EPSILON = 1e-4
--- Orthographic size multiplier per second while holding forward/back in free cam
+
 local FREE_ORTHOGRAPHIC_ZOOM_RATE = 2.5
 local FREE_ORTHOGRAPHIC_ZOOM_RATE_SLOW = 1.25
 
@@ -76,10 +76,18 @@ local function isOrthographic(camera: Camera)
 	return projectionType ~= nil and projectionType.Name == "Orthographic"
 end
 
+local function setOrthographic(camera: Camera, orthographic: boolean)
+	pcall(function()
+		local projectionTypes = (Enum :: any).ProjectionType;
+		(camera :: any).ProjectionType = if orthographic
+			then projectionTypes.Orthographic
+			else projectionTypes.Perspective
+	end)
+end
+
 local function createStaticObservableState()
 	return ObservableValue.new({
 		isSynced = true,
-		isOrthographic = isOrthographic(workspace.CurrentCamera),
 		animationTrack = nil :: AnimationTrack?,
 	})
 end
@@ -93,6 +101,7 @@ local function createDynamicObservableState()
 		captureDelay = 0,
 		captureSize = Vector2.new(256, 256),
 
+		isOrthographic = isOrthographic(workspace.CurrentCamera),
 		fov = workspace.CurrentCamera.FieldOfView,
 		orthographicSize = getCameraProperty(workspace.CurrentCamera, "OrthographicSize", ORTHOGRAPHIC_SIZE_DEFAULT),
 		fitType = "Orbital",
@@ -192,7 +201,6 @@ function AutoCaptureControllerStatic.new()
 	self.activePointCloud = nil
 
 	self.trove = Trove.new()
-	self.trove:Add(self:_watchProjectionType())
 
 	return self
 end
@@ -369,10 +377,18 @@ end
 function AutoCaptureControllerClass._watchProjectionType(self: AutoCaptureController)
 	local cameraTrove = Trove.new()
 
-	local function refresh()
+	local function applyStateToCamera()
+		local camera = workspace.CurrentCamera
+		local wantOrthographic = self.dynamicObservableState:get().isOrthographic
+		if isOrthographic(camera) ~= wantOrthographic then
+			setOrthographic(camera, wantOrthographic)
+		end
+	end
+
+	local function applyCameraToState()
 		local newIsOrthographic = isOrthographic(workspace.CurrentCamera)
-		if self.staticObservableState:get().isOrthographic ~= newIsOrthographic then
-			self.staticObservableState:update()(function(state)
+		if self.dynamicObservableState:get().isOrthographic ~= newIsOrthographic then
+			self.dynamicObservableState:update()(function(state)
 				state.isOrthographic = newIsOrthographic
 				return state
 			end)
@@ -381,18 +397,20 @@ function AutoCaptureControllerClass._watchProjectionType(self: AutoCaptureContro
 
 	local function cameraAdded(camera: Camera)
 		cameraTrove:Clean()
+		applyStateToCamera()
 		pcall(function()
-			cameraTrove:Add(camera:GetPropertyChangedSignal("ProjectionType" :: any):Connect(refresh))
+			cameraTrove:Add(camera:GetPropertyChangedSignal("ProjectionType" :: any):Connect(applyCameraToState))
 		end)
-		refresh()
 	end
 
 	cameraAdded(workspace.CurrentCamera)
 	local currentCameraChanged = workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
 		cameraAdded(workspace.CurrentCamera)
 	end)
+	local stateChanged = self.dynamicObservableState:onChanged(applyStateToCamera)
 
 	return function()
+		stateChanged:Disconnect()
 		currentCameraChanged:Disconnect()
 		cameraTrove:Destroy()
 	end
@@ -443,7 +461,7 @@ function AutoCaptureControllerClass._hookOrbital(self: AutoCaptureController)
 		local centerCF = if #filteredParts > 0 then CFrame.new(bboxCF.Position) else CFrame.new(self.origin)
 
 		local distortedCF
-		if self.staticObservableState:get().isOrthographic then
+		if self.dynamicObservableState:get().isOrthographic then
 			local fitSpan = math.min(paddedRect.Width, paddedRect.Height)
 			local orthographicSize = (2 * radius * viewportSize.Y / fitSpan) * dynamic.distanceScale
 			applyOrthographic(camera, orthographicSize)
@@ -537,7 +555,7 @@ function AutoCaptureControllerClass._hookPointCloud(self: AutoCaptureController)
 		end
 
 		local distortedCF
-		if self.staticObservableState:get().isOrthographic then
+		if self.dynamicObservableState:get().isOrthographic then
 			local hMax, hMin = viewProjectionEdgeHits(cloud, "X", 0, 0)
 			local vMax, vMin = viewProjectionEdgeHits(cloud, "Y", 0, 0)
 			local orthographicSize = math.max(
@@ -653,7 +671,7 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 			yaw -= input.Delta.X * FREE_LOOK_SENSITIVITY
 			pitch = math.clamp(pitch - input.Delta.Y * FREE_LOOK_SENSITIVITY, -PITCH_LIMIT, PITCH_LIMIT)
 		elseif
-			input.UserInputType == Enum.UserInputType.MouseWheel and self.staticObservableState:get().isOrthographic
+			input.UserInputType == Enum.UserInputType.MouseWheel and self.dynamicObservableState:get().isOrthographic
 		then
 			local factor = DISTANCE_SCALE_STEP ^ -input.Position.Z
 			self.dynamicObservableState:update()(function(state)
@@ -692,7 +710,7 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 		camera.CameraType = CAMERA_TYPE
 		camera.FieldOfView = dynamic.fov
 
-		if self.staticObservableState:get().isOrthographic then
+		if self.dynamicObservableState:get().isOrthographic then
 			applyOrthographic(camera, dynamic.orthographicSize)
 		end
 
@@ -717,7 +735,7 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 			end
 
 			zooming = false
-			if self.staticObservableState:get().isOrthographic then
+			if self.dynamicObservableState:get().isOrthographic then
 				local zoomDirection = localMove.Z
 				localMove = Vector3.new(localMove.X, localMove.Y, 0)
 
@@ -751,7 +769,7 @@ function AutoCaptureControllerClass._hookFree(self: AutoCaptureController)
 
 		local cameraCF = CFrame.new(position) * rotation
 
-		if self.staticObservableState:get().isOrthographic then
+		if self.dynamicObservableState:get().isOrthographic then
 			local aabb = getPullbackCloud():getAABB()
 			if aabb then
 				local lookVector = cameraCF.LookVector
@@ -943,6 +961,7 @@ function AutoCaptureControllerClass.focusAsync(
 	local prevCameraFov = camera.FieldOfView
 	local prevOrthographicSize = getCameraProperty(camera, "OrthographicSize", nil :: number?)
 	local prevOrthographicMode = getCameraProperty(camera, "OrthographicMode", nil :: EnumItem?)
+	local prevIsOrthographic = isOrthographic(camera)
 	pvInstance.Parent = camera
 
 	self.focusTrove:Add(function()
@@ -956,6 +975,7 @@ function AutoCaptureControllerClass.focusAsync(
 			orthographicCamera.OrthographicSize = prevOrthographicSize
 			orthographicCamera.OrthographicMode = prevOrthographicMode
 		end
+		setOrthographic(workspace.CurrentCamera, prevIsOrthographic)
 		pvInstance.Parent = nil
 	end)
 
@@ -967,6 +987,7 @@ function AutoCaptureControllerClass.focusAsync(
 	end))
 
 	self.focusTrove:Add(self:_watchIsSynced())
+	self.focusTrove:Add(self:_watchProjectionType())
 	self.focusTrove:Add(self:_watchFitType())
 end
 

@@ -206,7 +206,7 @@ local function Properties(props: Props, ref: any)
 				LayoutOrder = 1,
 			}),
 
-			FOV = not static.isOrthographic and React.createElement(StudioProperties.Number, {
+			FOV = not dynamic.isOrthographic and React.createElement(StudioProperties.Number, {
 				FieldName = "FOV",
 
 				Min = 1,
@@ -260,7 +260,7 @@ local function Properties(props: Props, ref: any)
 					}),
 
 				DistanceScale = React.createElement(StudioProperties.Number, {
-					FieldName = if static.isOrthographic then "Size Scale" else "Distance Scale",
+					FieldName = if dynamic.isOrthographic then "Size Scale" else "Distance Scale",
 
 					Min = 0,
 					Value = dynamic.distanceScale,
