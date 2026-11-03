@@ -1,7 +1,8 @@
 local pluginRoot = script:FindFirstAncestor("PluginRoot")
-local Asphalt = require(pluginRoot.Main.UserInterface.Asphalt)
 local MeshPartFogBackground = require(pluginRoot.Main.Photo.Tools.Background.MeshPartFogBackground)
 local FogOverride = require(pluginRoot.Main.Photo.Tools.FogOverride)
+local Asphalt = require(pluginRoot.Main.UserInterface.Asphalt)
+local Trove = require(pluginRoot.Packages.Trove)
 
 local AABBHelper = require(script.Parent.AABBHelper)
 
@@ -9,6 +10,9 @@ local COVERAGE_SCALE = 1.1
 local RENDER_DISTANCE = MeshPartFogBackground.RENDER_DISTANCE
 local MIN_FOG_DISTANCE = RENDER_DISTANCE + MeshPartFogBackground.MARGIN_OF_ERROR_DISTANCE
 local TILE_PIXELS = 50
+
+local sessionBackgroundColor3 = Color3.fromRGB(25, 26, 31)
+local sessionImageColor3 = Color3.fromRGB(255, 255, 255)
 
 local OrthographicBackdropStatic = {}
 
@@ -18,6 +22,7 @@ OrthographicBackdropClass.ClassName = "OrthographicBackdrop"
 
 export type OrthographicBackdrop = typeof(setmetatable(
 	{} :: {
+		trove: Trove.Trove,
 		part: Part,
 		billboardGui: BillboardGui,
 		visible: boolean,
@@ -28,7 +33,9 @@ export type OrthographicBackdrop = typeof(setmetatable(
 function OrthographicBackdropStatic.new(): OrthographicBackdrop
 	local self = setmetatable({}, OrthographicBackdropClass) :: OrthographicBackdrop
 
-	local part = Instance.new("Part")
+	local trove = Trove.new()
+
+	local part = trove:Add(Instance.new("Part"))
 	part.Name = "Backdrop"
 	part.Archivable = false
 	part.Locked = true
@@ -53,14 +60,23 @@ function OrthographicBackdropStatic.new(): OrthographicBackdrop
 	checkerboard.Name = "Checkerboard"
 	checkerboard.Size = UDim2.fromScale(1, 1)
 	checkerboard.BorderSizePixel = 0
-	checkerboard.BackgroundColor3 = Color3.fromRGB(25, 26, 31)
+	checkerboard.BackgroundColor3 = sessionBackgroundColor3
 	checkerboard.Image = Asphalt.misc.checkerboard
 	checkerboard.ScaleType = Enum.ScaleType.Tile
 	checkerboard.TileSize = UDim2.fromOffset(TILE_PIXELS, TILE_PIXELS)
-	checkerboard.ImageColor3 = Color3.fromRGB(255, 255, 255)
+	checkerboard.ImageColor3 = sessionImageColor3
 	checkerboard.ImageTransparency = 0.9
 	checkerboard.Parent = billboardGui
 
+	trove:Add(checkerboard:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+		sessionBackgroundColor3 = checkerboard.BackgroundColor3
+	end))
+
+	trove:Add(checkerboard:GetPropertyChangedSignal("ImageColor3"):Connect(function()
+		sessionImageColor3 = checkerboard.ImageColor3
+	end))
+
+	self.trove = trove
 	self.part = part
 	self.billboardGui = billboardGui
 	self.visible = false
@@ -108,7 +124,7 @@ end
 
 function OrthographicBackdropClass.Destroy(self: OrthographicBackdrop)
 	self:setVisible(false)
-	self.part:Destroy()
+	self.trove:Destroy()
 end
 
 return OrthographicBackdropStatic
