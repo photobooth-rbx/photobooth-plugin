@@ -2,7 +2,7 @@
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### [2.12.1] - 2026/11/04
-- Fix swapping between targets with orthographic projection type turned on.
+- Fix swapping between auto capture targets with orthographic projection type turned on.
 
 ### [2.12.0] - 2026/11/04
 - Add orthographic camera support to auto-capture.
