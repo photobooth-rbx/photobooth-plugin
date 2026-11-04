@@ -172,6 +172,7 @@ export type AutoCaptureController = typeof(setmetatable(
 		focusShared: Focus,
 		focusTrove: Trove.Trove,
 		stateByPV: { [PVInstance]: PVState },
+		restoredIsOrthographic: boolean?,
 
 		isInputFrozen: boolean,
 		meshDataCache: PointCloud.MeshDataCache,
@@ -199,6 +200,7 @@ function AutoCaptureControllerStatic.new()
 	self.stateByPV = {}
 	self.focusTrove = Trove.new()
 	self.focusShared = createNewFocus()
+	self.restoredIsOrthographic = nil
 
 	self.isInputFrozen = true
 	self.meshDataCache = {}
@@ -984,7 +986,10 @@ function AutoCaptureControllerClass.focusAsync(
 )
 	if not self.focusedPV then
 		local cameraIsOrthographic = isOrthographic(workspace.CurrentCamera)
-		if self.dynamicObservableState:get().isOrthographic ~= cameraIsOrthographic then
+		if
+			cameraIsOrthographic ~= self.restoredIsOrthographic
+			and self.dynamicObservableState:get().isOrthographic ~= cameraIsOrthographic
+		then
 			self.dynamicObservableState:update()(function(state)
 				state.isOrthographic = cameraIsOrthographic
 				return state
@@ -1008,6 +1013,18 @@ function AutoCaptureControllerClass.focusAsync(
 	local prevIsOrthographic = isOrthographic(camera)
 	pvInstance.Parent = camera
 
+	self.focusTrove:Add(pvState.animationManager:hookTrack(function(track)
+		self.staticObservableState:update()(function(state)
+			state.animationTrack = track
+			return state
+		end)
+	end))
+
+	self.focusTrove:Add(self:_watchIsSynced())
+	self.focusTrove:Add(self:_watchProjectionType())
+	self.focusTrove:Add(self:_watchFitType())
+	self.focusTrove:Add(self:_hookOrthographicBackdrop())
+
 	self.focusTrove:Add(function()
 		self.focusedPV = nil
 		self.isInputFrozen = false
@@ -1020,20 +1037,9 @@ function AutoCaptureControllerClass.focusAsync(
 			orthographicCamera.OrthographicMode = prevOrthographicMode
 		end
 		setOrthographic(workspace.CurrentCamera, prevIsOrthographic)
+		self.restoredIsOrthographic = isOrthographic(workspace.CurrentCamera)
 		pvInstance.Parent = nil
 	end)
-
-	self.focusTrove:Add(pvState.animationManager:hookTrack(function(track)
-		self.staticObservableState:update()(function(state)
-			state.animationTrack = track
-			return state
-		end)
-	end))
-
-	self.focusTrove:Add(self:_watchIsSynced())
-	self.focusTrove:Add(self:_watchProjectionType())
-	self.focusTrove:Add(self:_watchFitType())
-	self.focusTrove:Add(self:_hookOrthographicBackdrop())
 end
 
 function AutoCaptureControllerClass.unfocus(self: AutoCaptureController)
