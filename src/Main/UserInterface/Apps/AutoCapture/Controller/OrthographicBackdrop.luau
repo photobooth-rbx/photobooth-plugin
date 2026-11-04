@@ -47,13 +47,13 @@ function OrthographicBackdropStatic.new(): OrthographicBackdrop
 	checkerboard.Image = Asphalt.misc.checkerboard
 	checkerboard.ScaleType = Enum.ScaleType.Tile
 	checkerboard.TileSize = UDim2.fromOffset(TILE_PIXELS, TILE_PIXELS)
-	checkerboard.ImageTransparency = 0.9
+	checkerboard.ImageTransparency = 0.5
 	checkerboard.Parent = billboardGui
 
 	local function getThemeColors(): (Color3, Color3)
 		local theme = settings().Studio.Theme :: StudioTheme
-		return theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground),
-			theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+		return theme:GetColor(Enum.StudioStyleGuideColor.DimmedText),
+			theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground)
 	end
 
 	local function applyColors()
