@@ -7,6 +7,7 @@ local Trove = require(pluginRoot.Packages.Trove)
 local photoRoot = script:FindFirstAncestor("Photo")
 local Screenshot = require(photoRoot.Captures.Screenshot)
 local Background = require(photoRoot.Tools.Background)
+local FogOverride = require(photoRoot.Tools.FogOverride)
 local SceneControl = require(photoRoot.SceneControl)
 
 local capturesRoot = script:FindFirstAncestor("Captures")
@@ -22,7 +23,7 @@ local function operation(options: Types.CaptureViewportOptions, isFullscreen: bo
 	local colorCorrection = trove:Add(SceneControl.getAppliedColorCorrectionCopy())
 	local undoColorCorrection = trove:Add(SceneControl.hideColorCorrections())
 
-	local fogBackground = Background.new(workspace)
+	local fogBackground = Background.new(workspace, FogOverride.Priority.CAPTURE)
 	fogBackground:setColor(Color3.new(0, 0, 0))
 	fogBackground:setEnabled(true)
 

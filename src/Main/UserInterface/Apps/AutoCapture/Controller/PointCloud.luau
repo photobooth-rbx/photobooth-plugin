@@ -28,6 +28,11 @@ export type MeshData = {
 	naturalSize: Vector3,
 }
 
+export type AABB = {
+	min: Vector3,
+	max: Vector3,
+}
+
 export type MeshDataCache = { [string]: {
 	data: MeshData?,
 } }
@@ -40,6 +45,7 @@ export type PointCloud = typeof(setmetatable(
 		meshDataCache: MeshDataCache,
 		watchers: { [BasePart]: Watcher },
 		vertices: { Vector3 },
+		aabb: AABB?,
 		isRecalculateQueued: boolean,
 		pendingRequests: { [Future.Future<MeshData?>]: true },
 	},
@@ -55,6 +61,7 @@ function PointCloudStatic.new(subject: Instance, tryUseMeshVertices: boolean?, m
 	self.meshDataCache = meshDataCache
 	self.watchers = {}
 	self.vertices = {}
+	self.aabb = nil
 	self.isRecalculateQueued = false
 	self.pendingRequests = {}
 
@@ -303,17 +310,26 @@ function PointCloudClass.recalculateVertices(self: PointCloud)
 	self.isRecalculateQueued = false
 
 	local vertices = {}
+	local min = Vector3.one * math.huge
+	local max = -Vector3.one * math.huge
 	for _part, watcher in self.watchers do
 		local pointCloud = watcher.getPointCloud()
 		for _, wp in pointCloud do
 			table.insert(vertices, wp)
+			min = min:Min(wp)
+			max = max:Max(wp)
 		end
 	end
 	self.vertices = vertices
+	self.aabb = if #vertices > 0 then { min = min, max = max } else nil
 end
 
 function PointCloudClass.getVertices(self: PointCloud)
 	return self.vertices
+end
+
+function PointCloudClass.getAABB(self: PointCloud): AABB?
+	return self.aabb
 end
 
 function PointCloudClass.Destroy(self: PointCloud)

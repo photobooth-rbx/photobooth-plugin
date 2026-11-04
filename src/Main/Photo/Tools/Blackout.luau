@@ -4,6 +4,7 @@ local pluginRoot = script:FindFirstAncestor("PluginRoot")
 local Trove = require(pluginRoot.Packages.Trove)
 
 local MeshPartFogBackground = require(script.Parent.Background.MeshPartFogBackground)
+local FogOverride = require(script.Parent.FogOverride)
 
 local Blackout = {}
 
@@ -21,7 +22,7 @@ local function refresh()
 		blackoutTrove:Clean()
 
 		if not isDisabled then
-			local background = MeshPartFogBackground.new(workspace.CurrentCamera)
+			local background = MeshPartFogBackground.new(workspace.CurrentCamera, FogOverride.Priority.BLACKOUT)
 			background:setColor(Color3.new(0, 0, 0))
 			background:setEnabled(true)
 
