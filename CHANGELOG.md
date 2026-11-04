@@ -1,7 +1,7 @@
 # Changelog
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Unreleased
+### [2.12.0] - 2026/11/04
 - Add orthographic camera support to auto-capture.
 
 ### [2.11.4] - 2026/10/12
