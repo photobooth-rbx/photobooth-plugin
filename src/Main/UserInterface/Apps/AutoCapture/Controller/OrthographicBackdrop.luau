@@ -11,9 +11,6 @@ local RENDER_DISTANCE = MeshPartFogBackground.RENDER_DISTANCE
 local MIN_FOG_DISTANCE = RENDER_DISTANCE + MeshPartFogBackground.MARGIN_OF_ERROR_DISTANCE
 local TILE_PIXELS = 50
 
-local sessionBackgroundColor3 = Color3.fromRGB(25, 26, 31)
-local sessionImageColor3 = Color3.fromRGB(255, 255, 255)
-
 local OrthographicBackdropStatic = {}
 
 local OrthographicBackdropClass = {}
@@ -23,7 +20,6 @@ OrthographicBackdropClass.ClassName = "OrthographicBackdrop"
 export type OrthographicBackdrop = typeof(setmetatable(
 	{} :: {
 		trove: Trove.Trove,
-		part: Part,
 		billboardGui: BillboardGui,
 		visible: boolean,
 	},
@@ -35,49 +31,41 @@ function OrthographicBackdropStatic.new(): OrthographicBackdrop
 
 	local trove = Trove.new()
 
-	local part = trove:Add(Instance.new("Part"))
-	part.Name = "Backdrop"
-	part.Archivable = false
-	part.Locked = true
-	part.Anchored = true
-	part.CanCollide = false
-	part.CanTouch = false
-	part.CanQuery = false
-	part.CastShadow = false
-	part.Transparency = 1
-	part.Size = Vector3.new(1, 1, 1)
-	part:AddTag(AABBHelper.IGNORE_TAG)
-
-	local billboardGui = Instance.new("BillboardGui")
+	local billboardGui = trove:Add(Instance.new("BillboardGui"))
+	billboardGui.Name = "Backdrop"
 	billboardGui.Archivable = false
 	billboardGui.AlwaysOnTop = false
 	billboardGui.LightInfluence = 0
 	billboardGui.Brightness = 1
-	billboardGui.Adornee = part
-	billboardGui.Parent = part
+	billboardGui.Adornee = workspace.Terrain
+	billboardGui:AddTag(AABBHelper.IGNORE_TAG)
 
 	local checkerboard = Instance.new("ImageLabel")
 	checkerboard.Name = "Checkerboard"
 	checkerboard.Size = UDim2.fromScale(1, 1)
 	checkerboard.BorderSizePixel = 0
-	checkerboard.BackgroundColor3 = sessionBackgroundColor3
 	checkerboard.Image = Asphalt.misc.checkerboard
 	checkerboard.ScaleType = Enum.ScaleType.Tile
 	checkerboard.TileSize = UDim2.fromOffset(TILE_PIXELS, TILE_PIXELS)
-	checkerboard.ImageColor3 = sessionImageColor3
 	checkerboard.ImageTransparency = 0.9
 	checkerboard.Parent = billboardGui
 
-	trove:Add(checkerboard:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
-		sessionBackgroundColor3 = checkerboard.BackgroundColor3
-	end))
+	local function getThemeColors(): (Color3, Color3)
+		local theme = settings().Studio.Theme :: StudioTheme
+		return theme:GetColor(Enum.StudioStyleGuideColor.ViewPortBackground),
+			theme:GetColor(Enum.StudioStyleGuideColor.MainText)
+	end
 
-	trove:Add(checkerboard:GetPropertyChangedSignal("ImageColor3"):Connect(function()
-		sessionImageColor3 = checkerboard.ImageColor3
-	end))
+	local function applyColors()
+		local themeBackgroundColor3, themeImageColor3 = getThemeColors()
+		checkerboard.BackgroundColor3 = themeBackgroundColor3
+		checkerboard.ImageColor3 = themeImageColor3
+	end
+
+	applyColors()
+	trove:Add(settings().Studio.ThemeChanged:Connect(applyColors))
 
 	self.trove = trove
-	self.part = part
 	self.billboardGui = billboardGui
 	self.visible = false
 
@@ -90,7 +78,7 @@ function OrthographicBackdropClass.setVisible(self: OrthographicBackdrop, visibl
 	end
 
 	self.visible = visible
-	self.part.Parent = if visible then workspace.CurrentCamera else nil
+	self.billboardGui.Parent = if visible then workspace.CurrentCamera else nil
 
 	if visible then
 		FogOverride.set(FogOverride.Priority.ORTHOGRAPHIC_BACKDROP, function(fog)
@@ -113,7 +101,8 @@ function OrthographicBackdropClass.render(self: OrthographicBackdrop)
 	local camera = workspace.CurrentCamera
 	local cameraCF = camera.CFrame
 
-	self.part.CFrame = cameraCF * CFrame.new(0, 0, -RENDER_DISTANCE)
+	local position = cameraCF:PointToWorldSpace(Vector3.new(0, 0, -RENDER_DISTANCE))
+	self.billboardGui.StudsOffsetWorldSpace = position - workspace.Terrain.Position
 
 	local size = camera.ViewportSize * COVERAGE_SCALE
 	local udimSize = UDim2.fromOffset(size.X, size.Y)
