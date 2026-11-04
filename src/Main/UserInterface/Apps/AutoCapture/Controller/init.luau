@@ -983,6 +983,13 @@ function AutoCaptureControllerClass.focusAsync(
 	pvInstance: PVInstance
 )
 	if not self.focusedPV then
+		local cameraIsOrthographic = isOrthographic(workspace.CurrentCamera)
+		if self.dynamicObservableState:get().isOrthographic ~= cameraIsOrthographic then
+			self.dynamicObservableState:update()(function(state)
+				state.isOrthographic = cameraIsOrthographic
+				return state
+			end)
+		end
 		self.focusShared.dynamicState = table.clone(self.dynamicObservableState:get())
 	end
 
